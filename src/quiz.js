@@ -1,4 +1,4 @@
-// Stub for adminQuizList function
+// Stub for the adminQuizList function
 function adminQuizList(authUserId) {
     return {
         quizzes: [
