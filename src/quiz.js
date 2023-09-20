@@ -9,3 +9,10 @@ function adminQuizList(authUserId) {
         ]
     }
 }
+
+// Stub for the adminQuizCreate function
+function adminQuizCreate(authUserId, name, description) {
+    return {
+        quizId: 2
+    }
+}
