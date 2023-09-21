@@ -38,6 +38,10 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
     return {};
 }
 
+//Stub for adminQuizDescriptionUpdate function
+function adminQuizDescriptionUpdate(authUserId, quizId, description) {
+    return {};
+}
 
 
 
