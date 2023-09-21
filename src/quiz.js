@@ -33,7 +33,10 @@ function adminQuizInfo(authUserId, quizId) {
     };
   }
 
-
+// Stub for adminQuizNameUpdate function
+function adminQuizNameUpdate(authUserId, quizId, name) {
+    return {};
+}
 
 
 
