@@ -4,3 +4,10 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
         authUserId: 1,
       };
 }
+
+// Stub function for adminAuthLogin
+function adminAuthLogin(email, password) {
+    return {
+      authUserId: 1,
+    };
+}
