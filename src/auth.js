@@ -14,17 +14,32 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
     First_name: nameFirst,
     Last_name: nameLast,
   };
-  user_array.push(user_data);
-  const valid_email = validator.isEmail(email);
-  if (valid_email === false) {
-    return {error: "Email is invalid"};
-  }
   for (const user in user_array) {
     if (user_array[user].Email === email) {
       return {error: "Email has already been used"};
     }
   }
+  user_array.push(user_data);
+  const valid_email = validator.isEmail(email);
+  if (valid_email === false) {
+    return {error: "Email is invalid"};
+  }
   
+  if (nameFirst.length < 2) {
+    return {error: "First Name is too short"};
+  }
+  if (nameFirst.length > 20) {
+    return {error: "First Name is too long"}
+  }
+  if (nameLast.length < 2) {
+    return {error: "Last Name is too short"};
+  }
+  if (nameLast.length > 20) {
+    return {error: "Last Name is too long"}
+  }
+  if (password.length < 8) {
+    return {error: "Password is too short"}
+  }
   return ("Bruh")
 }
 
