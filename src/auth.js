@@ -24,3 +24,9 @@ function adminAuthLogin(email, password) {
     authUserId: 1,
   }
 }
+
+export {
+  adminUserDetails,
+  adminAuthRegister,
+  adminAuthLogin,
+};
