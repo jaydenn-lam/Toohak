@@ -13,9 +13,9 @@ function adminUserDetails (authUserId) {
 
 // Stub function for adminAuthRegister
 function adminAuthRegister(email, password, nameFirst, nameLast) {
-    return {
-        authUserId: 1,
-      };
+  return {
+    authUserId: 1,
+  }
 }
 
 // Stub function for adminAuthLogin
