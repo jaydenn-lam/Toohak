@@ -28,11 +28,11 @@ describe('adminAuthRegister', () => {
 
   test.each([
     ['william@unsw.edu.au', '1234abcd', 'William.', "Lu", 
-    "error: First Name contains invalid character/s"],
+    {error: "First Name contains invalid character/s"}],
     ['william@unsw.edu.au', '1234abcd', 'William1', "Lu", 
-    "error: First Name contains invalid character/s"],
+    {error: "First Name contains invalid character/s"}],
     ['william@unsw.edu.au', '1234abcd', 'William()', "Lu", 
-    "error: First Name contains invalid character/s"],
+    {error: "First Name contains invalid character/s"}],
   ])('Invalid Character in First Name Error', (email, pw, firstName, 
     lastName, expected) => {
     clear();
@@ -55,9 +55,9 @@ describe('adminAuthRegister', () => {
   
   test.each([
     ['william@unsw.edu.au', '1234abcd', 'William', "Lu1", 
-    "error: First Name contains invalid character/s"],
+    {error: "Last Name contains invalid character/s"}],
     ['william@unsw.edu.au', '1234abcd', 'William', "Lu()", 
-    "error: First Name contains invalid character/s"]
+    {error: "Last Name contains invalid character/s"}]
   ])('Invalid Character in Last Name Error', (email, pw, firstName, 
     lastName, expected) => {
     clear();
@@ -83,7 +83,7 @@ describe('adminAuthRegister', () => {
     let authUserId1 = adminAuthRegister('william@unsw.edu.au', '1234567', 
     'William', "Lu");
       expect(authUserId1).toStrictEqual({error: "Password is too short"});
-    let authUserId2 = adminAuthRegister('william@unsw.edu.au', '', 
+    let authUserId2 = adminAuthRegister('williaam@unsw.edu.au', '', 
     'William', "Lu");
       expect(authUserId2).toStrictEqual({error: "Password is too short"});
   });
@@ -94,7 +94,7 @@ describe('adminAuthRegister', () => {
     'William', "Lu");
       expect(authUserId1).toStrictEqual({error: 
         "Password must contain a number and a letter"});
-    let authUserId2 = adminAuthRegister('william@unsw.edu.au', '12345678', 
+    let authUserId2 = adminAuthRegister('williaam@unsw.edu.au', '12345678', 
     'William', "Lu");
       expect(authUserId2).toStrictEqual({error: 
         "Password must contain a number and a letter"});
