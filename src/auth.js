@@ -24,7 +24,6 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (valid_email === false) {
     return {error: "Email is invalid"};
   }
-  
   if (nameFirst.length < 2) {
     return {error: "First Name is too short"};
   }
@@ -40,7 +39,45 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (password.length < 8) {
     return {error: "Password is too short"}
   }
+  if (nameChecker(nameLast) === false) {
+    return {error: "Last Name contains invalid character/s"}
+  }
+  if (nameChecker(nameFirst) === false) {
+    return {error: "First Name contains invalid character/s"}
+  }
+  if (passwordChecker(password) === false) {
+    return {error: "Password must contain a number and a letter"}
+  }
   return ("Bruh")
+}
+
+function nameChecker(name) {
+  for (const char of name) {
+    const uni = char.charCodeAt(0);
+    if (!(uni >= 65 && uni <= 90) && !(uni >= 97 && uni <= 122) && char != "'" 
+    && char != ' ' && char != "-") {
+      return false;
+    }
+  }
+  return true;
+}
+
+function passwordChecker(password) {
+  let containsLetter = false;
+  let containsNumber = false;
+  if (/\d/.test(password) === true) {
+    containsNumber = true;
+  }
+  for (const char of password) {
+    const uni = char.charCodeAt(0);
+    if ((uni >= 65 && uni <= 90) || (uni >= 97 && uni <= 122)) {
+      containsLetter = true;
+    }
+  }
+  if (containsLetter === false || containsNumber === false) {
+    return false;
+  }
+  return true;
 }
 
 //Stub function for adminUserDetails
