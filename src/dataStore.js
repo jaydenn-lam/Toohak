@@ -1,11 +1,11 @@
 // YOU SHOULD MODIFY THIS OBJECT BELOW
 let data = {
-  user: [
-    {},
+  users: [
+    
   ],
 
   quizzes: [
-    {},
+    
   ],
 };
 
