@@ -5,9 +5,20 @@ describe('adminAuthRegister', () => {
     
   test('Working Entry', () => {
     clear();
-    let authUserId = adminAuthRegister('william@unsw.edu.au', 'YAYAYA', 
+    let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
+      expect(authUserId).toStrictEqual(1);
   });
+
+  test('Multiple Working Entries', () => {
+    clear();
+    let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+      expect(authUserId).toStrictEqual(1);
+    let authUserId2 = adminAuthRegister('williaam@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+      expect(authUserId2).toStrictEqual(2);
+  })
 
   test('Duplicate Email Error', () => {
     clear();

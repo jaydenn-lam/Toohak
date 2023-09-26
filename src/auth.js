@@ -48,7 +48,8 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (passwordChecker(password) === false) {
     return {error: "Password must contain a number and a letter"}
   }
-  return ("Bruh")
+  let value = user_array.length;
+  return (value)
 }
 
 function nameChecker(name) {
