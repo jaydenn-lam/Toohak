@@ -1,3 +1,7 @@
+import {getData, setData} from './dataStore.js';
+import {adminAuthLogin} from './auth.js';
+
+
 // Stub for the adminQuizList function
 function adminQuizList(authUserId) {
     return {
@@ -17,11 +21,30 @@ function adminQuizCreate(authUserId, name, description) {
     }
 }
 
-// Stub for adminQuizRemove function
-function adminQuizRemove(authUserId, quizId) {
-    return {};
-  }
 
+export function adminQuizRemove(authUserId, quizId) {
+
+    let authUserIdValidation = isValidAuthUserId(authUserId);
+    let quizIdValidation = isValidQuizId(quizId);
+
+    if (!authUserIdValidation) {
+        return { error: 'authUserId is invalid' };
+    }
+    if (!quizIdValidation) {
+        return { error: 'quizId is invalid' };
+    }
+    return {};
+}
+
+function isValidAuthUserId(authUserId) { 
+    return typeof authUserId === 'string' && authUserId.length > 0 && /^\d+$/.test(authUserId);
+  }
+  
+function isValidQuizId(quizId) {
+    return typeof quizId === 'string' && quizId.length > 0 && /^\d+$/.test(quizId);
+  }
+  
+  
 // Stub for adminQuizInfo function
 function adminQuizInfo(authUserId, quizId) {
     return {
@@ -42,6 +65,7 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
 function adminQuizDescriptionUpdate(authUserId, quizId, description) {
     return {};
 }
+
 
 
 
