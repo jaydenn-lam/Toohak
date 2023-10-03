@@ -8,18 +8,12 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   const validator = require('validator');
   const data = getData();
   const user_array = data.users;
-  const user_data = {
-    Email: email,
-    Password: password,
-    First_name: nameFirst,
-    Last_name: nameLast,
-  };
   for (const user in user_array) {
     if (user_array[user].Email === email) {
       return {error: "Email has already been used"};
     }
   }
-  user_array.push(user_data);
+  
   const valid_email = validator.isEmail(email);
   if (valid_email === false) {
     return {error: "Email is invalid"};
@@ -48,8 +42,18 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (passwordChecker(password) === false) {
     return {error: "Password must contain a number and a letter"}
   }
-  let value = user_array.length;
-  return (value)
+
+  const userId = user_array.length;
+  const user_data = {
+    UserId: userId,
+    Email: email,
+    Password: password,
+    First_name: nameFirst,
+    Last_name: nameLast,
+  };
+  data.users.push(user_data);
+  setData(data);
+  return (userId)
 }
 
 function nameChecker(name) {
