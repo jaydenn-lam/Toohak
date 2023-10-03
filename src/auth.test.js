@@ -122,24 +122,13 @@ describe('adminAuthLogin', () => {
     // Check if the authUserId is returned as expected
     expect(authUserId).toEqual(1); // Assuming 1 is the expected authUserId
   });
-
-  // Test case 2: Invalid email
-  test('should return an error when the email is invalid', () => {
-    const authResult = adminAuthLogin('invalid-email', 'password123');
-
-    // Check if an error object is returned with a specific error message
-    expect(authResult).toEqual({ error: 'Invalid email format' });
+  test('Return an error when the email is invalid', () => {
+    const authResult = adminAuthLogin('invalid_email', 'password123');
+    expect(authResult).toEqual({ error: 'Invalid email address' });
   });
-
-  // Test case 3: Incorrect password
-  test('should return an error for incorrect password', () => {
-    // Register a user first (assuming adminAuthRegister is implemented)
-    adminAuthRegister('test@example.com', 'password123', 'John', 'Doe');
-
-    // Attempt to login with an incorrect password
-    const authResult = adminAuthLogin('test@example.com', 'wrongpassword');
-
-    // Check if an error object is returned with a specific error message
+  test('Return an error for incorrect password', () => {
+    adminAuthRegister('anita@unsw.edu.au', 'password123', 'Anita', 'Byun');
+    const authResult = adminAuthLogin('anita@unsw.edu.au', 'wrongpassword');
     expect(authResult).toEqual({ error: 'Incorrect password' });
   });
 
