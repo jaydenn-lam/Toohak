@@ -96,9 +96,18 @@ function adminUserDetails (authUserId) {
 
 // Stub function for adminAuthLogin
 function adminAuthLogin(email, password) {
-  return {
-    authUserId: 1,
+  const data = getData();
+  const userArray = data.users;
+  const user = userArray.find((userArray) => userArray.Email === email);
+
+  if (!user) {
+    return { error: 'Invalid email address' };
   }
+  if (user.Password !== password) {
+    return { error: 'Incorrect password' };
+  }
+  const userId = userArray.length;
+  return(userId); 
 }
 
 export {
