@@ -7,17 +7,17 @@ describe('adminAuthRegister', () => {
     clear();
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId).toStrictEqual(1);
+      expect(authUserId).toStrictEqual(0);
   });
 
   test('Multiple Working Entries', () => {
     clear();
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId).toStrictEqual(1);
+      expect(authUserId).toStrictEqual(0);
     let authUserId2 = adminAuthRegister('williaam@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId2).toStrictEqual(2);
+      expect(authUserId2).toStrictEqual(1);
   })
 
   test('Duplicate Email Error', () => {
@@ -110,6 +110,7 @@ describe('adminAuthRegister', () => {
       expect(authUserId2).toStrictEqual({error: 
         "Password must contain a number and a letter"});
   });
+  
 });
 
 describe('adminAuthLogin', () => {

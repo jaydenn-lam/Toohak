@@ -8,18 +8,12 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   const validator = require('validator');
   const data = getData();
   const user_array = data.users;
-  const user_data = {
-    Email: email,
-    Password: password,
-    First_name: nameFirst,
-    Last_name: nameLast,
-  };
   for (const user in user_array) {
     if (user_array[user].Email === email) {
       return {error: "Email has already been used"};
     }
   }
-  user_array.push(user_data);
+  
   const valid_email = validator.isEmail(email);
   if (valid_email === false) {
     return {error: "Email is invalid"};
@@ -48,8 +42,18 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (passwordChecker(password) === false) {
     return {error: "Password must contain a number and a letter"}
   }
-  let value = user_array.length;
-  return (value)
+  
+  const userId = user_array.length;
+  const user_data = {
+    UserId: userId,
+    Email: email,
+    Password: password,
+    First_name: nameFirst,
+    Last_name: nameLast,
+  };
+  data.users.push(user_data);
+  setData(data);
+  return (userId)
 }
 
 function nameChecker(name) {
@@ -82,33 +86,20 @@ function passwordChecker(password) {
 }
 
 //Stub function for adminUserDetails
-
-
-  
-  function adminUserDetails(authUserId) {
-
+function adminUserDetails(authUserId) {
   const data = getData();
-  console.log(data);
-  let userExists = 0; 
   const userArray = data.users;
-  for (const user in userArray) {
-    if (userArray[user].UserId === authUserId) {
-      console.log(userArray[user].UserId);
-      userIdExists = 1;
-    }
-  }
-  
-  const user = userArray.find((user) => user.authUserId === authUserId);
-  
+  const user = userArray.find((user) => user.UserId === authUserId);
+  let numSuccessfulLogins = 0;
+  let numFailedPasswordsSinceLastLogin = 0;
+  const name = `${user.First_name} ${user.Last_name}`;
 
+  if (user) {
+    numSuccessfulLogins++;
+  }
   if (!user) {
     return { error: 'Invalid authUserId' };
   }
-
-  const numSuccessfulLogins = userArray.findIndex((user) => user.authUserId === authUserId) + 1;
-  const numFailedPasswordsSinceLastLogin = user.failedPasswordAttempts;
-  const name = `${user.First_name} ${user.Last_name}`;
-
   return {
     user: {
       userId: authUserId,
