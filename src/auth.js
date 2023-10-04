@@ -82,17 +82,44 @@ function passwordChecker(password) {
 }
 
 //Stub function for adminUserDetails
-function adminUserDetails (authUserId) {
-  return { user:
-    {
-      userId: 1,
-      name: 'Hayden Smith',
-      email: 'hayden.smith@unsw.edu.au',
-      numSuccessfulLogins: 3,
-      numFailedPasswordsSinceLastLogin: 1,
+
+
+  
+  function adminUserDetails(authUserId) {
+
+  const data = getData();
+  console.log(data);
+  let userExists = 0; 
+  const userArray = data.users;
+  for (const user in userArray) {
+    if (userArray[user].UserId === authUserId) {
+      console.log(userArray[user].UserId);
+      userIdExists = 1;
     }
+  }
+  
+  const user = userArray.find((user) => user.authUserId === authUserId);
+  
+
+  if (!user) {
+    return { error: 'Invalid authUserId' };
+  }
+
+  const numSuccessfulLogins = userArray.findIndex((user) => user.authUserId === authUserId) + 1;
+  const numFailedPasswordsSinceLastLogin = user.failedPasswordAttempts;
+  const name = `${user.First_name} ${user.Last_name}`;
+
+  return {
+    user: {
+      userId: authUserId,
+      name: name,
+      email: user.Email,
+      numSuccessfulLogins: numSuccessfulLogins,
+      numFailedPasswordsSinceLastLogin: numFailedPasswordsSinceLastLogin,
+    },
   };
 }
+
 
 // Stub function for adminAuthLogin
 function adminAuthLogin(email, password) {
