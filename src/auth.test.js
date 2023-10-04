@@ -119,8 +119,7 @@ describe('adminAuthLogin', () => {
   test('should return authUserId on successful login', () => {
     adminAuthRegister('anita@unsw.edu.au', 'password123', 'Anita', 'Byun');
     const authUserId = adminAuthLogin('anita@unsw.edu.au', 'password123');
-    // Check if the authUserId is returned as expected
-    expect(authUserId).toEqual(1); // Assuming 1 is the expected authUserId
+    expect(authUserId).toEqual(1); 
   });
   test('Return an error when the email is invalid', () => {
     const authResult = adminAuthLogin('invalid_email', 'password123');
@@ -132,8 +131,38 @@ describe('adminAuthLogin', () => {
     expect(authResult).toEqual({ error: 'Incorrect password' });
   });
 
-  // Add more test cases as needed to cover various scenarios
 });
+
+describe('adminUserDetails', () => {
+  beforeEach(() => {
+    clear(); 
+  });
+
+  test('Return user details for a valid authUserId', () => {
+    clear();
+    const authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const userDetails = adminUserDetails(authUserId);
+    expect(userDetails).toEqual({
+      user: {
+        userId: expect.any(Number),
+        name: 'William Lu',
+        email: 'william@unsw.edu.au',
+        numSuccessfulLogins: 1, 
+        numFailedPasswordsSinceLastLogin: 0, 
+      },
+    });
+  });
+
+  test('Return an error for an invalid authUserId', () => {
+    clear();
+    const userDetails = adminUserDetails(999); 
+    expect(userDetails).toEqual({ error: 'Invalid authUserId' });
+  });
+
+});
+
+
 
 
 
