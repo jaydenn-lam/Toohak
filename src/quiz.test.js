@@ -9,6 +9,62 @@ describe('adminQuizCreate', () => {
     clear();
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizList = adminQuizList(0);
+    expect(QuizList).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: 0,
+          name: 'Animal Quiz',
+          description: 'Test your knowledge on animals!'
+        }
+      ]
+    });
+  });
+
+  test('Multiple quiz working entry', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    const Quiz2 = adminQuizCreate(0, 'Food Quiz', 
+    'Test your knowledge on food!');
+    let QuizList = adminQuizList(0);
+    expect(QuizList).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: 0,
+          name: 'Animal Quiz',
+          description: 'Test your knowledge on animals!'
+        },
+        {
+          quizId: 0,
+          name: 'Food Quiz',
+          description: 'Test your knowledge on food!'
+        }
+      ]
+    });
+  });
+
+  test('Invalid AuthUserId ERROR', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizList = adminQuizList(1);
+    expect(QuizList).toStrictEqual({error: 'Invalid User Id'});
+  });
+});
+
+describe('adminQuizCreate', () => {
+    
+  test('Working Entry', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
     let quizId = adminQuizCreate(0, 'Animal Quiz', 
     'Test your knowledge on animals!');
     expect(quizId).toStrictEqual(0);
