@@ -1,3 +1,5 @@
+import {getData, setData} from './dataStore.js';
+
 // Stub for the adminQuizList function
 function adminQuizList(authUserId) {
     return {
@@ -12,9 +14,63 @@ function adminQuizList(authUserId) {
 
 // Stub for adminQuizCreate
 function adminQuizCreate(authUserId, name, description) {
-    return {
-        quizId: 2
+  let error = false;
+  const data = getData();
+  const quizArray = data.quizzes;
+  const userArray = data.users;
+  let userIdExists = 0;
+  for (const user in userArray) {
+    if (userArray[user].UserId === authUserId) {
+      userIdExists = 1;
     }
+  }
+  if (userIdExists === 0) {
+    return {error: 'Invalid User Id'};
+  }
+  let invalidName = 0;
+  for (let i = 0; i < name.length; i++) {
+    const char = name.charCodeAt(i);
+    if (char <= 47 && char != 32) {
+      invalidName = 1;
+    }
+    if (char >= 58 && char <= 64) {
+      invalidName = 1;
+    }
+    if (char >= 91 && char <= 96) {
+      invalidName = 1;
+    }
+    if (char >= 123) {
+      invalidName = 1;
+    }
+  }
+  if (invalidName === 1) {
+    return {error: "Invalid character(s) in name"};
+  }
+  if (name.length < 3) {
+    return {error: 'Quiz name too short'};
+  }
+  if (name.length > 30) {
+    return {error: 'Quiz name too long'};
+  }
+  for (const quiz in quizArray) {
+    if (quizArray[quiz].Name === name) {
+      return {error: 'Name already being used'};
+    }
+  }
+  if (description.length > 100) {
+    return {error: 'Quiz description too long'};
+  }
+  const quizId = quizArray.length;
+  const quizData = {
+    QuizId: quizId,
+    Name: name,
+    TimeCreated: Date.now(),
+    TimeLastEdited: Date.now(),
+    Description: description
+  };
+  data.quizzes.push(quizData);
+  setData(data);
+  return(quizId);
 }
 
 // Stub for adminQuizRemove function
@@ -43,5 +99,7 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
     return {};
 }
 
-
+export {
+  adminQuizCreate
+};
 
