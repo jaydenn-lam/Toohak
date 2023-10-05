@@ -90,27 +90,40 @@ function adminUserDetails(authUserId) {
   const data = getData();
   const userArray = data.users;
   const user = userArray.find((user) => user.UserId === authUserId);
-  let numSuccessfulLogins = 0;
-  let numFailedPasswordsSinceLastLogin = 0;
-  const name = `${user.First_name} ${user.Last_name}`;
 
-  if (user) {
-    numSuccessfulLogins++;
-  }
   if (!user) {
     return { error: 'Invalid authUserId' };
   }
+  const numSuccessfulLogins = calculateNumSuccessfulLogins(user);
+  const numFailedPasswords = calculateNumFailedPasswords(user);
+
+
   return {
     user: {
       userId: authUserId,
-      name: name,
+      name: `${user.First_name} ${user.Last_name}`,
       email: user.Email,
       numSuccessfulLogins: numSuccessfulLogins,
-      numFailedPasswordsSinceLastLogin: numFailedPasswordsSinceLastLogin,
+      numFailedPasswordsSinceLastLogin: numFailedPasswords,
     },
   };
 }
+function calculateNumSuccessfulLogins(user) {
+  if (user && user.Email && user.Password) {
+    const loginResult = adminAuthLogin(user.Email, user.Password);
+    return user.successfulLogins || 0;
+}
+}
 
+function calculateNumFailedPasswords(user, email, password) {
+  if (user && email && password) {
+    const loginResult = adminAuthLogin(email, password);
+    if (loginResult.error) {
+      user.failedPasswords = (user.failedPasswords || 0) + 1;
+    }
+  }
+  return user.failedPasswords || 0;
+}
 
 // Stub function for adminAuthLogin
 function adminAuthLogin(email, password) {
@@ -122,8 +135,11 @@ function adminAuthLogin(email, password) {
     return { error: 'Invalid email address' };
   }
   if (user.Password !== password) {
+    user.failedPasswords = (user.failedPasswords || 0) + 1;
     return { error: 'Incorrect password' };
   }
+
+  user.successfulLogins = (user.successfulLogins || 0) + 1;
   const userId = userArray.length;
   return(userId); 
 }
