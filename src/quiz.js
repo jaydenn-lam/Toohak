@@ -2,14 +2,25 @@ import {getData, setData} from './dataStore.js';
 
 // Stub for the adminQuizList function
 function adminQuizList(authUserId) {
-    return {
-        quizzes: [
-            {
-                quizId: 1,
-                name: 'My Quiz',
-            }
-        ]
+  let error = false;
+  const data = getData();
+  const quizArray = data.quizzes;
+  const listArray = [];
+  let success = 0;
+  for (let i = 0; i < quizArray.length; i++) {
+    if (quizArray[i].UserId === authUserId) {
+      const newObject = {
+        quizId: quizArray[i].QuizId,
+        name: quizArray[i].Name
+      }
+      listArray.push(newObject);
+      success = 1;
     }
+  }
+  if (success === 0) {
+    return {error: 'Invalid User Id'};
+  }
+  return {quizzes: listArray};
 }
 
 // Stub for adminQuizCreate
@@ -66,7 +77,8 @@ function adminQuizCreate(authUserId, name, description) {
     Name: name,
     TimeCreated: Date.now(),
     TimeLastEdited: Date.now(),
-    Description: description
+    Description: description,
+    UserId: authUserId
   };
   data.quizzes.push(quizData);
   setData(data);
@@ -100,6 +112,7 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 }
 
 export {
+  adminQuizList,
   adminQuizCreate
 };
 

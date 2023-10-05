@@ -3,6 +3,59 @@ import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo,
 import {adminAuthRegister} from './auth.js';
 import {clear} from './other.js';
 
+describe('adminQuizList', () => {
+    
+  test('Working Entry', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizList = adminQuizList(0);
+    expect(QuizList).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: 0,
+          name: 'Animal Quiz',
+        }
+      ]
+    });
+  });
+
+  test('Multiple quiz working entry', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    const Quiz2 = adminQuizCreate(0, 'Food Quiz', 
+    'Test your knowledge on food!');
+    let QuizList = adminQuizList(0);
+    expect(QuizList).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: 0,
+          name: 'Animal Quiz',
+        },
+        {
+          quizId: 1,
+          name: 'Food Quiz',
+        }
+      ]
+    });
+  });
+
+  test('Invalid AuthUserId ERROR', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizList = adminQuizList(1);
+    expect(QuizList).toStrictEqual({error: 'Invalid User Id'});
+  });
+});
+
 describe('adminQuizCreate', () => {
     
   test('Working Entry', () => {
