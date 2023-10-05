@@ -3,6 +3,59 @@ import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo,
 import {adminAuthRegister} from './auth.js';
 import {clear} from './other.js';
 
+describe('adminQuizList', () => {
+    
+  test('Working Entry', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizList = adminQuizList(0);
+    expect(QuizList).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: 0,
+          name: 'Animal Quiz',
+        }
+      ]
+    });
+  });
+
+  test('Multiple quiz working entry', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    const Quiz2 = adminQuizCreate(0, 'Food Quiz', 
+    'Test your knowledge on food!');
+    let QuizList = adminQuizList(0);
+    expect(QuizList).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: 0,
+          name: 'Animal Quiz',
+        },
+        {
+          quizId: 1,
+          name: 'Food Quiz',
+        }
+      ]
+    });
+  });
+
+  test('Invalid AuthUserId ERROR', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizList = adminQuizList(1);
+    expect(QuizList).toStrictEqual({error: 'Invalid User Id'});
+  });
+});
+
 describe('adminQuizCreate', () => {
     
   test('Working Entry', () => {
@@ -97,7 +150,7 @@ describe('adminQuizRemvoe testing', () => {
   test('Valid AuthUserId', () => {
     clear();
     let testauthuserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let quizId_valid = adminQuizCreate(testauthuserId, 'q1', "");
+    let quizId_valid = adminQuizCreate(testauthuserId, 'quiz1', "");
     let authUserId_error = adminQuizRemove(2, quizId_valid);
     expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
   });
@@ -105,7 +158,7 @@ describe('adminQuizRemvoe testing', () => {
   test('Valid quizId', () => {
     clear();
     let authUserId1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    adminQuizCreate(authUserId1, 'Q1', "");
+    adminQuizCreate(authUserId1, 'Quiz1', "");
     let quizId_error = adminQuizRemove(authUserId1, 2);
     expect(quizId_error).toStrictEqual({error: "Invalid quiz Id"});
   });
@@ -113,9 +166,9 @@ describe('adminQuizRemvoe testing', () => {
   test('quizId is not owned by user', () => {
     clear();
     let authUserId_play1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    adminAuthRegister('valid2email@gmail.com', '456abc!@#', 'Tim', 'Andy');
-    adminQuizCreate(authUserId_play1, 'Q1', "");
-    let quizId_play2 = adminQuizCreate(authUserId_play2, Q2, "");
+    let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy');
+    let quizId_play1 = adminQuizCreate(authUserId_play1, 'Quiz1', "Description");
+    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
     let invalid_UsertoquizId_error = adminQuizRemove(authUserId_play1, quizId_play2);
     expect(invalid_UsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
   });
@@ -123,8 +176,17 @@ describe('adminQuizRemvoe testing', () => {
   test('Check if quiz is removed by function, adminQuizRemove', () => {
     clear();
     let UserId_player = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let quizId_player = adminQuizCreate(UserId_player, 'Q1', "");
-    adminQuizRemove(UserId_player, quizId_player);
-    expect(adminQuizList(UserId_player, quizId_player)).toStrictEqual({});
+    let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy');
+    let quizId_player = adminQuizCreate(UserId_player, 'Quiz1', "Description");
+    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
+    adminQuizRemove(authUserId_play2, quizId_play2);
+    expect(adminQuizList(UserId_player)).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: quizId_player,
+          name: 'Quiz1',
+        }
+      ]
+    });
   })
 });
