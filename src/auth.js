@@ -42,7 +42,7 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (passwordChecker(password) === false) {
     return {error: "Password must contain a number and a letter"}
   }
-
+  
   const userId = user_array.length;
   const user_data = {
     UserId: userId,
@@ -50,6 +50,8 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
     Password: password,
     First_name: nameFirst,
     Last_name: nameLast,
+    failedPasswords: 0,
+    successfulLogins: 1
   };
   data.users.push(user_data);
   setData(data);
@@ -86,23 +88,42 @@ function passwordChecker(password) {
 }
 
 //Stub function for adminUserDetails
-function adminUserDetails (authUserId) {
-  return { user:
-    {
-      userId: 1,
-      name: 'Hayden Smith',
-      email: 'hayden.smith@unsw.edu.au',
-      numSuccessfulLogins: 3,
-      numFailedPasswordsSinceLastLogin: 1,
-    }
+function adminUserDetails(authUserId) {
+  const data = getData();
+  const userArray = data.users;
+  const user = userArray.find((user) => user.UserId === authUserId);
+  if (!user) {
+    return { error: 'Invalid authUserId' };
+  }
+  return {
+    user: {
+      userId: authUserId,
+      name: `${user.First_name} ${user.Last_name}`,
+      email: user.Email,
+      numSuccessfulLogins: user.successfulLogins,
+      numFailedPasswordsSinceLastLogin: user.failedPasswords,
+    },
   };
 }
 
 // Stub function for adminAuthLogin
 function adminAuthLogin(email, password) {
-  return {
-    authUserId: 1,
+  const data = getData();
+  const userArray = data.users;
+  const user = userArray.find((userArray) => userArray.Email === email);
+
+  if (!user) {
+    return { error: 'Invalid email address' };
   }
+  if (user.Password !== password) {
+    user.failedPasswords += 1;
+    return { error: 'Incorrect password' };
+  }
+  user.successfulLogins += 1;
+  user.failedPasswords = 0; 
+  setData(data);
+  const userId = userArray.length;
+  return { authUserId: userId}; 
 }
 
 export {
