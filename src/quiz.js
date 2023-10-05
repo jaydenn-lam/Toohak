@@ -111,11 +111,8 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
     return {};
 }
 
-<<<<<<< HEAD
-=======
 export {
   adminQuizList,
   adminQuizCreate
 };
 
->>>>>>> merge_branch
