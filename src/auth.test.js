@@ -118,10 +118,9 @@ describe('adminAuthLogin', () => {
     clear();
   });
   test('should return authUserId on successful login', () => {
-    adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    const authUserId = adminAuthLogin('william@unsw.edu.au', '1234abcd');
-    expect(authUserId).toEqual(1); 
+    adminAuthRegister('anita@unsw.edu.au', 'password123', 'Anita', 'Byun');
+    const authUserId = adminAuthLogin('anita@unsw.edu.au', 'password123');
+    expect(authUserId).toEqual({authUserId: 1}); 
   });
   test('Return an error when the email is invalid', () => {
     const authResult = adminAuthLogin('invalid_email', 'password123');
@@ -141,9 +140,8 @@ describe('adminUserDetails', () => {
   });
 
   test('Return user details for a valid authUserId', () => {
-    clear();
-    const authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
+    
+    const authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd','William', "Lu");
     const userDetails = adminUserDetails(authUserId);
     expect(userDetails).toEqual({
       user: {
@@ -157,9 +155,70 @@ describe('adminUserDetails', () => {
   });
 
   test('Return an error for an invalid authUserId', () => {
-    clear();
-    const userDetails = adminUserDetails(999); 
+    const userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const userDetails = adminUserDetails(userId + 1); 
     expect(userDetails).toEqual({ error: 'Invalid authUserId' });
+  });
+
+  test('Test two successful logins', () => {
+    const userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    adminAuthLogin('william@unsw.edu.au', '1234abcd');
+    const userDetails = adminUserDetails(userId); 
+    expect(userDetails).toEqual({
+      user: {
+        userId: expect.any(Number),
+        name: 'William Lu',
+        email: 'william@unsw.edu.au',
+        numSuccessfulLogins: 2, 
+        numFailedPasswordsSinceLastLogin: 0, 
+      },
+    });
+  });
+
+  test('Test one unsuccessful login', () => {
+    const userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    adminAuthLogin('william@unsw.edu.au', '123abcd');
+    const userDetails = adminUserDetails(userId); 
+    expect(userDetails).toEqual({
+      user: {
+        userId: expect.any(Number),
+        name: 'William Lu',
+        email: 'william@unsw.edu.au',
+        numSuccessfulLogins: 1, 
+        numFailedPasswordsSinceLastLogin: 1, 
+      },
+    });
+  });
+  test('Test unsuccessful login reset on success', () => {
+
+    const userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    adminAuthLogin('william@unsw.edu.au', '123abcd');
+    const userDetails = adminUserDetails(userId); 
+    expect(userDetails).toEqual({
+      user: {
+        userId: expect.any(Number),
+        name: 'William Lu',
+        email: 'william@unsw.edu.au',
+        numSuccessfulLogins: 1, 
+        numFailedPasswordsSinceLastLogin: 1, 
+      },
+    });
+
+    adminAuthLogin('william@unsw.edu.au', '1234abcd');
+    const userDetails2 = adminUserDetails(userId); 
+    expect(userDetails2).toEqual({
+      user: {
+        userId: expect.any(Number),
+        name: 'William Lu',
+        email: 'william@unsw.edu.au',
+        numSuccessfulLogins: 2, 
+        numFailedPasswordsSinceLastLogin: 0, 
+      },
+    });
   });
 
 });

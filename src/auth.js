@@ -50,6 +50,8 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
     Password: password,
     First_name: nameFirst,
     Last_name: nameLast,
+    failedPasswords: 0,
+    successfulLogins: 1
   };
   data.users.push(user_data);
   setData(data);
@@ -90,39 +92,18 @@ function adminUserDetails(authUserId) {
   const data = getData();
   const userArray = data.users;
   const user = userArray.find((user) => user.UserId === authUserId);
-
   if (!user) {
     return { error: 'Invalid authUserId' };
   }
-  const numSuccessfulLogins = calculateNumSuccessfulLogins(user);
-  const numFailedPasswords = calculateNumFailedPasswords(user);
-
-
   return {
     user: {
       userId: authUserId,
       name: `${user.First_name} ${user.Last_name}`,
       email: user.Email,
-      numSuccessfulLogins: numSuccessfulLogins,
-      numFailedPasswordsSinceLastLogin: numFailedPasswords,
+      numSuccessfulLogins: user.successfulLogins,
+      numFailedPasswordsSinceLastLogin: user.failedPasswords,
     },
   };
-}
-function calculateNumSuccessfulLogins(user) {
-  if (user && user.Email && user.Password) {
-    const loginResult = adminAuthLogin(user.Email, user.Password);
-    return user.successfulLogins || 0;
-}
-}
-
-function calculateNumFailedPasswords(user, email, password) {
-  if (user && email && password) {
-    const loginResult = adminAuthLogin(email, password);
-    if (loginResult.error) {
-      user.failedPasswords = (user.failedPasswords || 0) + 1;
-    }
-  }
-  return user.failedPasswords || 0;
 }
 
 // Stub function for adminAuthLogin
@@ -135,13 +116,14 @@ function adminAuthLogin(email, password) {
     return { error: 'Invalid email address' };
   }
   if (user.Password !== password) {
-    user.failedPasswords = (user.failedPasswords || 0) + 1;
+    user.failedPasswords += 1;
     return { error: 'Incorrect password' };
   }
-
-  user.successfulLogins = (user.successfulLogins || 0) + 1;
+  user.successfulLogins += 1;
+  user.failedPasswords = 0; 
+  setData(data);
   const userId = userArray.length;
-  return(userId); 
+  return { authUserId: userId}; 
 }
 
 export {
