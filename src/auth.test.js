@@ -118,8 +118,9 @@ describe('adminAuthLogin', () => {
     clear();
   });
   test('should return authUserId on successful login', () => {
-    adminAuthRegister('anita@unsw.edu.au', 'password123', 'Anita', 'Byun');
-    const authUserId = adminAuthLogin('anita@unsw.edu.au', 'password123');
+    adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const authUserId = adminAuthLogin('william@unsw.edu.au', '1234abcd');
     expect(authUserId).toEqual(1); 
   });
   test('Return an error when the email is invalid', () => {
