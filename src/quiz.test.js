@@ -3,7 +3,7 @@ import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo,
 import {adminAuthRegister} from './auth.js';
 import {clear} from './other.js';
 
-describe('adminQuizCreate', () => {
+describe('adminQuizList', () => {
     
   test('Working Entry', () => {
     clear();
@@ -17,7 +17,6 @@ describe('adminQuizCreate', () => {
         {
           quizId: 0,
           name: 'Animal Quiz',
-          description: 'Test your knowledge on animals!'
         }
       ]
     });
@@ -37,12 +36,10 @@ describe('adminQuizCreate', () => {
         {
           quizId: 0,
           name: 'Animal Quiz',
-          description: 'Test your knowledge on animals!'
         },
         {
-          quizId: 0,
+          quizId: 1,
           name: 'Food Quiz',
-          description: 'Test your knowledge on food!'
         }
       ]
     });
