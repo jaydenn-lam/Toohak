@@ -87,8 +87,50 @@ function adminQuizCreate(authUserId, name, description) {
 
 // Stub for adminQuizRemove function
 function adminQuizRemove(authUserId, quizId) {
-    return {};
+  // Error checking and early return
+	const data = getData();
+	const quizArray = data.quizzes;
+	const userArray = data.users;
+	let userIdExists = 0;
+
+  for (let userindex in userArray) {
+    if (userArray[userindex].UserId === authUserId) {
+      userIdExists = 1;
+    }
   }
+
+  if (userIdExists === 0) {
+    return {error: 'Invalid User Id'};
+  }
+
+	let quizIdExists = 0;
+	for (let quizindex in quizArray) {
+		if (quizArray[quizindex].QuizId === quizId) {
+			quizIdExists = 1;
+		}
+	}
+
+	if (quizIdExists === 0) {
+    return {error: 'Invalid quiz Id'};
+  }
+
+	// Error check for incorrect quizid for the specified user
+  for (let checkcount in quizArray) {
+		if (quizArray[checkcount].UserId === authUserId) {
+			if (quizArray[checkcount].QuizId != quizId) {
+				return {error: "Quiz Id is not owned by this user"};
+			}
+		}
+	}
+
+	// Remove a quiz
+	for (let quizcounter in data.quizzes) {
+		if (data.quizzes[quizcounter].QuizId === quizId) {
+			data.quizzes.splice(quizcounter);
+		}
+	}
+	setData(data);
+}
 
 // Stub for adminQuizInfo function
 function adminQuizInfo(authUserId, quizId) {
@@ -113,6 +155,8 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 
 export {
   adminQuizList,
-  adminQuizCreate
+  adminQuizCreate,
+  adminQuizRemove,
+  adminQuizDescriptionUpdate
 };
 
