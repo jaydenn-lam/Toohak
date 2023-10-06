@@ -64,6 +64,11 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   return (userId) ;
 }
 
+/*
+This function simply checks if all the characters in the name passed to it are valid
+@param {string} name - The name passed in
+@returns {boolean} - If the name is valid, or not
+*/
 function nameChecker(name) {
   for (const char of name) {
     const uni = char.charCodeAt(0);
@@ -74,7 +79,11 @@ function nameChecker(name) {
   }
   return true;
 }
-
+/*
+This function checks if the password contains both letters and numbers. If it doesn't, it is invalid.
+@param {string} password - The password passed in
+@returns {boolean} - If the password is valid, or not
+*/
 function passwordChecker(password) {
   let containsLetter = false;
   let containsNumber = false;
