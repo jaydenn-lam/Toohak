@@ -63,7 +63,7 @@ describe('adminQuizCreate', () => {
     'William', "Lu");
     let quizId = adminQuizCreate(0, 'Animal Quiz', 
     'Test your knowledge on animals!');
-    expect(quizId).toStrictEqual(0);
+    expect(quizId).toStrictEqual({ quizId: 0 });
   });
 
   test('Multiple Working Entries', () => {
@@ -72,10 +72,10 @@ describe('adminQuizCreate', () => {
     'William', "Lu");
     let quizId = adminQuizCreate(0, 'Animal Quiz', 
     'Test your knowledge on animals!');
-    expect(quizId).toStrictEqual(0);
+    expect(quizId).toStrictEqual({ quizId: 0 });
     let quizId2 = adminQuizCreate(0, 'Country Quiz', 
     'Test your knowledge on countries!');
-    expect(quizId2).toStrictEqual(1);
+    expect(quizId2).toStrictEqual({ quizId: 1 });
   })
 
   test('Invalid AuthUserId ERROR', () => {
@@ -126,7 +126,7 @@ describe('adminQuizCreate', () => {
     'William', "Lu");
     let quizId = adminQuizCreate(0, 'Animal Quiz', 
     'Test your knowledge on animals!');
-    expect(quizId).toStrictEqual(0);
+    expect(quizId).toStrictEqual({ quizId: 0 });
     let quizId2 = adminQuizCreate(0, 'Animal Quiz', 
     'Test more of your knowledge on animals!');
     expect(quizId2).toStrictEqual({error: 'Name already being used'});
@@ -201,7 +201,7 @@ describe('adminQuizNameUpdate', () => {
 
   test('Normal Run', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
-    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    let quizId = adminQuizCreate(userId, 'quiz1', '').quizId;
     let QuizInfo = adminQuizInfo(userId, quizId);
     expect(QuizInfo).toStrictEqual({ 
       quizId: 0,
@@ -223,26 +223,26 @@ describe('adminQuizNameUpdate', () => {
 
   test('Invalid userId', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
-    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    let quizId = adminQuizCreate(userId, 'quiz1', '').quizId;
     expect(adminQuizNameUpdate(userId + 1, quizId, 'newquiz1')).toStrictEqual({error: 'Invalid userId'});
   });
 
   test('Invalid quizId', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
-    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    let quizId = adminQuizCreate(userId, 'quiz1', '').quizId;
     expect(adminQuizNameUpdate(0, quizId + 1, 'newquiz1')).toStrictEqual({error: 'Invalid quizId'});
   });
 
   test('User does not own quizId', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
     let userId2 = adminAuthRegister('anita@unsw.edu.au', '1234abcd', 'Anita', "Byun");
-    let quizId = adminQuizCreate(userId2, 'quiz1', '');
+    let quizId = adminQuizCreate(userId2, 'quiz1', '').quizId;
     expect(adminQuizNameUpdate(userId, quizId, 'newquiz1')).toStrictEqual({error: 'Quiz not owned by user'});
   });
 
   test('Invalid new name', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
-    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    let quizId = adminQuizCreate(userId, 'quiz1', '').quizId;
     expect(adminQuizNameUpdate(userId, quizId, 'quiz1#')).toStrictEqual({error: 'Invalid new name'});
     expect(adminQuizNameUpdate(userId, quizId, 'quiz1/')).toStrictEqual({error: 'Invalid new name'});
     expect(adminQuizNameUpdate(userId, quizId, 'q1')).toStrictEqual({error: 'Invalid new name'});
@@ -252,7 +252,7 @@ describe('adminQuizNameUpdate', () => {
   test('Quiz name already used', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
     adminQuizCreate(userId, 'quiz1', '');
-    let quizId =  adminQuizCreate(userId, 'quiz2', '');
+    let quizId =  adminQuizCreate(userId, 'quiz2', '').quizId;
     expect(adminQuizNameUpdate(userId, quizId, 'quiz1')).toStrictEqual({error: 'Quiz name already in use'});
   });
 
@@ -263,7 +263,7 @@ describe('adminQuizRemove testing', () => {
   test('Valid AuthUserId', () => {
     clear();
     let testauthuserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let quizId_valid = adminQuizCreate(testauthuserId, 'quiz1', "");
+    let quizId_valid = adminQuizCreate(testauthuserId, 'quiz1', "").quizId;
     let authUserId_error = adminQuizRemove(2, quizId_valid);
     expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
   });
@@ -280,8 +280,8 @@ describe('adminQuizRemove testing', () => {
     clear();
     let authUserId_play1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
     let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy');
-    let quizId_play1 = adminQuizCreate(authUserId_play1, 'Quiz1', "Description");
-    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
+    let quizId_play1 = adminQuizCreate(authUserId_play1, 'Quiz1', "Description").quizId;
+    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description").quizId;
     let invalid_UsertoquizId_error = adminQuizRemove(authUserId_play1, quizId_play2);
     expect(invalid_UsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
   });
@@ -290,8 +290,8 @@ describe('adminQuizRemove testing', () => {
     clear();
     let UserId_player = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
     let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy');
-    let quizId_player = adminQuizCreate(UserId_player, 'Quiz1', "Description");
-    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
+    let quizId_player = adminQuizCreate(UserId_player, 'Quiz1', "Description").quizId;
+    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description").quizId;
     adminQuizRemove(authUserId_play2, quizId_play2);
     expect(adminQuizList(UserId_player)).toStrictEqual({ 
       quizzes: [
@@ -310,7 +310,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
   test('Valid AuthUserId', () => {
     clear();
     let result_id = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let validquizId = adminQuizCreate(result_id, 'quiz1', "Description");
+    let validquizId = adminQuizCreate(result_id, 'quiz1', "Description").quizId;
     let authUserId_error = adminQuizDescriptionUpdate(2, validquizId, "");
     expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
   });
@@ -327,7 +327,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
     let authUserIdplay1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
     let authUserId_play2 = adminAuthRegister('valid2email@gmail.com', '456abc!@#', 'Tim', 'Andy');
     adminQuizCreate(authUserIdplay1, 'Quiz1', "Desription");
-    let quizIdplay2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
+    let quizIdplay2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description").quizId;
     let invalidUsertoquizId_error = adminQuizDescriptionUpdate(authUserIdplay1, quizIdplay2, "Description");
     expect(invalidUsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
   });
@@ -336,7 +336,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
     clear();
     let text = "more than 100 characters description is more than 100 characters description is more than 100 characterssssssss";
     let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description");
+    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description").quizId;
     let descriperror = adminQuizDescriptionUpdate(testuserid, testquizId, text);
     expect(descriperror).toStrictEqual({error: "Description is more than 100 characters in length"});
   });
@@ -345,7 +345,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
     clear();
     let text = "more than 100 characters description";
     let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description");
+    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description").quizId;
     adminQuizDescriptionUpdate(testuserid, testquizId, text);
     let quizobjectinfo = adminQuizInfo(testuserid, testquizId);
     expect(quizobjectinfo.description).toStrictEqual(text);
@@ -355,7 +355,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
     clear();
     let text = "";
     let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let testquizId = adminQuizCreate(testuserid, 'quiz1', "");
+    let testquizId = adminQuizCreate(testuserid, 'quiz1', "").quizId;
     adminQuizDescriptionUpdate(testuserid, testquizId, text);
     let quizobjectinfo = adminQuizInfo(testuserid, testquizId);
     expect(quizobjectinfo.description).toStrictEqual(text);
