@@ -1,6 +1,11 @@
 import {getData, setData} from './dataStore.js';
 
-// Stub for the adminQuizList function
+/*
+Lists all quizzes owned by the inputted authUserId
+Invalid userIds will return an error
+@param {number} authuserId - The userId of the person who owns the listed quizzes
+@returns {quizzes: listArray} - An object containing a list of all quizzes owned by the user
+*/
 function adminQuizList(authUserId) {
   let error = false;
   const data = getData();
@@ -23,7 +28,15 @@ function adminQuizList(authUserId) {
   return {quizzes: listArray};
 }
 
-// Stub for adminQuizCreate
+/*
+Creates a quiz owned by the authUserId, including the inputted name and description
+Invalid characters, userIds, name being too short or long, name already being used
+or description being too long return errors.
+@param {number} authuserId - The userId of the person who is creating the quiz
+@param {string} name - Name of the quiz
+@param {string} description - Description of the quiz
+@returns {quizId: quizId} - An object containing the quizId
+*/
 function adminQuizCreate(authUserId, name, description) {
   let error = false;
   const data = getData();
@@ -133,7 +146,13 @@ function adminQuizRemove(authUserId, quizId) {
   return {};
 }
 
-// Stub for adminQuizInfo function
+/*
+Gives information about a quiz with the given quizId
+Invalid quiz/user Ids or if the quiz isn't owned by the authUserId will give an error
+@param {number} authuserId - The userId of the person who owns the quiz
+@param {number} quizId - The quizId of the quiz which needs info returned
+@returns {quizInfo} - An object containing all relevant info of the quiz
+*/
 function adminQuizInfo(authUserId, quizId) {
   let error = false;
   const data = getData();
