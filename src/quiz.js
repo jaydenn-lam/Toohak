@@ -1,6 +1,10 @@
 import {getData, setData} from './dataStore.js';
 
-// Stub for the adminQuizList function
+/*
+This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
+@param {number} authUserId - Integer that contains their assigned authUserId
+@returns {object} - An object containing quidId and name 
+*/
 function adminQuizList(authUserId) {
   let error = false;
   const data = getData();
@@ -23,7 +27,13 @@ function adminQuizList(authUserId) {
   return {quizzes: listArray};
 }
 
-// Stub for adminQuizCreate
+/*
+This function creates a quiz for the logged-in user.
+@param {number} authUserId - The user's assigned authUserId.
+@param {string} name - The name of the quiz.
+@param {string} description - The description of the quiz.
+@returns {number} - The quizId of the newly created quiz.
+*/
 function adminQuizCreate(authUserId, name, description) {
   let error = false;
   const data = getData();
