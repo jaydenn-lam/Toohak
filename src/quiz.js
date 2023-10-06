@@ -92,7 +92,7 @@ function adminQuizCreate(authUserId, name, description) {
   };
   data.quizzes.push(quizData);
   setData(data);
-  return(quizId);
+  return({ quizId: quizId });
 }
 
 // Stub for adminQuizRemove function

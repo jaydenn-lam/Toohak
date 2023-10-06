@@ -7,17 +7,17 @@ describe('adminAuthRegister', () => {
     clear();
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId).toStrictEqual(0);
+      expect(authUserId).toStrictEqual({authUserId: 0});
   });
 
   test('Multiple Working Entries', () => {
     clear();
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId).toStrictEqual(0);
+      expect(authUserId).toStrictEqual({authUserId: 0});
     let authUserId2 = adminAuthRegister('williaam@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId2).toStrictEqual(1);
+      expect(authUserId2).toStrictEqual({authUserId: 1});
   })
 
   test('Duplicate Email Error', () => {

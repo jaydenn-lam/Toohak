@@ -49,9 +49,9 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
     return {error: "Password must contain a number and a letter"}
   }
   
-  const userId = user_array.length;
+  const authUserId = user_array.length;
   const user_data = {
-    UserId: userId,
+    UserId: authUserId,
     Email: email,
     Password: password,
     First_name: nameFirst,
@@ -61,7 +61,7 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   };
   data.users.push(user_data);
   setData(data);
-  return (userId) ;
+  return {authUserId} ;
 }
 
 /*
@@ -114,7 +114,8 @@ function adminUserDetails(authUserId) {
   const data = getData();
   const userArray = data.users;
   //finds the user with the matching UserId
-  const user = userArray.find((user) => user.UserId === authUserId);
+  const user = userArray.find((user) => user.UserId === authUserId.authUserId);
+
   //if no user is found return error: 'Invalid authUserId'
   if (!user) {
     return { error: 'Invalid authUserId' };
@@ -122,7 +123,7 @@ function adminUserDetails(authUserId) {
   //construct and return user details 
   return {
     user: {
-      userId: authUserId,
+      userId: authUserId.authUserId,
       name: `${user.First_name} ${user.Last_name}`,
       email: user.Email,
       numSuccessfulLogins: user.successfulLogins,
