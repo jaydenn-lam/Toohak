@@ -1,10 +1,9 @@
 import {getData, setData} from './dataStore.js';
 
 /*
-Lists all quizzes owned by the inputted authUserId
-Invalid userIds will return an error
-@param {number} authuserId - The userId of the person who owns the listed quizzes
-@returns {quizzes: listArray} - An object containing a list of all quizzes owned by the user
+This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
+@param {number} authUserId - Integer that contains their assigned authUserId
+@returns {object} - An object containing quizId and name 
 */
 function adminQuizList(authUserId) {
   let error = false;
@@ -29,13 +28,11 @@ function adminQuizList(authUserId) {
 }
 
 /*
-Creates a quiz owned by the authUserId, including the inputted name and description
-Invalid characters, userIds, name being too short or long, name already being used
-or description being too long return errors.
-@param {number} authuserId - The userId of the person who is creating the quiz
-@param {string} name - Name of the quiz
-@param {string} description - Description of the quiz
-@returns {quizId: quizId} - An object containing the quizId
+This function creates a quiz for the logged-in user.
+@param {number} authUserId - The user's assigned authUserId.
+@param {string} name - The name of the quiz.
+@param {string} description - The description of the quiz.
+@returns {number} - The quizId of the newly created quiz.
 */
 function adminQuizCreate(authUserId, name, description) {
   let error = false;
@@ -98,7 +95,12 @@ function adminQuizCreate(authUserId, name, description) {
   return({ quizId: quizId });
 }
 
-// Stub for adminQuizRemove function
+/*
+This function removes a quiz for the logged-in user.
+@param {number} authUserId - The user's assigned authUserId.
+@param {number} quizId - The quiz's assigned quizId.
+@returns {} - Empty object.
+*/
 function adminQuizRemove(authUserId, quizId) {
   // Error checking and early return
 	const data = getData();
@@ -242,7 +244,13 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
   return {};
 }
 
-//Stub for adminQuizDescriptionUpdate function
+/*
+This function updates the description of an existing quiz.
+@param {number} authUserId - The user's assigned authUserId.
+@param {number} quizId - The quiz's assigned quizId.
+@param {string} description - The description of the quiz.
+@returns {} - Empty object.
+*/
 function adminQuizDescriptionUpdate(authUserId, quizId, description) {
   // Error checking and early return
 	const data = getData();
