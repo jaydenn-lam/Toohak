@@ -144,8 +144,63 @@ describe('adminQuizCreate', () => {
   });
 });
 
+<<<<<<< HEAD
 
 describe('adminQuizRemvoe testing', () => {
+=======
+describe('adminQuizInfo', () => {
+    
+  test('Working Entry', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizInfo = adminQuizInfo(0, 0);
+    expect(QuizInfo).toStrictEqual({ 
+      quizId: 0,
+      name: 'Animal Quiz',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: 'Test your knowledge on animals!'
+    });
+  });
+
+  test('Invalid AuthUserId ERROR', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizInfo = adminQuizInfo(1, 0);
+    expect(QuizInfo).toStrictEqual({error: 'Invalid User Id'});
+  });
+
+  test('Invalid QuizId ERROR', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizInfo = adminQuizInfo(0, 1);
+    expect(QuizInfo).toStrictEqual({error: 'Invalid Quiz Id'});
+  });
+
+  test('Quiz not owned by this user ERROR', () => {
+    clear();
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+    'William', "Lu");
+    const AuthUserId2 = adminAuthRegister('jayden@unsw.edu.au', '1234abcd', 
+    'Jayden', "Lam");
+    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
+    'Test your knowledge on animals!');
+    let QuizInfo = adminQuizInfo(1, 0);
+    expect(QuizInfo).toStrictEqual({error: 'Quiz not owned by user'});
+  });
+});
+
+describe('adminQuizRemove testing', () => {
+>>>>>>> 65462b3faa31a262f7e9c20e754a97086d47c192
 
   test('Valid AuthUserId', () => {
     clear();
