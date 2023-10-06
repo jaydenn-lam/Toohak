@@ -174,7 +174,8 @@ function adminQuizInfo(authUserId, quizId) {
 
 // Stub for adminQuizNameUpdate function
 function adminQuizNameUpdate(authUserId, quizId, name) {
-    return {};
+
+  return {};
 }
 
 //Stub for adminQuizDescriptionUpdate function
@@ -186,11 +187,8 @@ export {
   adminQuizList,
   adminQuizCreate,
   adminQuizRemove,
-<<<<<<< HEAD
-  adminQuizDescriptionUpdate
-=======
   adminQuizDescriptionUpdate,
-  adminQuizInfo
->>>>>>> 65462b3faa31a262f7e9c20e754a97086d47c192
+  adminQuizInfo,
+  adminQuizNameUpdate,
 };
 

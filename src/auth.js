@@ -54,7 +54,7 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   };
   data.users.push(user_data);
   setData(data);
-  return { authUserId: userId } ;
+  return (userId) ;
 }
 
 function nameChecker(name) {
