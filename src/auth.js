@@ -64,11 +64,6 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   return (userId) ;
 }
 
-/*
-This function simply checks if all the characters in the name passed to it are valid
-@param {string} name - The name passed in
-@returns {boolean} - If the name is valid, or not
-*/
 function nameChecker(name) {
   for (const char of name) {
     const uni = char.charCodeAt(0);
@@ -79,11 +74,7 @@ function nameChecker(name) {
   }
   return true;
 }
-/*
-This function checks if the password contains both letters and numbers. If it doesn't, it is invalid.
-@param {string} password - The password passed in
-@returns {boolean} - If the password is valid, or not
-*/
+
 function passwordChecker(password) {
   let containsLetter = false;
   let containsNumber = false;
@@ -102,14 +93,24 @@ function passwordChecker(password) {
   return true;
 }
 
-//Stub function for adminUserDetails
+/*
+<adminUserDetails finds a user with a matching UserId and returns user details which includes their authUserId
+first name and last name, email address, number of successful logins and number of failed passwords since last login.
+If the user is not found, it returns a error message, error: 'Invalid authUserId'.
+@param {number} authUserId - The unique identifier of the user.
+@returns {object} -  An object containing user details.
+*/
 function adminUserDetails(authUserId) {
+  //grabs the data from the data store
   const data = getData();
   const userArray = data.users;
+  //finds the user with the matching UserId
   const user = userArray.find((user) => user.UserId === authUserId);
+  //if no user is found return error: 'Invalid authUserId'
   if (!user) {
     return { error: 'Invalid authUserId' };
   }
+  //construct and return user details 
   return {
     user: {
       userId: authUserId,
@@ -120,22 +121,36 @@ function adminUserDetails(authUserId) {
     },
   };
 }
-
-// Stub function for adminAuthLogin
+/*
+<adminAuthLogin finds a user with a matching email address and returns their authUserId, If no user
+is found it returns an error. it checks if the provided password matches the stored password and if it
+doesn't, it increments failedPasswords by 1 and returns an error. If the login is successful it increments 
+successful login by 1 and resets failed passwords to 0.
+@param {string} email - Email address of the user.
+@param {string} password - Password of the user
+@returns {number} - The unique identifier of the user.
+*/
 function adminAuthLogin(email, password) {
+  //grabs the data from the data store
   const data = getData();
   const userArray = data.users;
+  //finds the user with matching email address
   const user = userArray.find((userArray) => userArray.Email === email);
-
+  //if no user is found return error: 'Invalid email address'
   if (!user) {
     return { error: 'Invalid email address' };
   }
+  //check if the provided password matches the stored password
   if (user.Password !== password) {
+    //increment failedPasswords by 1 and return an error
     user.failedPasswords += 1;
     return { error: 'Incorrect password' };
   }
+  //If password is correct, reset failedPasswords to 0
+  //increment successfulLogins by 1
   user.successfulLogins += 1;
   user.failedPasswords = 0; 
+  //update the data store 
   setData(data);
   const userId = userArray.length;
   return { authUserId: userId }; 
