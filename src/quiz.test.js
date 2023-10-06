@@ -343,7 +343,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
   
   test('Test that the description has been updated', () => {
     clear();
-    let text = "more than 100 characters description is more than 100 characters description is more than 100 characters";
+    let text = "more than 100 characters description";
     let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
     let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description");
     adminQuizDescriptionUpdate(testuserid, testquizId, text);
@@ -355,7 +355,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
     clear();
     let text = "";
     let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
-    let testquizId = adminQuizCreate(testuserid, 'q1', "");
+    let testquizId = adminQuizCreate(testuserid, 'quiz1', "");
     adminQuizDescriptionUpdate(testuserid, testquizId, text);
     let quizobjectinfo = adminQuizInfo(testuserid, testquizId);
     expect(quizobjectinfo.description).toStrictEqual(text);
