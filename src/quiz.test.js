@@ -143,3 +143,50 @@ describe('adminQuizCreate', () => {
     expect(quizId).toStrictEqual({error: 'Quiz description too long'});
   });
 });
+
+
+describe('adminQuizRemvoe testing', () => {
+
+  test('Valid AuthUserId', () => {
+    clear();
+    let testauthuserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let quizId_valid = adminQuizCreate(testauthuserId, 'quiz1', "");
+    let authUserId_error = adminQuizRemove(2, quizId_valid);
+    expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
+  });
+
+  test('Valid quizId', () => {
+    clear();
+    let authUserId1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    adminQuizCreate(authUserId1, 'Quiz1', "");
+    let quizId_error = adminQuizRemove(authUserId1, 2);
+    expect(quizId_error).toStrictEqual({error: "Invalid quiz Id"});
+  });
+
+  test('quizId is not owned by user', () => {
+    clear();
+    let authUserId_play1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy');
+    let quizId_play1 = adminQuizCreate(authUserId_play1, 'Quiz1', "Description");
+    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
+    let invalid_UsertoquizId_error = adminQuizRemove(authUserId_play1, quizId_play2);
+    expect(invalid_UsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
+  });
+
+  test('Check if quiz is removed by function, adminQuizRemove', () => {
+    clear();
+    let UserId_player = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy');
+    let quizId_player = adminQuizCreate(UserId_player, 'Quiz1', "Description");
+    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
+    adminQuizRemove(authUserId_play2, quizId_play2);
+    expect(adminQuizList(UserId_player)).toStrictEqual({ 
+      quizzes: [
+        {
+          quizId: quizId_player,
+          name: 'Quiz1',
+        }
+      ]
+    });
+  })
+});
