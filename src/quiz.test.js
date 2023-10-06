@@ -1,5 +1,4 @@
-import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, 
-    adminQuizNameUpdate, adminQuizDescriptionUpdate} from './quiz.js';
+import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, adminQuizNameUpdate, adminQuizDescriptionUpdate} from './quiz.js';
 import {adminAuthRegister} from './auth.js';
 import {clear} from './other.js';
 
@@ -193,6 +192,70 @@ describe('adminQuizInfo', () => {
     let QuizInfo = adminQuizInfo(1, 0);
     expect(QuizInfo).toStrictEqual({error: 'Quiz not owned by user'});
   });
+});
+
+describe('adminQuizNameUpdate', () => {
+  beforeEach(() => {
+    clear();
+  });
+
+  test('Normal Run', () => {
+    let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
+    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    let QuizInfo = adminQuizInfo(userId, quizId);
+    expect(QuizInfo).toStrictEqual({ 
+      quizId: 0,
+      name: 'quiz1',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: ''
+    });
+    adminQuizNameUpdate(userId, quizId, 'newquiz1');
+    let QuizInfo2 = adminQuizInfo(userId, quizId);
+    expect(QuizInfo2).toStrictEqual({ 
+      quizId: 0,
+      name: 'newquiz1',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: ''
+    });
+  });
+
+  test('Invalid userId', () => {
+    let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
+    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    expect(adminQuizNameUpdate(userId + 1, quizId, 'newquiz1')).toStrictEqual({error: 'Invalid userId'});
+  });
+
+  test('Invalid quizId', () => {
+    let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
+    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    expect(adminQuizNameUpdate(0, quizId + 1, 'newquiz1')).toStrictEqual({error: 'Invalid quizId'});
+  });
+
+  test('User does not own quizId', () => {
+    let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
+    let userId2 = adminAuthRegister('anita@unsw.edu.au', '1234abcd', 'Anita', "Byun");
+    let quizId = adminQuizCreate(userId2, 'quiz1', '');
+    expect(adminQuizNameUpdate(userId, quizId, 'newquiz1')).toStrictEqual({error: 'Quiz not owned by user'});
+  });
+
+  test('Invalid new name', () => {
+    let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
+    let quizId = adminQuizCreate(userId, 'quiz1', '');
+    expect(adminQuizNameUpdate(userId, quizId, 'quiz1#')).toStrictEqual({error: 'Invalid new name'});
+    expect(adminQuizNameUpdate(userId, quizId, 'quiz1/')).toStrictEqual({error: 'Invalid new name'});
+    expect(adminQuizNameUpdate(userId, quizId, 'q1')).toStrictEqual({error: 'Invalid new name'});
+    expect(adminQuizNameUpdate(userId, quizId, 'quiz1quiz1quiz1quiz1quiz1quiz1quiz1')).toStrictEqual({error: 'Invalid new name'});
+  });
+
+  test('Quiz name already used', () => {
+    let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
+    adminQuizCreate(userId, 'quiz1', '');
+    let quizId =  adminQuizCreate(userId, 'quiz2', '');
+    expect(adminQuizNameUpdate(userId, quizId, 'quiz1')).toStrictEqual({error: 'Quiz name already in use'});
+  });
+
 });
 
 describe('adminQuizRemove testing', () => {

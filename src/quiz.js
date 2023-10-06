@@ -174,7 +174,44 @@ function adminQuizInfo(authUserId, quizId) {
 
 // Stub for adminQuizNameUpdate function
 function adminQuizNameUpdate(authUserId, quizId, name) {
-    return {};
+  const data = getData();
+  const userArray = data.users;
+  const quizArray = data.quizzes;
+  if (name.length > 30 || name.length < 3) {
+    return ({error: 'Invalid new name'});
+  } 
+  if (/^[a-zA-Z0-9]+$/.test(name) === false) {
+    return ({error: 'Invalid new name'});
+  }
+  let userexists = 0, quizexists = 0;
+  for (const users in userArray) {
+    if (userArray[users].UserId === authUserId) {
+      userexists = 1;
+    }
+  }
+  if (userexists === 0) {
+    return ({error: 'Invalid userId'});
+  }
+  for (const quiz in quizArray) {
+    if (quizArray[quiz].QuizId === quizId) {
+      quizexists = 1;
+      if (quizArray[quiz].UserId != authUserId) {
+        return ({error: 'Quiz not owned by user'});
+      } 
+    }
+    if (quizArray[quiz].Name === name) {
+      return ({error: 'Quiz name already in use'});
+    }
+  }
+  for (const quiz in quizArray) {
+    if (quizArray[quiz].QuizId === quizId) {
+      quizArray[quiz].Name = name;
+    }
+  }
+  if (quizexists === 0) {
+    return ({error: 'Invalid quizId'});
+  }
+  return {};
 }
 
 //Stub for adminQuizDescriptionUpdate function
@@ -187,6 +224,7 @@ export {
   adminQuizCreate,
   adminQuizRemove,
   adminQuizDescriptionUpdate,
-  adminQuizInfo
+  adminQuizInfo,
+  adminQuizNameUpdate,
 };
 
