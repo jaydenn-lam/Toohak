@@ -12,7 +12,7 @@ function adminQuizList(authUserId) {
   const listArray = [];
   let success = 0;
   for (let i = 0; i < quizArray.length; i++) {
-    if (quizArray[i].UserId === authUserId) {
+    if (quizArray[i].userId === authUserId) {
       const newObject = {
         quizId: quizArray[i].QuizId,
         name: quizArray[i].Name
@@ -41,7 +41,7 @@ function adminQuizCreate(authUserId, name, description) {
   const userArray = data.users;
   let userIdExists = 0;
   for (const user in userArray) {
-    if (userArray[user].UserId === authUserId) {
+    if (userArray[user].userId === authUserId) {
       userIdExists = 1;
     }
   }
@@ -88,7 +88,7 @@ function adminQuizCreate(authUserId, name, description) {
     TimeCreated: Date.now(),
     TimeLastEdited: Date.now(),
     Description: description,
-    UserId: authUserId
+    userId: authUserId
   };
   data.quizzes.push(quizData);
   setData(data);
@@ -109,7 +109,7 @@ function adminQuizRemove(authUserId, quizId) {
 	let userIdExists = 0;
 
   for (let userindex in userArray) {
-    if (userArray[userindex].UserId === authUserId) {
+    if (userArray[userindex].userId === authUserId) {
       userIdExists = 1;
     }
   }
@@ -131,7 +131,7 @@ function adminQuizRemove(authUserId, quizId) {
 
 	// Error check for incorrect quizid for the specified user
   for (let checkcount in quizArray) {
-		if (quizArray[checkcount].UserId === authUserId) {
+		if (quizArray[checkcount].userId === authUserId) {
 			if (quizArray[checkcount].QuizId != quizId) {
 				return {error: "Quiz Id is not owned by this user"};
 			}
@@ -163,7 +163,7 @@ function adminQuizInfo(authUserId, quizId) {
   let userIdExists = 0, quizIdExists = 0;
   let quizInfo = {};
   for (const user in userArray) {
-    if (userArray[user].UserId === authUserId) {
+    if (userArray[user].userId === authUserId) {
       userIdExists = 1;
     }
   }
@@ -180,17 +180,17 @@ function adminQuizInfo(authUserId, quizId) {
         timeCreated: q.TimeCreated,
         timeLastEdited: q.TimeLastEdited,
         description: q.Description,
-        UserId: q.UserId
+        userId: q.userId
       };
     }
   }
   if (quizIdExists === 0) {
     return {error: 'Invalid Quiz Id'};
   }
-  if (quizInfo.UserId !== authUserId) {
+  if (quizInfo.userId !== authUserId) {
     return {error: 'Quiz not owned by user'};
   }
-  delete quizInfo.UserId;
+  delete quizInfo.userId;
   return quizInfo;
 }
 
@@ -215,7 +215,7 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
   }
   let userexists = 0, quizexists = 0;
   for (const users in userArray) {
-    if (userArray[users].UserId === authUserId) {
+    if (userArray[users].userId === authUserId) {
       userexists = 1;
     }
   }
@@ -225,7 +225,7 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
   for (const quiz in quizArray) {
     if (quizArray[quiz].QuizId === quizId) {
       quizexists = 1;
-      if (quizArray[quiz].UserId != authUserId) {
+      if (quizArray[quiz].userId != authUserId) {
         return ({error: 'Quiz not owned by user'});
       } 
     }
@@ -259,7 +259,7 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 	let userIdExists = 0;
 
   for (let userindex in userArray) {
-    if (userArray[userindex].UserId === authUserId) {
+    if (userArray[userindex].userId === authUserId) {
       userIdExists = 1;
     }
   }
@@ -281,7 +281,7 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 
 	// Error check for incorrect quizid for the specified user
   for (let checkcount in quizArray) {
-		if (quizArray[checkcount].UserId === authUserId) {
+		if (quizArray[checkcount].userId === authUserId) {
 			if (quizArray[checkcount].QuizId != quizId) {
 				return {error: "Quiz Id is not owned by this user"};
 			}

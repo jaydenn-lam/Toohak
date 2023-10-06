@@ -94,12 +94,12 @@ describe('adminQuizCreate', () => {
     {error: "Invalid character(s) in name"}],
     [0, 'Animal Quiz()', 'Test your knowledge on animals!', 
     {error: "Invalid character(s) in name"}],
-  ])('Name contains invalid characters ERROR', (UserId, name, description, 
+  ])('Name contains invalid characters ERROR', (userId, name, description, 
     expected) => {
     clear();
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-    expect(adminQuizCreate(UserId, name, description)).toEqual(expected) 
+    expect(adminQuizCreate(userId, name, description)).toEqual(expected) 
   });
 
   test('Name too short ERROR', () => {
