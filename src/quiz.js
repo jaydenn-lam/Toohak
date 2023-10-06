@@ -3,7 +3,7 @@ import {getData, setData} from './dataStore.js';
 /*
 This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
 @param {number} authUserId - Integer that contains their assigned authUserId
-@returns {object} - An object containing quidId and name 
+@returns {object} - An object containing quizId and name 
 */
 function adminQuizList(authUserId) {
   let error = false;
@@ -95,7 +95,12 @@ function adminQuizCreate(authUserId, name, description) {
   return({ quizId: quizId });
 }
 
-// Stub for adminQuizRemove function
+/*
+This function removes a quiz for the logged-in user.
+@param {number} authUserId - The user's assigned authUserId.
+@param {number} quizId - The quiz's assigned quizId.
+@returns {} - Empty object.
+*/
 function adminQuizRemove(authUserId, quizId) {
   // Error checking and early return
 	const data = getData();
@@ -143,7 +148,13 @@ function adminQuizRemove(authUserId, quizId) {
   return {};
 }
 
-// Stub for adminQuizInfo function
+/*
+Gives information about a quiz with the given quizId
+Invalid quiz/user Ids or if the quiz isn't owned by the authUserId will give an error
+@param {number} authuserId - The userId of the person who owns the quiz
+@param {number} quizId - The quizId of the quiz which needs info returned
+@returns {quizInfo} - An object containing all relevant info of the quiz
+*/
 function adminQuizInfo(authUserId, quizId) {
   let error = false;
   const data = getData();
@@ -233,7 +244,13 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
   return {};
 }
 
-//Stub for adminQuizDescriptionUpdate function
+/*
+This function updates the description of an existing quiz.
+@param {number} authUserId - The user's assigned authUserId.
+@param {number} quizId - The quiz's assigned quizId.
+@param {string} description - The description of the quiz.
+@returns {} - Empty object.
+*/
 function adminQuizDescriptionUpdate(authUserId, quizId, description) {
   // Error checking and early return
 	const data = getData();
