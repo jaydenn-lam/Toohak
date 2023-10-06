@@ -303,3 +303,63 @@ describe('adminQuizRemove testing', () => {
     });
   })
 });
+
+
+describe('adminQuizDescriptionUpdate testing', () => {
+
+  test('Valid AuthUserId', () => {
+    clear();
+    let result_id = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let validquizId = adminQuizCreate(result_id, 'quiz1', "Description");
+    let authUserId_error = adminQuizDescriptionUpdate(2, validquizId, "");
+    expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
+  });
+  test('Valid quizId', () => {
+    clear();
+    let authUserId1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    adminQuizCreate(authUserId1, 'Quiz1', "Description");
+    let quizIderror = adminQuizDescriptionUpdate(authUserId1, 2, "Description");
+    expect(quizIderror).toStrictEqual({error: "Invalid quiz Id"});
+  });
+
+  test('quizId is not owned by user', () => {
+    clear();
+    let authUserIdplay1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let authUserId_play2 = adminAuthRegister('valid2email@gmail.com', '456abc!@#', 'Tim', 'Andy');
+    adminQuizCreate(authUserIdplay1, 'Quiz1', "Desription");
+    let quizIdplay2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description");
+    let invalidUsertoquizId_error = adminQuizDescriptionUpdate(authUserIdplay1, quizIdplay2, "Description");
+    expect(invalidUsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
+  });
+
+  test('Description is more than 100 characters', () => {
+    clear();
+    let text = "more than 100 characters description is more than 100 characters description is more than 100 characterssssssss";
+    let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description");
+    let descriperror = adminQuizDescriptionUpdate(testuserid, testquizId, text);
+    expect(descriperror).toStrictEqual({error: "Description is more than 100 characters in length"});
+  });
+  
+  test('Test that the description has been updated', () => {
+    clear();
+    let text = "more than 100 characters description";
+    let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description");
+    adminQuizDescriptionUpdate(testuserid, testquizId, text);
+    let quizobjectinfo = adminQuizInfo(testuserid, testquizId);
+    expect(quizobjectinfo.description).toStrictEqual(text);
+  });
+
+  test('Description is an empty string', () => {
+    clear();
+    let text = "";
+    let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella');
+    let testquizId = adminQuizCreate(testuserid, 'quiz1', "");
+    adminQuizDescriptionUpdate(testuserid, testquizId, text);
+    let quizobjectinfo = adminQuizInfo(testuserid, testquizId);
+    expect(quizobjectinfo.description).toStrictEqual(text);
+  });
+});
+
+
