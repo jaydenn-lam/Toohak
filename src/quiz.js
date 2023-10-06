@@ -172,7 +172,15 @@ function adminQuizInfo(authUserId, quizId) {
   return quizInfo;
 }
 
-// Stub for adminQuizNameUpdate function
+/*
+Function allows the name of a quiz to be updated in our datastore, given that the quizId is owned by the userId given.
+Error messages are returned if the name already exists under that userId, if it is invalid, or if the quiz is not owned by them.
+Invalid user/quiz Ids will also cause an error.
+@param {number} authuserId - The userId of the person who's quiz they are trying to rename
+@param {number} quizId - The quizId of the quiz which they are renaming
+@param {string} name - The new name of the quiz
+@returns {void} - Nothing is returned
+*/
 function adminQuizNameUpdate(authUserId, quizId, name) {
   const data = getData();
   const userArray = data.users;
