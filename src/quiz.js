@@ -130,6 +130,7 @@ function adminQuizRemove(authUserId, quizId) {
 		}
 	}
 	setData(data);
+  return {};
 }
 
 // Stub for adminQuizInfo function
@@ -273,6 +274,7 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 	}
 
 	setData(data);
+  return {};
 }
 
 export {
