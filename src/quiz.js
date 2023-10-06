@@ -216,7 +216,55 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
 
 //Stub for adminQuizDescriptionUpdate function
 function adminQuizDescriptionUpdate(authUserId, quizId, description) {
-    return {};
+  // Error checking and early return
+	const data = getData();
+	const quizArray = data.quizzes;
+	const userArray = data.users;
+	let userIdExists = 0;
+
+  for (let userindex in userArray) {
+    if (userArray[userindex].UserId === authUserId) {
+      userIdExists = 1;
+    }
+  }
+
+  if (userIdExists === 0) {
+    return {error: 'Invalid User Id'};
+  }
+
+	let quizIdExists = 0;
+	for (let quizindex in quizArray) {
+		if (quizArray[quizindex].QuizId === quizId) {
+			quizIdExists = 1;
+		}
+	}
+
+	if (quizIdExists === 0) {
+    return {error: 'Invalid quiz Id'};
+  }
+
+	// Error check for incorrect quizid for the specified user
+  for (let checkcount in quizArray) {
+		if (quizArray[checkcount].UserId === authUserId) {
+			if (quizArray[checkcount].QuizId != quizId) {
+				return {error: "Quiz Id is not owned by this user"};
+			}
+		}
+	}
+
+	// Error checking for description
+	if (description.length > 100 && description !== "") {
+		return {error: "Description is more than 100 characters in length"};
+	}
+
+	// Updating the description property of the quizzes object
+	for (let quizcount in data.quizzes) {
+		if (data.quizzes[quizcount].QuizId === quizId) {
+			data.quizzes[quizcount].Description = description;
+		}
+	}
+
+	setData(data);
 }
 
 export {
