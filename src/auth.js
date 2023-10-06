@@ -48,7 +48,6 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (passwordChecker(password) === false) {
     return {error: "Password must contain a number and a letter"}
   }
-  
   const authUserId = user_array.length;
   const user_data = {
     UserId: authUserId,
@@ -162,8 +161,8 @@ function adminAuthLogin(email, password) {
   user.failedPasswords = 0; 
   //update the data store 
   setData(data);
-  const userId = userArray.length;
-  return { authUserId: userId }; 
+  const authUserId = user.UserId;
+  return {authUserId}; 
 }
 
 export {
