@@ -1,8 +1,15 @@
 import {getData, setData} from './dataStore.js';
 import validator from 'validator';
 
-
-// Stub function for adminAuthRegister
+/*
+This function allows for users to be registered, and have their details stored in the data store. 
+Identical passwords and names are allowed, but not emails. Error messages are returned if names, passwords or email is invalid
+@param {string} email - String that contains the email
+@param {string} password - String that contains the password
+@param {string} nameFirst - String that contains their first name
+@param {string} nameLast - String that contains their last name
+@returns {number} authUserId - Integer that contains their assigned authUserId
+*/
 function adminAuthRegister(email, password, nameFirst, nameLast) {
   let error = false;
   const validator = require('validator');
@@ -57,6 +64,11 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   return (userId) ;
 }
 
+/*
+This function simply checks if all the characters in the name passed to it are valid
+@param {string} name - The name passed in
+@returns {boolean} - If the name is valid, or not
+*/
 function nameChecker(name) {
   for (const char of name) {
     const uni = char.charCodeAt(0);
@@ -67,7 +79,11 @@ function nameChecker(name) {
   }
   return true;
 }
-
+/*
+This function checks if the password contains both letters and numbers. If it doesn't, it is invalid.
+@param {string} password - The password passed in
+@returns {boolean} - If the password is valid, or not
+*/
 function passwordChecker(password) {
   let containsLetter = false;
   let containsNumber = false;
