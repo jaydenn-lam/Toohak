@@ -13,7 +13,6 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
       return {error: "Email has already been used"};
     }
   }
-  
   const valid_email = validator.isEmail(email);
   if (valid_email === false) {
     return {error: "Email is invalid"};
@@ -55,7 +54,7 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   };
   data.users.push(user_data);
   setData(data);
-  return (userId)
+  return { authUserId: userId } ;
 }
 
 function nameChecker(name) {
@@ -123,7 +122,7 @@ function adminAuthLogin(email, password) {
   user.failedPasswords = 0; 
   setData(data);
   const userId = userArray.length;
-  return { authUserId: userId}; 
+  return { authUserId: userId }; 
 }
 
 export {
