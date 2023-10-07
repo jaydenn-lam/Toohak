@@ -12,7 +12,6 @@ Identical passwords and names are allowed, but not emails. Error messages are re
 */
 function adminAuthRegister(email, password, nameFirst, nameLast) {
   let error = false;
-  const validator = require('validator');
   const data = getData();
   const user_array = data.users;
   for (const user in user_array) {
