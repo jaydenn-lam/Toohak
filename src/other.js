@@ -11,6 +11,7 @@ function clear() {
       quizzes: []
     }
   );
+  return{};
 }
 
 export {clear};
