@@ -9,6 +9,9 @@
 ## Change Log
 
 * 25/09: A few remaining references to 'assumptions' removed from the spec
+* 10/10: Updated section `4.9` to try and elaborate in more detail about sessions.
+* 11/10: Few minor system updates; Removed a 403 error from swagger for some routes because they weren't applicable
+* 14/10: Correction at the top of `4.1`; Unnecessary `400` error condition for `Quiz ID does not refer to a quiz that this user owns` removed from a number of places where this is covered by `403`.
 
 ## 🫡 0. Aims:
 
@@ -838,7 +841,9 @@ Please see section 7.5 for information on **peer assessment**.
 In this iteration, more features were added to the specification, and the focus has been changed to HTTP endpoints. Most of the theory surrounding iteration 2 is covered in week 4-5 lectures. Note that there will still be some features of the frontend that will not work because the routes will not appear until iteration 3. There is no introductory video for iteration 2.
 
 Iteration 2 both reuses a lot of work from iteration 1, as well as has new work. Most of the work from iteration 1 can be recycled, but the following consideration(s) need to be made from previous work:
- * `DELETE /v1/admin/quiz/{quizid}` now requires also that all sessions for this quiz must be in END state. This was not a requirement for a similar route in iteration 1.
+ * `DELETE /v1/admin/quiz/{quizid}` now requires that upon deletion items are moved to trash instead of permanently removed.
+
+If you'd like more support in this iteration, you can see a [previous term's video](https://www.youtube.com/watch?v=j0P-SA8bwSs) where a lecturer discusses iteration 2 with the students of that term
 
 In this iteration, you are expected to:
 
@@ -852,7 +857,7 @@ In this iteration, you are expected to:
 
     * Your implementation will need to include persistence of data (see section 4.7).
 
-    * Introduce tokens for session management (see 5.7).
+    * Introduce sessions for your login system (see 4.9).
 
     * You can structure your tests inside a `/tests` folder (or however you choose), as long as they are appended with `.test.ts`. For this iteration and iteration 3 we will only be testing your HTTP layer of tests. You may still wish to use your iteration 1 tests and simply wrap up them - that is a design choice up to you. An example of an HTTP test can be found in section 4.4.
 
@@ -969,23 +974,43 @@ You might notice that some routes are prefixed with `v1`. Why is this? When you 
 Hint: Yes, your `v1` routes can use the functions you had in iteration 1, regardless of whether you rename the functions or not. The layer of abstraction in iteration 2 has changed from the function interface to the HTTP interface, and therefore your 'functions' from iteration 1 are essentially now just implementation details, and therefore are completely modifiable by you.
 
 ### 🐝 4.9. User Sessions
-Iteration 2 introduces the concept of <b>sessions</b>. With sessions, when a user logs in or registers, they receive a "token" (think of it like a ticket to a concert). These tokens are stored on the web browser (something the frontend handles), and nearly every time that user wants to make a request to the server, they will pass this "token" as part of this request. In this way, the server is able to take this token, look at it (like checking a ticket), and figure out who the user is.
 
-The difference between an <code>authUserId</code> and a <code>token</code> is that an <code>authUserId</code> is a permanent identifier of a user, whereas a new token is generated upon each new login for a user.
+#### The problem with Iteration 1 `authUserId`
 
-A token (to represent a session) for iteration 2 can be as simple a randomly generated number (converted to a string as per the interface specifications) and stored as one of many possible sessions against a specific user.
+In iteration 1, a problem we have with the `authUserId` is that there is no way to "log-out" a user - because all the user needs to identify themselves is just their user ID.
 
-A token is not necessarily a user session, but it will likely contain a user session. A good example of a token structure might be:
-```text
-token = {
-  sessionId: 2930420934
-  userId: 233
+In iteration 2, we want to issue something that abstracts their user ID into the notion of a session - this way a single user can log in, log out, or maybe log in from multiple places at the same time.
+
+If you're not following the issue with the `authUserId`, imagine it like trying to board a plane flight but your boarding pass IS your passport. Your passport is a (effectively) a permanent thing - it is just "always you". That wouldn't work, which is why airlines issue out boarding passes - to essentially grant you a "session" on a plane. And your boarding pass is linked to your passport. In this same way, a session is associated with an `authUserId`!
+
+#### How we adapt in Iteration 2 - sessions
+
+In iteration 2, instead of passing in `authUserId` into functions, we will instead pass in a session. Then on our server we look up the session information (which we've stored) to:
+* Identify if the session is valid
+* Identify which user this session belongs to
+
+Then in this way, we can now allow for things like the ability to meaningfully log someone out, as well as to have multiple sessions at the same time for multiple users (e.g. imagine being logged in on two computers but only wanting to log one out).
+
+#### The term `token`
+
+You may however notice in the specification that the word `token` is used - not session. This is because when sending HTTP requests a common practice is to package up information relating to the session of the user, we wrap it up into an object called a `token`. This token could take on a number of different forms, though the simplest form is to just have your session inside a token object:
+```json
+{
+  "sessionId": 23145
 }
 ```
 
-In this structure, this also means it's possible to "log out" a particular user's session without logging out other sessions. I.e. One user can log in on two different browser tabs, click logout on tab 1, but still functionally use the website on tab 2.
+A token is generally stringified for sending over HTTP - since everything over an HTTP request needs to be stringified. This is typically done with JSON. If you pass a JSONified object (as opposed to just a string or a number) as a token, we recommend that you use [encodeURIComponent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) and [decodeURIComponent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) to encode it to be friendly for transfer over URLs.
 
-If you pass a JSONified object (as opposed to just a string or a number) as a token, we recommend that you use [encodeURIComponent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) and [decodeURIComponent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) to encode it to be friendly for transfer over URLs.
+How you generate unique identifiers for sessions is up to you.
+
+#### In summary
+
+Implentation details are up to you, though the key things to ensure that you comply with are that:
+* Token is an object that contains some information that allows you to derive a user session
+* Your system allows multiple sessions to be able to be logged in and logged out at the same time.
+
+#### Other notes
 
 ### 🐝 4.10. Error returning
 

@@ -985,10 +985,6 @@ paths:
           description: Token is empty or invalid (does not refer to valid logged in user session)
           schema:
             $ref: '#/components/return/Error'
-        403:
-          description: Valid token is provided, but user is unauthorised to complete this action
-          schema:
-            $ref: '#/components/return/Error'
     put:
       summary: Update the details of an admin user (non-password).
       description: Given a set of properties, update those properties of this logged in admin user.
@@ -1004,10 +1000,6 @@ paths:
             $ref: '#/components/return/Empty'
         401:
           description: Token is empty or invalid (does not refer to valid logged in user session)
-          schema:
-            $ref: '#/components/return/Error'
-        403:
-          description: Valid token is provided, but user is unauthorised to complete this action
           schema:
             $ref: '#/components/return/Error'
         400:
@@ -1129,7 +1121,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
           schema:
             $ref: '#/components/return/Error'
     get:
@@ -1158,7 +1149,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
           schema:
             $ref: '#/components/return/Error'
   /v1/admin/quiz/{quizid}/name:
@@ -1188,7 +1178,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Name contains invalid characters. Valid characters are alphanumeric and spaces
             - Name is either less than 3 characters long or more than 30 characters long
             - Name is already used by the current logged in user for another quiz
@@ -1221,7 +1210,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Description is more than 100 characters in length (note: empty strings are OK)
           schema:
             $ref: '#/components/return/Error'
@@ -1241,10 +1229,6 @@ paths:
             $ref: '#/components/return/QuizTrash'
         401:
           description: Token is empty or invalid (does not refer to valid logged in user session)
-          schema:
-            $ref: '#/components/return/Error'
-        403:
-          description: Valid token is provided, but user is not an owner of this quiz
           schema:
             $ref: '#/components/return/Error'
   /v1/admin/quiz/{quizid}/restore:
@@ -1274,7 +1258,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Quiz name of the restored quiz is already used by another active quiz
             - Quiz ID refers to a quiz that is not currently in the trash
           schema:
@@ -1337,7 +1320,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - userEmail is not a real user
             - userEmail is the current logged in user
             - Quiz ID refers to a quiz that has a name that is already used by the target user
@@ -1373,7 +1355,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Question string is less than 5 characters in length or greater than 50 characters in length
             - The question has more than 6 answers or less than 2 answers
             - The question duration is not a positive number
@@ -1414,7 +1395,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Question Id does not refer to a valid question within this quiz
             - Question string is less than 5 characters in length or greater than 50 characters in length
             - The question has more than 6 answers or less than 2 answers
@@ -1453,7 +1433,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Question Id does not refer to a valid question within this quiz
             - All sessions for this quiz must be in END state
           schema:
@@ -1488,7 +1467,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Question Id does not refer to a valid question within this quiz
             - NewPosition is less than 0, or NewPosition is greater than n-1 where n is the number of questions
             - NewPosition is the position of the current question
@@ -1524,7 +1502,6 @@ paths:
           description: |
             If any of the following are true:
             - Quiz ID does not refer to a valid quiz
-            - Quiz ID does not refer to a quiz that this user owns
             - Question Id does not refer to a valid question within this quiz
           schema:
             $ref: '#/components/return/Error'
