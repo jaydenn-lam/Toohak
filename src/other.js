@@ -14,4 +14,20 @@ function clear() {
   return{};
 }
 
-export {clear};
+function userIdExists(userId) {
+  const data = getData();
+  let exists = 0;
+  for (let user of data.users) {
+    if (user.userId === userId) {
+      exists++;
+    }
+  }
+  if (exists !== 0) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+export {clear, userIdExists};
