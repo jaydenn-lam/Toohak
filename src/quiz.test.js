@@ -1,10 +1,4 @@
 import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, adminQuizNameUpdate, adminQuizDescriptionUpdate} from './quiz.js';
-<<<<<<< HEAD
-import {adminAuthRegister} from './auth.js';
-import {clear} from './other.js';
-import { beforeEach } from 'node:test';
-
-=======
 import {adminAuthRegister} from './auth';
 import {clear} from './other';
 
@@ -13,7 +7,6 @@ test('Temporary Placeholder', () => {
   expect(var1).toStrictEqual(0);
 })
 /*
->>>>>>> 65555cc30115bfed41ac2264ac05e0bb7d82f188
 describe('adminQuizList', () => {
   beforeEach(() => {
     clear();
@@ -383,8 +376,4 @@ describe('adminQuizDescriptionUpdate testing', () => {
     expect(quizobjectinfo.description).toStrictEqual(text);
   });
 });
-
-<<<<<<< HEAD
-=======
 */
->>>>>>> 65555cc30115bfed41ac2264ac05e0bb7d82f188
