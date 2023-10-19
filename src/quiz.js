@@ -1,5 +1,7 @@
 import {getData, setData} from './dataStore.js';
-
+import {userIdExists} from './other.js';
+const TRUE = 1;
+const FALSE = 0;
 /*
 This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
 @param {number} authUserId - Integer that contains their assigned authUserId
@@ -10,18 +12,18 @@ function adminQuizList(authUserId) {
   const data = getData();
   const quizArray = data.quizzes;
   const listArray = [];
-  let success = 0;
-  for (let i = 0; i < quizArray.length; i++) {
-    if (quizArray[i].userId === authUserId) {
+  let success = FALSE;
+  for (let quiz of quizArray) {
+    if (quiz.userId === authUserId) {
       const newObject = {
-        quizId: quizArray[i].QuizId,
-        name: quizArray[i].Name
+        quizId: quiz.QuizId,
+        name: quiz.Name
       }
       listArray.push(newObject);
-      success = 1;
+      success = TRUE;
     }
   }
-  if (success === 0) {
+  if (success === FALSE) {
     return {error: 'Invalid User Id'};
   }
   return {quizzes: listArray};
@@ -38,33 +40,26 @@ function adminQuizCreate(authUserId, name, description) {
   let error = false;
   const data = getData();
   const quizArray = data.quizzes;
-  const userArray = data.users;
-  let userIdExists = 0;
-  for (const user in userArray) {
-    if (userArray[user].userId === authUserId) {
-      userIdExists = 1;
-    }
-  }
-  if (userIdExists === 0) {
+  if (userIdExists(authUserId) === FALSE) {
     return {error: 'Invalid User Id'};
   }
-  let invalidName = 0;
+  let invalidName = FALSE;
   for (let i = 0; i < name.length; i++) {
     const char = name.charCodeAt(i);
     if (char <= 47 && char != 32) {
-      invalidName = 1;
+      invalidName = TRUE;
     }
     if (char >= 58 && char <= 64) {
-      invalidName = 1;
+      invalidName = TRUE;
     }
     if (char >= 91 && char <= 96) {
-      invalidName = 1;
+      invalidName = TRUE;
     }
     if (char >= 123) {
-      invalidName = 1;
+      invalidName = TRUE;
     }
   }
-  if (invalidName === 1) {
+  if (invalidName === TRUE) {
     return {error: "Invalid character(s) in name"};
   }
   if (name.length < 3) {
@@ -103,36 +98,28 @@ This function removes a quiz for the logged-in user.
 */
 function adminQuizRemove(authUserId, quizId) {
   // Error checking and early return
-	const data = getData();
+  const data = getData();
 	const quizArray = data.quizzes;
 	const userArray = data.users;
-	let userIdExists = 0;
-
-  for (let userindex in userArray) {
-    if (userArray[userindex].userId === authUserId) {
-      userIdExists = 1;
-    }
-  }
-
-  if (userIdExists === 0) {
+  if (userIdExists(authUserId) === FALSE) {
     return {error: 'Invalid User Id'};
   }
 
-	let quizIdExists = 0;
-	for (let quizindex in quizArray) {
-		if (quizArray[quizindex].QuizId === quizId) {
-			quizIdExists = 1;
+	let quizIdExists = FALSE;
+	for (let quiz of quizArray) {
+		if (quiz.QuizId === quizId) {
+			quizIdExists = TRUE;
 		}
 	}
 
-	if (quizIdExists === 0) {
+	if (quizIdExists === FALSE) {
     return {error: 'Invalid quiz Id'};
   }
 
 	// Error check for incorrect quizid for the specified user
-  for (let checkcount in quizArray) {
-		if (quizArray[checkcount].userId === authUserId) {
-			if (quizArray[checkcount].QuizId != quizId) {
+  for (let quiz of quizArray) {
+		if (quiz.userId === authUserId) {
+			if (quiz.QuizId != quizId) {
 				return {error: "Quiz Id is not owned by this user"};
 			}
 		}
@@ -158,22 +145,16 @@ Invalid quiz/user Ids or if the quiz isn't owned by the authUserId will give an 
 function adminQuizInfo(authUserId, quizId) {
   let error = false;
   const data = getData();
-  const userArray = data.users;
   const quizArray = data.quizzes;
-  let userIdExists = 0, quizIdExists = 0;
+  let quizIdExists = FALSE;
   let quizInfo = {};
-  for (const user in userArray) {
-    if (userArray[user].userId === authUserId) {
-      userIdExists = 1;
-    }
-  }
-  if (userIdExists === 0) {
+  if (userIdExists(authUserId) === FALSE) {
     return {error: 'Invalid User Id'};
   }
-  for (const quiz in quizArray) {
-    if (quizArray[quiz].QuizId === quizId) {
-      quizIdExists = 1;
-      const q = quizArray[quiz];
+  for (let quiz of quizArray) {
+    if (quiz.QuizId === quizId) {
+      quizIdExists = TRUE;
+      const q = quiz;
       quizInfo = {
         quizId: q.QuizId,
         name: q.Name,
@@ -184,7 +165,7 @@ function adminQuizInfo(authUserId, quizId) {
       };
     }
   }
-  if (quizIdExists === 0) {
+  if (quizIdExists === FALSE) {
     return {error: 'Invalid Quiz Id'};
   }
   if (quizInfo.userId !== authUserId) {
@@ -213,32 +194,27 @@ function adminQuizNameUpdate(authUserId, quizId, name) {
   if (/^[a-zA-Z0-9]+$/.test(name) === false) {
     return ({error: 'Invalid new name'});
   }
-  let userexists = 0, quizexists = 0;
-  for (const users in userArray) {
-    if (userArray[users].userId === authUserId) {
-      userexists = 1;
-    }
-  }
-  if (userexists === 0) {
+  let quizexists = FALSE;
+  if (userIdExists(authUserId) === FALSE) {
     return ({error: 'Invalid userId'});
   }
-  for (const quiz in quizArray) {
-    if (quizArray[quiz].QuizId === quizId) {
-      quizexists = 1;
-      if (quizArray[quiz].userId != authUserId) {
+  for (let quiz of quizArray) {
+    if (quiz.QuizId === quizId) {
+      quizexists = TRUE;
+      if (quiz.userId != authUserId) {
         return ({error: 'Quiz not owned by user'});
       } 
     }
-    if (quizArray[quiz].Name === name) {
+    if (quiz.Name === name) {
       return ({error: 'Quiz name already in use'});
     }
   }
-  for (const quiz in quizArray) {
-    if (quizArray[quiz].QuizId === quizId) {
-      quizArray[quiz].Name = name;
+  for (let quiz of quizArray) {
+    if (quiz.QuizId === quizId) {
+      quiz.Name = name;
     }
   }
-  if (quizexists === 0) {
+  if (quizexists === FALSE) {
     return ({error: 'Invalid quizId'});
   }
   return {};
@@ -256,33 +232,25 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 	const data = getData();
 	const quizArray = data.quizzes;
 	const userArray = data.users;
-	let userIdExists = 0;
-
-  for (let userindex in userArray) {
-    if (userArray[userindex].userId === authUserId) {
-      userIdExists = 1;
-    }
-  }
-
-  if (userIdExists === 0) {
+  if (userIdExists(authUserId) === FALSE) {
     return {error: 'Invalid User Id'};
   }
 
-	let quizIdExists = 0;
-	for (let quizindex in quizArray) {
-		if (quizArray[quizindex].QuizId === quizId) {
-			quizIdExists = 1;
+	let quizIdExists = FALSE;
+	for (let quiz of quizArray) {
+		if (quiz.QuizId === quizId) {
+			quizIdExists = TRUE;
 		}
 	}
 
-	if (quizIdExists === 0) {
+	if (quizIdExists === FALSE) {
     return {error: 'Invalid quiz Id'};
   }
 
 	// Error check for incorrect quizid for the specified user
-  for (let checkcount in quizArray) {
-		if (quizArray[checkcount].userId === authUserId) {
-			if (quizArray[checkcount].QuizId != quizId) {
+  for (let quiz of quizArray) {
+		if (quiz.userId === authUserId) {
+			if (quiz.QuizId != quizId) {
 				return {error: "Quiz Id is not owned by this user"};
 			}
 		}
@@ -294,9 +262,9 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 	}
 
 	// Updating the description property of the quizzes object
-	for (let quizcount in data.quizzes) {
-		if (data.quizzes[quizcount].QuizId === quizId) {
-			data.quizzes[quizcount].Description = description;
+	for (let quiz of data.quizzes) {
+		if (quiz.QuizId === quizId) {
+			i.Description = description;
 		}
 	}
 
