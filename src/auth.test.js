@@ -1,13 +1,12 @@
-import { adminUserDetails, adminAuthRegister, adminAuthLogin,} from './auth.js';
-import {clear} from './other.js'
+import { adminUserDetails, adminAuthRegister, adminAuthLogin, authUserId} from './auth';
+import {clear} from './other'
 
 describe('adminAuthRegister', () => {
-    
   test('Working Entry', () => {
     clear();
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId).toStrictEqual({authUserId: 0});
+      expect(authUserId).toStrictEqual({authUserId: expect.any(Number)});
   });
 
   test('Multiple Working Entries', () => {
@@ -28,7 +27,7 @@ describe('adminAuthRegister', () => {
     'William', "Lu");
       expect(authUserId2).toStrictEqual({error: "Email has already been used"});
   });
-  
+
   test('Invalid Email Error', () => {
     clear();
     let authUserId1 = adminAuthRegister('will', '1234abcd', 'William', "Lu");

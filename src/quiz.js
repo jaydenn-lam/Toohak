@@ -1,7 +1,9 @@
-import {getData, setData} from './dataStore.js';
-import {userIdExists} from './other.js';
+
+import {getData, setData} from './dataStore';
+import {userIdExists} from './other';
 const TRUE = 1;
 const FALSE = 0;
+
 /*
 This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
 @param {number} authUserId - Integer that contains their assigned authUserId
@@ -78,7 +80,7 @@ function adminQuizCreate(authUserId, name, description) {
   }
   const quizId = quizArray.length;
   const quizData = {
-    QuizId: quizId,
+    quizId: quizId,
     Name: name,
     TimeCreated: Date.now(),
     TimeLastEdited: Date.now(),

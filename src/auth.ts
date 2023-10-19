@@ -1,5 +1,23 @@
-import {getData, setData} from './dataStore.js';
+import {getData, setData} from './dataStore';
 import validator from 'validator';
+
+interface authUserId {
+  authUserId: number;
+};
+
+interface error {
+  error: string;
+};
+
+interface user {
+  user: {
+    userId: number;
+    name: string;
+    email: string;
+    numSuccessfulLogins: number;
+    numFailedPasswordsSinceLastLogin: number;
+  }
+}
 
 /*
 This function allows for users to be registered, and have their details stored in the data store. 
@@ -10,7 +28,7 @@ Identical passwords and names are allowed, but not emails. Error messages are re
 @param {string} nameLast - String that contains their last name
 @returns {number} authUserId - Integer that contains their assigned authUserId
 */
-function adminAuthRegister(email, password, nameFirst, nameLast) {
+function adminAuthRegister(email: string, password: string, nameFirst: string, nameLast: string): authUserId | error {
   let error = false;
   const data = getData();
   const user_array = data.users;
@@ -23,9 +41,9 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (valid_email === false) {
     return {error: "Email is invalid"};
   }
-  const nameCheckResult = validNameCheck(nameFirst, nameLast);
-  if (nameCheckResult) {
-    return nameCheckResult;
+  const InvalidErrorMessage = NameIsInvalid(nameFirst, nameLast);
+  if (InvalidErrorMessage) {
+    return InvalidErrorMessage;
   }
   if (password.length < 8) {
     return {error: "Password is too short"}
@@ -45,10 +63,10 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   };
   data.users.push(user_data);
   setData(data);
-  return {authUserId} ;
+  return {authUserId};
 }
 
-function validNameCheck(nameFirst, nameLast) {
+function NameIsInvalid(nameFirst: string, nameLast: string) {
   if (nameFirst.length < 2) {
     return {error: "First Name is too short"};
   }
@@ -74,7 +92,7 @@ This function simply checks if all the characters in the name passed to it are v
 @param {string} name - The name passed in
 @returns {boolean} - If the name is valid, or not
 */
-function nameChecker(name) {
+function nameChecker(name: string): boolean {
   for (const char of name) {
     const uni = char.charCodeAt(0);
     if (!(uni >= 65 && uni <= 90) && !(uni >= 97 && uni <= 122) && char != "'" 
@@ -89,7 +107,7 @@ This function checks if the password contains both letters and numbers. If it do
 @param {string} password - The password passed in
 @returns {boolean} - If the password is valid, or not
 */
-function passwordChecker(password) {
+function passwordChecker(password: string): boolean {
   let containsLetter = false;
   let containsNumber = false;
   if (/\d/.test(password) === true) {
@@ -113,7 +131,7 @@ If the user is not found, it returns a error message, error: 'Invalid authUserId
 @param {number} authUserId - The unique identifier of the user.
 @returns {object} -  An object containing user details.
 */
-function adminUserDetails(authUserId) {
+function adminUserDetails(authUserId: authUserId): user | error {
   //grabs the data from the data store
   const data = getData();
   const userArray = data.users;
@@ -144,7 +162,7 @@ successful login by 1 and resets failed passwords to 0.
 @param {string} password - Password of the user
 @returns {number} - The unique identifier of the user.
 */
-function adminAuthLogin(email, password) {
+function adminAuthLogin(email: string, password: string): authUserId | error {
   //grabs the data from the data store
   const data = getData();
   const userArray = data.users;
