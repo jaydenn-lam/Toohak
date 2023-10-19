@@ -8,14 +8,16 @@ test('Temporary Placeholder', () => {
 })
 /*
 describe('adminQuizList', () => {
-    
-  test('Working Entry', () => {
+  beforeEach(() => {
     clear();
+  });
+  test('Working Entry', () => {
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
-    const Quiz1 = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    adminQuizCreate(AuthUserId, 'Animal Quiz', 
     'Test your knowledge on animals!');
-    let QuizList = adminQuizList(0);
+    let QuizList = adminQuizList(AuthUserId);
     expect(QuizList).toStrictEqual({ 
       quizzes: [
         {
@@ -27,12 +29,12 @@ describe('adminQuizList', () => {
   });
 
   test('Multiple quiz working entry', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
-    const Quiz1 = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    adminQuizCreate(AuthUserId, 'Animal Quiz', 
     'Test your knowledge on animals!');
-    const Quiz2 = adminQuizCreate(AuthUserId, 'Food Quiz', 
+    adminQuizCreate(AuthUserId, 'Food Quiz', 
     'Test your knowledge on food!');
     let QuizList = adminQuizList(AuthUserId);
     expect(QuizList).toStrictEqual({ 
@@ -50,10 +52,10 @@ describe('adminQuizList', () => {
   });
 
   test('Invalid AuthUserId ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
-    const Quiz1 = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    adminQuizCreate(AuthUserId, 'Animal Quiz', 
     'Test your knowledge on animals!');
     let QuizList = adminQuizList(AuthUserId + 1);
     expect(QuizList).toStrictEqual({error: 'Invalid User Id'});
@@ -61,34 +63,36 @@ describe('adminQuizList', () => {
 });
 
 describe('adminQuizCreate', () => {
-    
-  test('Working Entry', () => {
+  beforeEach(() => {
     clear();
+  });
+  test('Working Entry', () => {
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    let quizId = adminQuizCreate(0, 'Animal Quiz', 
-    'Test your knowledge on animals!');
+    'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
     expect(quizId).toStrictEqual({ quizId: 0 });
   });
 
   test('Multiple Working Entries', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    let quizId = adminQuizCreate(0, 'Animal Quiz', 
-    'Test your knowledge on animals!');
+    'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
     expect(quizId).toStrictEqual({ quizId: 0 });
-    let quizId2 = adminQuizCreate(0, 'Country Quiz', 
-    'Test your knowledge on countries!');
+    let quizId2 = adminQuizCreate(AuthUserId, 'Country Quiz', 
+    'Test your knowledge on countries!').quizId;
     expect(quizId2).toStrictEqual({ quizId: 1 });
   })
 
   test('Invalid AuthUserId ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    let quizId = adminQuizCreate(1, 'Animal Quiz', 
-    'Test your knowledge on animals!');
+    'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
     expect(quizId).toStrictEqual({error: 'Invalid User Id'});
   });
 
@@ -101,62 +105,64 @@ describe('adminQuizCreate', () => {
     {error: "Invalid character(s) in name"}],
   ])('Name contains invalid characters ERROR', (userId, name, description, 
     expected) => {
-    clear();
-    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
+
+    adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
     expect(adminQuizCreate(userId, name, description)).toEqual(expected) 
   });
 
   test('Name too short ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    let quizId = adminQuizCreate(0, 'AQ', 
-    'Test your knowledge on animals!');
+    'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'AQ', 
+    'Test your knowledge on animals!').quizId;
     expect(quizId).toStrictEqual({error: 'Quiz name too short'});
   });
 
   test('Name too long ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    let quizId = adminQuizCreate(0, 'The worlds hardest ever animal quiz', 
-    'Test your knowledge on animals!');
+    'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'The worlds hardest ever animal quiz', 
+    'Test your knowledge on animals!').quizId;
     expect(quizId).toStrictEqual({error: 'Quiz name too long'});
   });
 
   test('Name already used by current user ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    let quizId = adminQuizCreate(0, 'Animal Quiz', 
-    'Test your knowledge on animals!');
+    'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
     expect(quizId).toStrictEqual({ quizId: 0 });
-    let quizId2 = adminQuizCreate(0, 'Animal Quiz', 
+    let quizId2 = adminQuizCreate(AuthUserId, 'Animal Quiz', 
     'Test more of your knowledge on animals!');
     expect(quizId2).toStrictEqual({error: 'Name already being used'});
   });
 
   test('Description too long ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    let quizId = adminQuizCreate(0, 'Animal Quiz', 
+    'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
     `abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz 
-    abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz`);
+    abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz`).quizId;
     expect(quizId).toStrictEqual({error: 'Quiz description too long'});
   });
 });
 
 describe('adminQuizInfo', () => {
-    
-  test('Working Entry', () => {
+  beforeEach(() => {
     clear();
+  });
+  test('Working Entry', () => {
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
-    'Test your knowledge on animals!');
-    let QuizInfo = adminQuizInfo(0, 0);
+    'William', "Lu").authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
+    let QuizInfo = adminQuizInfo(AuthUserId, QuizId);
     expect(QuizInfo).toStrictEqual({ 
       quizId: 0,
       name: 'Animal Quiz',
@@ -167,34 +173,34 @@ describe('adminQuizInfo', () => {
   });
 
   test('Invalid AuthUserId ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
-    'Test your knowledge on animals!');
-    let QuizInfo = adminQuizInfo(1, 0);
+    'William', "Lu").authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
+    let QuizInfo = adminQuizInfo(AuthUserId + 1, QuizId);
     expect(QuizInfo).toStrictEqual({error: 'Invalid User Id'});
   });
 
   test('Invalid QuizId ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
-    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
-    'Test your knowledge on animals!');
-    let QuizInfo = adminQuizInfo(0, 1);
+    'William', "Lu").authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
+    let QuizInfo = adminQuizInfo(AuthUserId, QuizId + 1);
     expect(QuizInfo).toStrictEqual({error: 'Invalid Quiz Id'});
   });
 
   test('Quiz not owned by this user ERROR', () => {
-    clear();
+
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
+    'William', "Lu").authUserId;
     const AuthUserId2 = adminAuthRegister('jayden@unsw.edu.au', '1234abcd', 
-    'Jayden', "Lam");
-    const Quiz1 = adminQuizCreate(0, 'Animal Quiz', 
-    'Test your knowledge on animals!');
-    let QuizInfo = adminQuizInfo(1, 0);
+    'Jayden', "Lam").authUserId;
+    const Quiz1 = adminQuizCreate(AuthUserId, 'Animal Quiz', 
+    'Test your knowledge on animals!').quizId;
+    let QuizInfo = adminQuizInfo(AuthUserId2, Quiz1);
     expect(QuizInfo).toStrictEqual({error: 'Quiz not owned by user'});
   });
 });
@@ -235,7 +241,7 @@ describe('adminQuizNameUpdate', () => {
   test('Invalid quizId', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
     let quizId = adminQuizCreate(userId, 'quiz1', '').quizId;
-    expect(adminQuizNameUpdate(0, quizId + 1, 'newquiz1')).toStrictEqual({error: 'Invalid quizId'});
+    expect(adminQuizNameUpdate(userId, quizId + 1, 'newquiz1')).toStrictEqual({error: 'Invalid quizId'});
   });
 
   test('User does not own quizId', () => {
@@ -264,41 +270,43 @@ describe('adminQuizNameUpdate', () => {
 });
 
 describe('adminQuizRemove testing', () => {
-
-  test('Valid AuthUserId', () => {
+  beforeEach(() => {
     clear();
-    let testauthuserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let quizId_valid = adminQuizCreate(testauthuserId, 'quiz1', "").quizId;
-    let authUserId_error = adminQuizRemove(2, quizId_valid);
+  });
+  test('Valid AuthUserId', () => {
+
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "").quizId;
+    let authUserId_error = adminQuizRemove(AuthUserId + 1, QuizId);
     expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
   });
 
   test('Valid quizId', () => {
-    clear();
-    let authUserId1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    adminQuizCreate(authUserId1, 'Quiz1', "");
-    let quizId_error = adminQuizRemove(authUserId1, 2);
+
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "").quizId;
+    const quizId_error = adminQuizRemove(authUserId1, QuizId + 1);
     expect(quizId_error).toStrictEqual({error: "Invalid quiz Id"});
   });
 
   test('quizId is not owned by user', () => {
-    clear();
-    let authUserId_play1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
-    let quizId_play1 = adminQuizCreate(authUserId_play1, 'Quiz1', "Description").quizId;
-    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description").quizId;
-    let invalid_UsertoquizId_error = adminQuizRemove(authUserId_play1, quizId_play2);
+
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const AuthUserId2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Description").quizId;
+    const QuizId2 = adminQuizCreate(AuthUserId2, 'Quiz2', "Description").quizId;
+    const invalid_UsertoquizId_error = adminQuizRemove(AuthUserId, QuizId2);
     expect(invalid_UsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
   });
 
   test('Check if quiz is removed by function, adminQuizRemove', () => {
-    clear();
-    let UserId_player = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let authUserId_play2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
-    let quizId_player = adminQuizCreate(UserId_player, 'Quiz1', "Description").quizId;
-    let quizId_play2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description").quizId;
-    adminQuizRemove(authUserId_play2, quizId_play2);
-    expect(adminQuizList(UserId_player)).toStrictEqual({ 
+
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const AuthUserId2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Description").quizId;
+    const QuizId2 = adminQuizCreate(AuthUserId2, 'Quiz2', "Description").quizId;
+    adminQuizRemove(AuthUserId2, QuizId2);
+    expect(adminQuizList(AuthUserId)).toStrictEqual({ 
       quizzes: [
         {
           quizId: quizId_player,
@@ -311,60 +319,61 @@ describe('adminQuizRemove testing', () => {
 
 
 describe('adminQuizDescriptionUpdate testing', () => {
-
-  test('Valid AuthUserId', () => {
+  beforeEach(() => {
     clear();
-    let result_id = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let validquizId = adminQuizCreate(result_id, 'quiz1', "Description").quizId;
-    let authUserId_error = adminQuizDescriptionUpdate(2, validquizId, "");
+  });
+  test('Valid AuthUserId', () => {
+ 
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "Description").quizId;
+    const authUserId_error = adminQuizDescriptionUpdate(AuthUserId + 1, QuizId, "");
     expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
   });
   test('Valid quizId', () => {
-    clear();
-    let authUserId1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    adminQuizCreate(authUserId1, 'Quiz1', "Description");
-    let quizIderror = adminQuizDescriptionUpdate(authUserId1, 2, "Description");
+
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Description").quizId;
+    const quizIderror = adminQuizDescriptionUpdate(AuthUserId, QuizId + 1, "Description");
     expect(quizIderror).toStrictEqual({error: "Invalid quiz Id"});
   });
 
   test('quizId is not owned by user', () => {
-    clear();
-    let authUserIdplay1 = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let authUserId_play2 = adminAuthRegister('valid2email@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
-    adminQuizCreate(authUserIdplay1, 'Quiz1', "Desription");
-    let quizIdplay2 = adminQuizCreate(authUserId_play2, 'Quiz2', "Description").quizId;
-    let invalidUsertoquizId_error = adminQuizDescriptionUpdate(authUserIdplay1, quizIdplay2, "Description");
+
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const AuthUserId2 = adminAuthRegister('valid2email@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Desription").quizId;
+    const QuizId2 = adminQuizCreate(AuthUserId, 'Quiz2', "Description").quizId;
+    const invalidUsertoquizId_error = adminQuizDescriptionUpdate(AuthUserId, QuizId, "Description");
     expect(invalidUsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
   });
 
   test('Description is more than 100 characters', () => {
-    clear();
-    let text = "more than 100 characters description is more than 100 characters description is more than 100 characterssssssss";
-    let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description").quizId;
-    let descriperror = adminQuizDescriptionUpdate(testuserid, testquizId, text);
+
+    const text = "more than 100 characters description is more than 100 characters description is more than 100 characterssssssss";
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "Description").quizId;
+    const descriperror = adminQuizDescriptionUpdate(AuthUserId, QuizId, text);
     expect(descriperror).toStrictEqual({error: "Description is more than 100 characters in length"});
   });
   
   test('Test that the description has been updated', () => {
-    clear();
-    let text = "more than 100 characters description";
-    let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let testquizId = adminQuizCreate(testuserid, 'quiz1', "Description").quizId;
-    adminQuizDescriptionUpdate(testuserid, testquizId, text);
-    let quizobjectinfo = adminQuizInfo(testuserid, testquizId);
+
+    const text = "more than 100 characters description";
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "Description").quizId;
+    adminQuizDescriptionUpdate(AuthUserId, QuizId, text);
+    const quizobjectinfo = adminQuizInfo(AuthUserId, QuizId);
     expect(quizobjectinfo.description).toStrictEqual(text);
   });
 
   test('Description is an empty string', () => {
-    clear();
-    let text = "";
-    let testuserid = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
-    let testquizId = adminQuizCreate(testuserid, 'quiz1', "").quizId;
-    adminQuizDescriptionUpdate(testuserid, testquizId, text);
-    let quizobjectinfo = adminQuizInfo(testuserid, testquizId);
+
+    const text = "";
+    const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
+    const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "").quizId;
+    adminQuizDescriptionUpdate(AuthUserId, QuizId, text);
+    const quizobjectinfo = adminQuizInfo(testuserid, testquizId);
     expect(quizobjectinfo.description).toStrictEqual(text);
   });
 });
-
 */
