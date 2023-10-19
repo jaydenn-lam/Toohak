@@ -1,6 +1,6 @@
 
 import {getData, setData} from './dataStore';
-import {userIdExists} from './other.js';
+import {userIdExists} from './other';
 const TRUE = 1;
 const FALSE = 0;
 

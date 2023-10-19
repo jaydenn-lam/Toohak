@@ -41,9 +41,9 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   if (valid_email === false) {
     return {error: "Email is invalid"};
   }
-  const nameCheckResult = validNameCheck(nameFirst, nameLast);
-  if (nameCheckResult) {
-    return nameCheckResult;
+  const InvalidErrorMessage = NameIsInvalid(nameFirst, nameLast);
+  if (InvalidErrorMessage) {
+    return InvalidErrorMessage;
   }
   if (password.length < 8) {
     return {error: "Password is too short"}
@@ -66,7 +66,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   return {authUserId};
 }
 
-function validNameCheck(nameFirst, nameLast) {
+function NameIsInvalid(nameFirst: string, nameLast: string) {
   if (nameFirst.length < 2) {
     return {error: "First Name is too short"};
   }
