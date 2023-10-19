@@ -1,6 +1,6 @@
 import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, adminQuizNameUpdate, adminQuizDescriptionUpdate} from './quiz.js';
-import {adminAuthRegister} from './auth.js';
-import {clear} from './other.js';
+import {adminAuthRegister} from './auth';
+import {clear} from './other';
 
 describe('adminQuizList', () => {
     

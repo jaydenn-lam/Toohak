@@ -1,12 +1,30 @@
-// YOU SHOULD MODIFY THIS OBJECT BELOW
-let data = {
-  users: [
-    
-  ],
+interface user {
+  userId: number;
+  email: string;
+  password: string;
+  First_name: string;
+  Last_name: string;
+  numFailedPasswordsSinceLastLogin: number;
+  numSuccessfulLogins: number;
+}
 
-  quizzes: [
-    
-  ],
+interface quiz {
+  quizId: number;
+  Name: string;
+  TimeCreated: number;
+  TimeLastEdited: number;
+  Description: string;
+  userId: number;
+}
+
+interface dataStore {
+  users: user[];
+  quizzes: quiz[];
+}
+// YOU SHOULD MODIFY THIS OBJECT BELOW
+let data: dataStore = {
+  users: [],
+  quizzes: [],
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1
@@ -31,7 +49,7 @@ function getData() {
 }
 
 // Use set(newData) to pass in the entire data object, with modifications made
-function setData(newData) {
+function setData(newData: dataStore) {
   data = newData;
 }
 

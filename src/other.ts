@@ -1,4 +1,4 @@
-import {getData, setData} from './dataStore.js';
+import {getData, setData} from './dataStore';
 /*
 Function completely sets the data in dataStore.js to an empty version of the original dataStore we had saved there
 @param {void} - Nothing is passed in
