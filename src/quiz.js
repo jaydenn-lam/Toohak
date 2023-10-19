@@ -264,7 +264,7 @@ function adminQuizDescriptionUpdate(authUserId, quizId, description) {
 	// Updating the description property of the quizzes object
 	for (let quiz of data.quizzes) {
 		if (quiz.QuizId === quizId) {
-			i.Description = description;
+			quiz.Description = description;
 		}
 	}
 

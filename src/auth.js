@@ -23,26 +23,12 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   if (valid_email === false) {
     return {error: "Email is invalid"};
   }
-  if (nameFirst.length < 2) {
-    return {error: "First Name is too short"};
-  }
-  if (nameFirst.length > 20) {
-    return {error: "First Name is too long"}
-  }
-  if (nameLast.length < 2) {
-    return {error: "Last Name is too short"};
-  }
-  if (nameLast.length > 20) {
-    return {error: "Last Name is too long"}
+  const nameCheckResult = validNameCheck(nameFirst, nameLast);
+  if (nameCheckResult) {
+    return nameCheckResult;
   }
   if (password.length < 8) {
     return {error: "Password is too short"}
-  }
-  if (nameChecker(nameLast) === false) {
-    return {error: "Last Name contains invalid character/s"}
-  }
-  if (nameChecker(nameFirst) === false) {
-    return {error: "First Name contains invalid character/s"}
   }
   if (passwordChecker(password) === false) {
     return {error: "Password must contain a number and a letter"}
@@ -62,6 +48,27 @@ function adminAuthRegister(email, password, nameFirst, nameLast) {
   return {authUserId} ;
 }
 
+function validNameCheck(nameFirst, nameLast) {
+  if (nameFirst.length < 2) {
+    return {error: "First Name is too short"};
+  }
+  if (nameFirst.length > 20) {
+    return {error: "First Name is too long"}
+  }
+  if (nameLast.length < 2) {
+    return {error: "Last Name is too short"};
+  }
+  if (nameLast.length > 20) {
+    return {error: "Last Name is too long"}
+  }
+  if (nameChecker(nameLast) === false) {
+    return {error: "Last Name contains invalid character/s"}
+  }
+  if (nameChecker(nameFirst) === false) {
+    return {error: "First Name contains invalid character/s"}
+  }
+  return null;
+}
 /*
 This function simply checks if all the characters in the name passed to it are valid
 @param {string} name - The name passed in
@@ -99,7 +106,6 @@ function passwordChecker(password) {
   }
   return true;
 }
-
 /*
 <adminUserDetails finds a user with a matching UserId and returns user details which includes their authUserId
 first name and last name, email address, number of successful logins and number of failed passwords since last login.
