@@ -5,6 +5,7 @@ stages:
 
 before_script:
   - npm install
+  - npm start 
 
 tests:
   stage: checks
@@ -12,8 +13,6 @@ tests:
     - master
     - merge_requests
   script:
-    - npm run test
-    - npm run lint
     - SERVER_LOG=$(mktemp)
     - npm run start >& $SERVER_LOG &
     - timeout 10s grep -q "⚡️ Server started on port" <(tail -f $SERVER_LOG) || exit 1
@@ -21,3 +20,5 @@ tests:
     - kill -SIGINT %1
     - sleep 2
     - cat $SERVER_LOG
+    - npm run test
+    - npm run lint
