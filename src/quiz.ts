@@ -30,7 +30,7 @@ This function given a users authUserId, provides the list of all quizzes owned b
 @param {number} authUserId - Integer that contains their assigned authUserId
 @returns {object} - An object containing quizId and name
 */
-function adminQuizList(authUserId: number): quizList | error | quiz[] {
+function adminQuizList(authUserId: number): quizList | error {
   const data = getData();
   const quizArray = data.quizzes;
   const quizList = [];
@@ -118,7 +118,7 @@ This function removes a quiz for the logged-in user.
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - Empty object.
 */
-function adminQuizRemove(authUserId: number, quizId: number): error | object | quiz[] {
+function adminQuizRemove(authUserId: number, quizId: number): error | object {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
