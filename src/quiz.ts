@@ -267,7 +267,7 @@ function adminQuizDescriptionUpdate(authUserId: number, quizId: number, descript
 }
 
 // Helper function for determining if string is alphanumeric
-function validName(name: String) {
+function validName(name: string) {
   let invalidName = FALSE;
   for (let char = 0; char < name.length; char++) {
     const charCode = name.charCodeAt(char);
