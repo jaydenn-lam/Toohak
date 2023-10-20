@@ -22,7 +22,6 @@ interface dataStore {
   quizzes: quiz[];
 }
 
-interface emptyObject {};
 // YOU SHOULD MODIFY THIS OBJECT BELOW
 let data: dataStore = {
   users: [],
@@ -51,7 +50,7 @@ function getData(): dataStore {
 }
 
 // Use set(newData) to pass in the entire data object, with modifications made
-function setData(newData: dataStore): emptyObject {
+function setData(newData: dataStore) {
   data = newData;
   return {};
 }

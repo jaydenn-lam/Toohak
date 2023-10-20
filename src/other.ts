@@ -1,4 +1,4 @@
-import {getData, setData} from './dataStore';
+import { getData, setData } from './dataStore';
 const TRUE = 1;
 const FALSE = 0;
 /*
@@ -13,23 +13,27 @@ function clear() {
       quizzes: []
     }
   );
-  return{};
+  return {};
 }
 
 function userIdExists(userId: number): number {
   const data = getData();
-  let exists = 0;
-  for (let user of data.users) {
+  for (const user of data.users) {
     if (user.userId === userId) {
-      exists++;
+      return TRUE;
     }
   }
-  if (exists !== 0) {
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
+  return FALSE;
 }
 
-export {clear, userIdExists};
+function quizIdExists(quizId: number): number {
+  const data = getData();
+  for (const quiz of data.quizzes) {
+    if (quiz.quizId === quizId) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+export { clear, userIdExists, quizIdExists };
