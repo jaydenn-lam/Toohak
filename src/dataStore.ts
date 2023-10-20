@@ -10,7 +10,7 @@ interface user {
 
 interface quiz {
   quizId: number;
-  Name: string;
+  name: string;
   TimeCreated: number;
   TimeLastEdited: number;
   Description: string;
@@ -21,6 +21,7 @@ interface dataStore {
   users: user[];
   quizzes: quiz[];
 }
+
 // YOU SHOULD MODIFY THIS OBJECT BELOW
 let data: dataStore = {
   users: [],
@@ -44,13 +45,14 @@ Example usage
 */
 
 // Use get() to access the data
-function getData() {
+function getData(): dataStore {
   return data;
 }
 
 // Use set(newData) to pass in the entire data object, with modifications made
 function setData(newData: dataStore) {
   data = newData;
+  return {};
 }
 
 export { getData, setData };
