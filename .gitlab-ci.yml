@@ -19,6 +19,5 @@ tests:
     - kill -SIGINT %1
     - sleep 2
     - cat $SERVER_LOG
-    - npm start
     - npm run test
     - npm run lint
