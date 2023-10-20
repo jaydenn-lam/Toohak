@@ -1,6 +1,6 @@
 import { clear } from './other';
 import { adminUserDetails, adminAuthRegister} from './auth';
-import {adminQuizList, adminQuizCreate} from './quiz.js';
+import {adminQuizList, adminQuizCreate} from './quiz';
 
 describe("Clear", () => {
   test("Clear one user", () => {
