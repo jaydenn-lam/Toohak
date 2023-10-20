@@ -65,23 +65,7 @@ function adminQuizCreate(authUserId: number, name: string, description: string):
   if (userIdExists(authUserId) === FALSE) {
     return { error: 'Invalid User Id' };
   }
-  let invalidName = FALSE;
-  for (let i = 0; i < name.length; i++) {
-    const char = name.charCodeAt(i);
-    if (char <= 47 && char !== 32) {
-      invalidName = TRUE;
-    }
-    if (char >= 58 && char <= 64) {
-      invalidName = TRUE;
-    }
-    if (char >= 91 && char <= 96) {
-      invalidName = TRUE;
-    }
-    if (char >= 123) {
-      invalidName = TRUE;
-    }
-  }
-  if (invalidName === TRUE) {
+  if (!validName(name)) {
     return { error: 'Invalid character(s) in name' };
   }
   if (name.length < 3) {
@@ -280,6 +264,31 @@ function adminQuizDescriptionUpdate(authUserId: number, quizId: number, descript
   }
   setData(data);
   return {};
+}
+
+// Helper function for determining if string is alphanumeric
+function validName(name: String) {
+  let invalidName = FALSE;
+  for (let char = 0; char < name.length; char++) {
+    const charCode = name.charCodeAt(char);
+    if (charCode <= 47 && charCode !== 32) {
+      invalidName = TRUE;
+    }
+    if (charCode >= 58 && charCode <= 64) {
+      invalidName = TRUE;
+    }
+    if (charCode >= 91 && charCode <= 96) {
+      invalidName = TRUE;
+    }
+    if (charCode >= 123) {
+      invalidName = TRUE;
+    }
+  }
+  if (invalidName) {
+    return FALSE;
+  } else {
+    return TRUE;
+  }
 }
 
 export {
