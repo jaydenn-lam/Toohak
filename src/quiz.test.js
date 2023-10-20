@@ -1,4 +1,4 @@
-import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, adminQuizNameUpdate, adminQuizDescriptionUpdate} from './quiz.js';
+import {adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, adminQuizNameUpdate, adminQuizDescriptionUpdate} from './quiz';
 import {adminAuthRegister} from './auth';
 import {clear} from './other';
 
@@ -6,7 +6,7 @@ test('Temporary Placeholder', () => {
   let var1 = 0;
   expect(var1).toStrictEqual(0);
 })
-/*
+
 describe('adminQuizList', () => {
   beforeEach(() => {
     clear();
@@ -92,7 +92,7 @@ describe('adminQuizCreate', () => {
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
-    'Test your knowledge on animals!').quizId;
+    'Test your knowledge on animals!');
     expect(quizId).toStrictEqual({error: 'Invalid User Id'});
   });
 
@@ -116,7 +116,7 @@ describe('adminQuizCreate', () => {
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId, 'AQ', 
-    'Test your knowledge on animals!').quizId;
+    'Test your knowledge on animals!');
     expect(quizId).toStrictEqual({error: 'Quiz name too short'});
   });
 
@@ -125,7 +125,7 @@ describe('adminQuizCreate', () => {
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId, 'The worlds hardest ever animal quiz', 
-    'Test your knowledge on animals!').quizId;
+    'Test your knowledge on animals!');
     expect(quizId).toStrictEqual({error: 'Quiz name too long'});
   });
 
@@ -147,7 +147,7 @@ describe('adminQuizCreate', () => {
     'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
     `abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz 
-    abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz`).quizId;
+    abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz`);
     expect(quizId).toStrictEqual({error: 'Quiz description too long'});
   });
 });
@@ -285,7 +285,7 @@ describe('adminQuizRemove testing', () => {
 
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "").quizId;
-    const quizId_error = adminQuizRemove(authUserId1, QuizId + 1);
+    const quizId_error = adminQuizRemove(AuthUserId, QuizId + 1);
     expect(quizId_error).toStrictEqual({error: "Invalid quiz Id"});
   });
 
@@ -343,7 +343,7 @@ describe('adminQuizDescriptionUpdate testing', () => {
     const AuthUserId2 = adminAuthRegister('valid2email@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Desription").quizId;
     const QuizId2 = adminQuizCreate(AuthUserId, 'Quiz2', "Description").quizId;
-    const invalidUsertoquizId_error = adminQuizDescriptionUpdate(AuthUserId, QuizId, "Description");
+    const invalidUsertoquizId_error = adminQuizDescriptionUpdate(AuthUserId, QuizId2, "Description");
     expect(invalidUsertoquizId_error).toStrictEqual({error: "Quiz Id is not owned by this user"});
   });
 
@@ -376,4 +376,4 @@ describe('adminQuizDescriptionUpdate testing', () => {
     expect(quizobjectinfo.description).toStrictEqual(text);
   });
 });
-*/
+
