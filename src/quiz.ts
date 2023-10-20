@@ -12,8 +12,6 @@ interface quizId {
   quizId: number;
 }
 
-interface emptyObject {}
-
 interface quiz {
   quizId: number;
   name: string;
@@ -120,7 +118,7 @@ This function removes a quiz for the logged-in user.
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - Empty object.
 */
-function adminQuizRemove(authUserId: number, quizId: number): error | emptyObject | quiz[] {
+function adminQuizRemove(authUserId: number, quizId: number): error | void | quiz[] {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
@@ -205,7 +203,7 @@ Invalid user/quiz Ids will also cause an error.
 @param {string} name - The new name of the quiz
 @returns {void} - Nothing is returned
 */
-function adminQuizNameUpdate(authUserId: number, quizId: number, name: string): error | emptyObject {
+function adminQuizNameUpdate(authUserId: number, quizId: number, name: string): error | void {
   const data = getData();
   const quizArray = data.quizzes;
   if (name.length > 30 || name.length < 3) {
@@ -245,7 +243,7 @@ This function updates the description of an existing quiz.
 @param {string} description - The description of the quiz.
 @returns {} - Empty object.
 */
-function adminQuizDescriptionUpdate(authUserId: number, quizId: number, description: string):error | emptyObject {
+function adminQuizDescriptionUpdate(authUserId: number, quizId: number, description: string):error | void {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
