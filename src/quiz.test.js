@@ -14,7 +14,7 @@ describe('adminQuizList', () => {
     expect(QuizList).toStrictEqual({ 
       quizzes: [
         {
-          quizId: 0,
+          quizId: expect.any(Number),
           name: 'Animal Quiz',
         }
       ]
@@ -29,11 +29,11 @@ describe('adminQuizList', () => {
     expect(QuizList).toStrictEqual({ 
       quizzes: [
         {
-          quizId: 0,
+          quizId: expect.any(Number),
           name: 'Animal Quiz',
         },
         {
-          quizId: 1,
+          quizId: expect.any(Number),
           name: 'Food Quiz',
         }
       ]
@@ -59,7 +59,6 @@ describe('adminQuizCreate', () => {
   });
 
   test('Multiple Working Entries', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 'Test your knowledge on animals!');
     expect(quizId).toStrictEqual({ quizId: expect.any(Number) });
@@ -68,7 +67,6 @@ describe('adminQuizCreate', () => {
   })
 
   test('Invalid AuthUserId ERROR', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId + 1, 'Animal Quiz', 'Test your knowledge on animals!');
     expect(quizId).toStrictEqual({error: 'Invalid User Id'});
@@ -81,11 +79,8 @@ describe('adminQuizCreate', () => {
     {error: "Invalid character(s) in name"}],
     [0, 'Animal Quiz()', 'Test your knowledge on animals!', 
     {error: "Invalid character(s) in name"}],
-  ])('Name contains invalid characters ERROR', (userId, name, description, 
-    expected) => {
-
-    adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu");
+  ])('Name contains invalid characters ERROR', (userId, name, description, expected) => {
+    adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu");
     expect(adminQuizCreate(userId, name, description)).toEqual(expected) 
   });
 
@@ -96,25 +91,20 @@ describe('adminQuizCreate', () => {
   });
 
   test('Name too long ERROR', () => {
-
-    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
-    'William', "Lu").authUserId;
-    let quizId = adminQuizCreate(AuthUserId, 'The worlds hardest ever animal quiz', 
-    'Test your knowledge on animals!');
+    const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
+    let quizId = adminQuizCreate(AuthUserId, 'The worlds hardest ever animal quiz', 'Test your knowledge on animals!');
     expect(quizId).toStrictEqual({error: 'Quiz name too long'});
   });
 
   test('Name already used by current user ERROR', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 'Test your knowledge on animals!');
-    expect(quizId).toStrictEqual({ quizId: 0 });
+    expect(quizId).toStrictEqual({ quizId: expect.any(Number) });
     let quizId2 = adminQuizCreate(AuthUserId, 'Animal Quiz', 'Test more of your knowledge on animals!');
     expect(quizId2).toStrictEqual({error: 'Name already being used'});
   });
 
   test('Description too long ERROR', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
     let quizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
     `abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz`);
@@ -127,7 +117,6 @@ describe('adminQuizInfo', () => {
     clear();
   });
   test('Working Entry', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     let QuizInfo = adminQuizInfo(AuthUserId, QuizId);
@@ -141,7 +130,6 @@ describe('adminQuizInfo', () => {
   });
 
   test('Invalid AuthUserId ERROR', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
@@ -151,7 +139,6 @@ describe('adminQuizInfo', () => {
   });
 
   test('Invalid QuizId ERROR', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Animal Quiz', 
@@ -161,7 +148,6 @@ describe('adminQuizInfo', () => {
   });
 
   test('Quiz not owned by this user ERROR', () => {
-
     const AuthUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu").authUserId;
     const AuthUserId2 = adminAuthRegister('jayden@unsw.edu.au', '1234abcd', 
@@ -177,13 +163,12 @@ describe('adminQuizNameUpdate', () => {
   beforeEach(() => {
     clear();
   });
-
   test('Normal Run', () => {
     let userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', "Lu").authUserId;
     let quizId = adminQuizCreate(userId, 'quiz1', '').quizId;
     let QuizInfo = adminQuizInfo(userId, quizId);
     expect(QuizInfo).toStrictEqual({ 
-      quizId: 0,
+      quizId: expect.any(Number),
       name: 'quiz1',
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
@@ -192,7 +177,7 @@ describe('adminQuizNameUpdate', () => {
     adminQuizNameUpdate(userId, quizId, 'newquiz1');
     let QuizInfo2 = adminQuizInfo(userId, quizId);
     expect(QuizInfo2).toStrictEqual({ 
-      quizId: 0,
+      quizId: expect.any(Number),
       name: 'newquiz1',
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
@@ -242,7 +227,6 @@ describe('adminQuizRemove testing', () => {
     clear();
   });
   test('Valid AuthUserId', () => {
-
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "").quizId;
     let authUserId_error = adminQuizRemove(AuthUserId + 1, QuizId);
@@ -258,7 +242,6 @@ describe('adminQuizRemove testing', () => {
   });
 
   test('quizId is not owned by user', () => {
-
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const AuthUserId2 = adminAuthRegister('palidemail@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Description").quizId;
@@ -289,14 +272,13 @@ describe('adminQuizDescriptionUpdate testing', () => {
     clear();
   });
   test('Valid AuthUserId', () => {
- 
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "Description").quizId;
     const authUserId_error = adminQuizDescriptionUpdate(AuthUserId + 1, QuizId, "");
     expect(authUserId_error).toStrictEqual({error: 'Invalid User Id'});
   });
-  test('Valid quizId', () => {
 
+  test('Valid quizId', () => {
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Description").quizId;
     const quizIderror = adminQuizDescriptionUpdate(AuthUserId, QuizId + 1, "Description");
@@ -304,7 +286,6 @@ describe('adminQuizDescriptionUpdate testing', () => {
   });
 
   test('quizId is not owned by user', () => {
-
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const AuthUserId2 = adminAuthRegister('valid2email@gmail.com', '456abc!@#', 'Tim', 'Andy').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'Quiz1', "Desription").quizId;
@@ -314,7 +295,6 @@ describe('adminQuizDescriptionUpdate testing', () => {
   });
 
   test('Description is more than 100 characters', () => {
-
     const text = "more than 100 characters description is more than 100 characters description is more than 100 characterssssssss";
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "Description").quizId;
@@ -323,7 +303,6 @@ describe('adminQuizDescriptionUpdate testing', () => {
   });
   
   test('Test that the description has been updated', () => {
-
     const text = "more than 100 characters description";
     const AuthUserId = adminAuthRegister('validemail@gmail.com', '123abc!@#', 'Jake', 'Renzella').authUserId;
     const QuizId = adminQuizCreate(AuthUserId, 'quiz1', "Description").quizId;

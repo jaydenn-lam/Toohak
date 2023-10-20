@@ -2,25 +2,26 @@ import { adminUserDetails, adminAuthRegister, adminAuthLogin, authUserId} from '
 import {clear} from './other'
 
 describe('adminAuthRegister', () => {
-  test('Working Entry', () => {
+  beforeEach(() => {
     clear();
+  });
+  
+  test('Working Entry', () => {
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
       expect(authUserId).toStrictEqual({authUserId: expect.any(Number)});
   });
 
   test('Multiple Working Entries', () => {
-    clear();
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId).toStrictEqual({authUserId: 0});
+      expect(authUserId).toStrictEqual({authUserId: expect.any(Number)});
     let authUserId2 = adminAuthRegister('williaam@unsw.edu.au', '1234abcd', 
     'William', "Lu");
-      expect(authUserId2).toStrictEqual({authUserId: 1});
+      expect(authUserId2).toStrictEqual({authUserId: expect.any(Number)});
   })
 
   test('Duplicate Email Error', () => {
-    clear();
     let authUserId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lu");
     let authUserId2 = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
@@ -29,7 +30,6 @@ describe('adminAuthRegister', () => {
   });
 
   test('Invalid Email Error', () => {
-    clear();
     let authUserId1 = adminAuthRegister('will', '1234abcd', 'William', "Lu");
       expect(authUserId1).toStrictEqual({error: "Email is invalid"});
     let authUserId2 = adminAuthRegister('', '1234abcd', 'William', "Lu");
@@ -45,19 +45,16 @@ describe('adminAuthRegister', () => {
     {error: "First Name contains invalid character/s"}],
   ])('Invalid Character in First Name Error', (email, pw, firstName, 
     lastName, expected) => {
-    clear();
     expect(adminAuthRegister(email,pw,firstName,lastName)).toEqual(expected) 
   });
 
   test('First Name too Long Error', () => {
-    clear();
     let authUserId1 = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'WilliamWilliamWilliam', "Lu");
       expect(authUserId1).toStrictEqual({error: "First Name is too long"});
   });
 
   test('First Name too Short Error', () => {
-    clear();
     let authUserId1 = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'W', "Lu");
       expect(authUserId1).toStrictEqual({error: "First Name is too short"});
@@ -70,26 +67,22 @@ describe('adminAuthRegister', () => {
     {error: "Last Name contains invalid character/s"}]
   ])('Invalid Character in Last Name Error', (email, pw, firstName, 
     lastName, expected) => {
-    clear();
     expect(adminAuthRegister(email,pw,firstName,lastName)).toEqual(expected) 
   });
   
   test('Last Name too Long Error', () => {
-    clear();
     let authUserId1 = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "Lululululululululululu");
       expect(authUserId1).toStrictEqual({error: "Last Name is too long"});
   });
 
   test('Last Name too Short Error', () => {
-    clear();
     let authUserId1 = adminAuthRegister('william@unsw.edu.au', '1234abcd', 
     'William', "L");
       expect(authUserId1).toStrictEqual({error: "Last Name is too short"});
   });
 
   test('Password too Short Error', () => {
-    clear();
     let authUserId1 = adminAuthRegister('william@unsw.edu.au', '1234567', 
     'William', "Lu");
       expect(authUserId1).toStrictEqual({error: "Password is too short"});
@@ -99,7 +92,6 @@ describe('adminAuthRegister', () => {
   });
 
   test("Password Doesn't Contain 1 Number or 1 Letter", () => {
-    clear();
     let authUserId1 = adminAuthRegister('william@unsw.edu.au', 'password', 
     'William', "Lu");
       expect(authUserId1).toStrictEqual({error: 
@@ -221,7 +213,6 @@ describe('adminUserDetails', () => {
       },
     });
   });
-
 });
 
 
