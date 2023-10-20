@@ -118,7 +118,7 @@ This function removes a quiz for the logged-in user.
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - Empty object.
 */
-function adminQuizRemove(authUserId: number, quizId: number): error | void | quiz[] {
+function adminQuizRemove(authUserId: number, quizId: number): error | object | quiz[] {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
@@ -201,9 +201,9 @@ Invalid user/quiz Ids will also cause an error.
 @param {number} authuserId - The userId of the person who's quiz they are trying to rename
 @param {number} quizId - The quizId of the quiz which they are renaming
 @param {string} name - The new name of the quiz
-@returns {void} - Nothing is returned
+@returns {object} - Nothing is returned
 */
-function adminQuizNameUpdate(authUserId: number, quizId: number, name: string): error | void {
+function adminQuizNameUpdate(authUserId: number, quizId: number, name: string): error | object {
   const data = getData();
   const quizArray = data.quizzes;
   if (name.length > 30 || name.length < 3) {
@@ -243,7 +243,7 @@ This function updates the description of an existing quiz.
 @param {string} description - The description of the quiz.
 @returns {} - Empty object.
 */
-function adminQuizDescriptionUpdate(authUserId: number, quizId: number, description: string):error | void {
+function adminQuizDescriptionUpdate(authUserId: number, quizId: number, description: string):error | object {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
