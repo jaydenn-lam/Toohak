@@ -1,3 +1,4 @@
+test('Placeholder', () => {})
 /*
 import { adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, adminQuizNameUpdate, adminQuizDescriptionUpdate } from './quiz';
 import { adminAuthRegister } from './auth';
