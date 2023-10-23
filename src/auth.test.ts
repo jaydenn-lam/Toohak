@@ -303,7 +303,6 @@ describe('adminAuthRegister', () => {
     expect(data2).toStrictEqual({ error: 'Password must contain a number and a letter' });
   });
 });
-
 describe('adminAuthLogin', () => {
   beforeEach(() => {
     request(
