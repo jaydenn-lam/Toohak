@@ -1,5 +1,6 @@
 import request from 'sync-request-curl';
 import config from './config.json';
+import { token } from './dataStore';
 
 const port = config.port;
 const url = config.url;
@@ -15,7 +16,8 @@ function requestAuthRegister(email: string, password: string, nameFirst: string,
         password,
         nameFirst,
         nameLast
-      }
+      }, 
+      timeout: 100
     }
   );
 
@@ -28,10 +30,26 @@ function requestQuizCreate(token: string, name: string, description: string) {
     SERVER_URL + '/v1/admin/quiz',
     {
       json: {
-        token: token,
-        name: name,
-        description: description
-      }
+        token,
+        name,
+        description
+      },
+      timeout: 100
+    }
+  );
+
+  return JSON.parse(res.body.toString());
+}
+
+function requestQuizList(token: string) {
+  const res = request(
+    'GET',
+    SERVER_URL + '/v1/admin/quiz/list',
+    {
+      qs: {
+        token
+      },
+      timeout: 100
     }
   );
 
@@ -112,6 +130,28 @@ describe('POST /v1/admin/quiz', () => {
     expect(requestQuizCreate(token, 'Animal Quiz',
       'abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz'))
       .toStrictEqual({ error: 'Quiz description too long' });
+  });
+});
+
+describe('GET /v1/admin/quiz/list', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('Success', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    requestQuizCreate(token, 'Animal Quiz', 'Test you knowledge on animals!');
+    expect(requestQuizList(token)).toStrictEqual({ quizzes: expect.any(Array) });
+  });
+
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    requestQuizCreate(token, 'Animal Quiz', 'Test you knowledge on animals!');
+    const invalidToken = token + 'Invalid';
+    expect(requestQuizList(invalidToken)).toStrictEqual({ error: 'Invalid Token' });
   });
 });
 /*
