@@ -9,8 +9,8 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthRegister } from './auth';
-import { adminQuizCreate } from './quiz';
-import { clear } from './other';
+import { adminQuizCreate, adminQuizList } from './quiz';
+import { clear, findUserId } from './other';
 
 // Set up web app
 const app = express();
@@ -62,6 +62,18 @@ app.post('/v1/admin/quiz', (req: Request, res: Response) => {
     return res.status(401).json(response);
   } else if ('error' in response) {
     return res.status(400).json(response);
+  }
+  res.json(response);
+});
+
+app.get('/v1/admin/quiz/list', (req: Request, res: Response) => {
+  const token = {
+    token: req.query.token as string,
+    userId: findUserId(req.query.token as string)
+  };
+  const response = adminQuizList(token);
+  if ('error' in response) {
+    return res.status(401).json(response);
   }
   res.json(response);
 });
