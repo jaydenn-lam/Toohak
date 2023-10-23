@@ -3,11 +3,12 @@ import { port, url } from './config.json';
 import { clear } from './other';
 const SERVER_URL = `${url}:${port}`;
 
-describe ('adminAuthRegister', () => {
+describe('adminAuthRegister', () => {
   beforeEach(() => {
     clear();
-  });    
-  test ('Working Case', () => {
+  });
+
+  test('Working Case', () => {
     const res = request(
       'POST',
       SERVER_URL + '/v1/admin/auth/register',
@@ -23,14 +24,14 @@ describe ('adminAuthRegister', () => {
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({ authUserId: expect.any(Number) });
   });
-  
-  test ('Multiple Working Entries with Unique Identifiers', () => {
+
+  test('Multiple Working Entries with Unique Identifiers', () => {
     const res1 = request(
       'POST',
       SERVER_URL + '/v1/admin/auth/register',
       {
         json: {
-          email: 'william@unsw.edu.au',
+          email: 'williaa@unsw.edu.au',
           password: '1234abcd',
           nameFirst: 'William',
           nameLast: 'Lu',
@@ -56,7 +57,7 @@ describe ('adminAuthRegister', () => {
     expect(data1).not.toBe(data2);
   });
 
-  test ('Duplicate Email Error', () => {
+  test('Duplicate Email Error', () => {
     request(
       'POST',
       SERVER_URL + '/v1/admin/auth/register',
@@ -82,7 +83,7 @@ describe ('adminAuthRegister', () => {
       }
     );
     const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: 'Email has already been used' })
+    expect(data).toStrictEqual({ error: 'Email has already been used' });
   });
 
   test('Invalid Email Error', () => {
@@ -113,10 +114,10 @@ describe ('adminAuthRegister', () => {
       }
     );
     const data2 = JSON.parse(res2.body.toString());
-    expect(data2).toStrictEqual({ error: 'Email is invalid' })
+    expect(data2).toStrictEqual({ error: 'Email is invalid' });
   });
 
-  test ('Invalid character in First Name', () => {
+  test('Invalid character in First Name', () => {
     const res1 = request(
       'POST',
       SERVER_URL + '/v1/admin/auth/register',
@@ -132,7 +133,7 @@ describe ('adminAuthRegister', () => {
     const data1 = JSON.parse(res1.body.toString());
     expect(data1).toStrictEqual({ error: 'First Name contains invalid character/s' });
     const res2 = request(
-     'POST',
+      'POST',
       SERVER_URL + '/v1/admin/auth/register',
       {
         json: {
@@ -195,7 +196,7 @@ describe ('adminAuthRegister', () => {
       }
     );
     const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: 'Last Name contains invalid character/s' }); 
+    expect(data).toStrictEqual({ error: 'Last Name contains invalid character/s' });
   });
 
   test('Last Name too long error', () => {
