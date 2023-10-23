@@ -67,7 +67,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   };
   data.users.push(userData);
   setData(data);
-  return { 
+  return {
     token: uuidv4(),
     userId: authUserId
   };
@@ -192,7 +192,7 @@ function adminAuthLogin(email: string, password: string): token | error {
   // update the data store
   setData(data);
   const authUserId = user.userId;
-  return { 
+  return {
     token: uuidv4(),
     userId: authUserId
   };
