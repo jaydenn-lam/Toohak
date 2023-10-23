@@ -10,7 +10,8 @@ function clear() {
   setData(
     {
       users: [],
-      quizzes: []
+      quizzes: [],
+      tokens: []
     }
   );
   return {};
@@ -36,4 +37,14 @@ function quizIdExists(quizId: number): number {
   return FALSE;
 }
 
-export { clear, userIdExists, quizIdExists };
+function findUserId(token: string): number {
+  const data = getData();
+  for (const existingToken of data.tokens) {
+    if (token === existingToken.token) {
+      return existingToken.userId;
+    }
+  }
+  return FALSE;
+}
+
+export { clear, userIdExists, quizIdExists, findUserId };

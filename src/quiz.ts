@@ -1,6 +1,6 @@
 
 import { getData, setData } from './dataStore';
-import { userIdExists, quizIdExists } from './other';
+import { userIdExists, quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
 
@@ -53,17 +53,17 @@ function adminQuizList(authUserId: number): quizList | error {
 
 /*
 This function creates a quiz for the logged-in user.
-@param {number} authUserId - The user's assigned authUserId.
+@param {number} token - The session's assigned token.
 @param {string} name - The name of the quiz.
 @param {string} description - The description of the quiz.
 @returns {number} - The quizId of the newly created quiz.
 */
 
-function adminQuizCreate(authUserId: number, name: string, description: string): quizId |error {
+function adminQuizCreate(token: string, name: string, description: string): quizId |error {
   const data = getData();
   const quizArray = data.quizzes;
-  if (userIdExists(authUserId) === FALSE) {
-    return { error: 'Invalid User Id' };
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
   }
   if (!validName(name)) {
     return { error: 'Invalid character(s) in name' };
@@ -89,7 +89,7 @@ function adminQuizCreate(authUserId: number, name: string, description: string):
     TimeCreated: Math.round(Date.now() / 1000),
     TimeLastEdited: Math.round(Date.now() / 1000),
     Description: description,
-    userId: authUserId
+    userId: findUserId(token)
   };
   data.quizzes.push(quizData);
   setData(data);
@@ -289,6 +289,17 @@ function validName(name: string) {
   } else {
     return TRUE;
   }
+}
+
+// Helper function for determining if token exists
+function tokenExists(token: string) {
+  const data = getData();
+  for (const existingToken of data.tokens) {
+    if (token === existingToken.token) {
+      return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 export {

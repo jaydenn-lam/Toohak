@@ -17,15 +17,22 @@ interface quiz {
   userId: number;
 }
 
+interface token {
+  token: string;
+  userId: number;
+}
+
 interface dataStore {
   users: user[];
   quizzes: quiz[];
+  tokens: token[];
 }
 
 // YOU SHOULD MODIFY THIS OBJECT BELOW
 let data: dataStore = {
   users: [],
   quizzes: [],
+  tokens: []
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1
