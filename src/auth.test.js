@@ -1,4 +1,6 @@
-test('Placeholder', () => {})
+test('Placeholder', () => {
+  expect('yes').toEqual('yes');
+});
 /*
 import { adminUserDetails, adminAuthRegister, adminAuthLogin } from './auth';
 import { clear } from './other';

@@ -1,4 +1,6 @@
-test('Placeholder', () => {})
+test('Placeholder', () => {
+  expect('yes').toEqual('yes');
+});
 /*
 import { adminQuizList, adminQuizCreate, adminQuizRemove, adminQuizInfo, adminQuizNameUpdate, adminQuizDescriptionUpdate } from './quiz';
 import { adminAuthRegister } from './auth';
