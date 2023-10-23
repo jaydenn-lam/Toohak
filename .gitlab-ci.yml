@@ -20,4 +20,11 @@ tests:
     - sleep 2
     - cat $SERVER_LOG
     - npm run test
-    - npm run lint
+
+typecheck:
+  stage: checks
+  script: npm run tsc
+
+linting:
+  stage: checks
+  script: npm run lint
