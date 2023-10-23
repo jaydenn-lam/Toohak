@@ -5,7 +5,10 @@ const SERVER_URL = `${url}:${port}`;
 
 describe('adminAuthRegister', () => {
   beforeEach(() => {
-    clear();
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
   });
 
   test('Working Case', () => {
@@ -18,14 +21,16 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ authUserId: expect.any(Number) });
+    expect(data.userId).toStrictEqual(expect.any(Number));
   });
 
   test('Multiple Working Entries with Unique Identifiers', () => {
+    clear();
     const res1 = request(
       'POST',
       SERVER_URL + '/v1/admin/auth/register',
@@ -35,11 +40,12 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data1 = JSON.parse(res1.body.toString());
-    expect(data1).toStrictEqual({ authUserId: expect.any(Number) });
+    expect(data1.userId).toStrictEqual(expect.any(Number));
     const res2 = request(
       'POST',
       SERVER_URL + '/v1/admin/auth/register',
@@ -49,12 +55,14 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'Jayden',
           nameLast: 'Lam',
-        }
+        },
+        timeout: 100
       }
     );
     const data2 = JSON.parse(res2.body.toString());
-    expect(data2).toStrictEqual({ authUserId: expect.any(Number) });
-    expect(data1).not.toBe(data2);
+    expect(data2.userId).toStrictEqual(expect.any(Number));
+    expect(data1.userId).not.toBe(data2.userId);
+    expect(data1.token).not.toBe(data2.token);
   });
 
   test('Duplicate Email Error', () => {
@@ -67,7 +75,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const res = request(
@@ -79,7 +88,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -96,7 +106,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data1 = JSON.parse(res1.body.toString());
@@ -110,7 +121,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data2 = JSON.parse(res2.body.toString());
@@ -127,7 +139,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'Invalid.',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data1 = JSON.parse(res1.body.toString());
@@ -141,7 +154,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'Invalid()',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data2 = JSON.parse(res2.body.toString());
@@ -158,7 +172,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'FirstNameFirstNameFirstNameFirstName',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -175,7 +190,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'W',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -192,7 +208,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William Lu',
           nameLast: 'Lu()',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -209,7 +226,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William Lu',
           nameLast: 'LastNameLastNameLastNameLastName',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -226,7 +244,8 @@ describe('adminAuthRegister', () => {
           password: '1234abcd',
           nameFirst: 'William Lu',
           nameLast: 'L',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -243,7 +262,8 @@ describe('adminAuthRegister', () => {
           password: 'Short12',
           nameFirst: 'William Lu',
           nameLast: 'Lu',
-        }
+        },
+        timeout: 100
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -259,8 +279,9 @@ describe('adminAuthRegister', () => {
           email: 'william@unsw.edu.au',
           password: 'NoNumbers',
           nameFirst: 'William Lu',
-          nameLast: 'L',
-        }
+          nameLast: 'Lu',
+        },
+        timeout: 100
       }
     );
     const data1 = JSON.parse(res1.body.toString());
@@ -273,8 +294,9 @@ describe('adminAuthRegister', () => {
           email: 'william@unsw.edu.au',
           password: '12345678',
           nameFirst: 'William Lu',
-          nameLast: 'L',
-        }
+          nameLast: 'Lu',
+        },
+        timeout: 100
       }
     );
     const data2 = JSON.parse(res2.body.toString());
