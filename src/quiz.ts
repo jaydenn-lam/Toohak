@@ -86,8 +86,8 @@ function adminQuizCreate(authUserId: number, name: string, description: string):
   const quizData = {
     quizId: quizId,
     name: name,
-    TimeCreated: Date.now(),
-    TimeLastEdited: Date.now(),
+    TimeCreated: Math.round(Date.now() / 1000),
+    TimeLastEdited: Math.round(Date.now() / 1000),
     Description: description,
     userId: authUserId
   };

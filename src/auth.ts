@@ -1,8 +1,14 @@
 import { getData, setData } from './dataStore';
 import validator from 'validator';
+import { v4 as uuidv4 } from 'uuid';
 
 interface authUserId {
   authUserId: number;
+}
+
+interface token {
+  token: string;
+  userId: number;
 }
 
 interface error {
@@ -28,7 +34,7 @@ Identical passwords and names are allowed, but not emails. Error messages are re
 @param {string} nameLast - String that contains their last name
 @returns {number} authUserId - Integer that contains their assigned authUserId
 */
-function adminAuthRegister(email: string, password: string, nameFirst: string, nameLast: string): authUserId | error {
+function adminAuthRegister(email: string, password: string, nameFirst: string, nameLast: string): token | error {
   const data = getData();
   const userArray = data.users;
   for (const user in userArray) {
@@ -61,7 +67,10 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   };
   data.users.push(userData);
   setData(data);
-  return { authUserId };
+  return { 
+    token: uuidv4(),
+    userId: authUserId
+  };
 }
 
 function NameIsInvalid(nameFirst: string, nameLast: string) {
@@ -160,7 +169,7 @@ successful login by 1 and resets failed passwords to 0.
 @param {string} password - Password of the user
 @returns {number} - The unique identifier of the user.
 */
-function adminAuthLogin(email: string, password: string): authUserId | error {
+function adminAuthLogin(email: string, password: string): token | error {
   // grabs the data from the data store
   const data = getData();
   const userArray = data.users;
@@ -183,7 +192,10 @@ function adminAuthLogin(email: string, password: string): authUserId | error {
   // update the data store
   setData(data);
   const authUserId = user.userId;
-  return { authUserId };
+  return { 
+    token: uuidv4(),
+    userId: authUserId
+  };
 }
 
 export {
