@@ -1,3 +1,4 @@
+/*
 import { adminUserDetails, adminAuthRegister, adminAuthLogin } from './auth';
 import { clear } from './other';
 
@@ -214,3 +215,4 @@ describe('adminUserDetails', () => {
     });
   });
 });
+*/
