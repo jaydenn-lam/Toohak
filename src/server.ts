@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthRegister } from './auth';
+import { adminQuizCreate } from './quiz';
 import { clear } from './other';
 
 // Set up web app
@@ -52,6 +53,17 @@ app.post('/v1/admin/auth/register', (req: Request, res: Response) => {
 
 app.delete('/v1/clear', (req: Request, res: Response) => {
   res.json(clear());
+});
+
+app.post('/v1/admin/quiz', (req: Request, res: Response) => {
+  const { token, name, description } = req.body;
+  const response = adminQuizCreate(token, name, description);
+  if ('error' in response && response.error === 'Invalid Token') {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.json(response);
 });
 
 // ====================================================================
