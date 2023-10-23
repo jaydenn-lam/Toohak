@@ -361,7 +361,7 @@ describe('adminAuthLogin', () => {
     expect(registrationData.userId).toEqual(expect.any(Number));
 
     const loginResponse = request(
-      'POST', 
+      'POST',
       SERVER_URL + '/v1/admin/auth/login',
       {
         headers: {
@@ -394,8 +394,8 @@ describe('adminAuthLogin', () => {
     expect(registrationData.userId).toEqual(expect.any(Number));
 
     const loginResponse = request(
-      'POST', 
-      SERVER_URL + '/v1/admin/auth/login', 
+      'POST',
+      SERVER_URL + '/v1/admin/auth/login',
       {
         headers: {
           'Content-Type': 'application/json',
