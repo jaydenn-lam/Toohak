@@ -1,6 +1,5 @@
 import request from 'sync-request-curl';
 import config from './config.json';
-import { token } from './dataStore';
 
 const port = config.port;
 const url = config.url;
@@ -16,7 +15,7 @@ function requestAuthRegister(email: string, password: string, nameFirst: string,
         password,
         nameFirst,
         nameLast
-      }, 
+      },
       timeout: 100
     }
   );
