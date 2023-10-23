@@ -303,3 +303,112 @@ describe('adminAuthRegister', () => {
     expect(data2).toStrictEqual({ error: 'Password must contain a number and a letter' });
   });
 });
+
+describe('adminAuthLogin', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('should return authUserId on successful login', () => {
+    const registrationResponse = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'anita@unsw.edu.au',
+          password: 'password123',
+          nameFirst: 'Anita',
+          nameLast: 'Byun',
+        },
+      }
+    );
+    const registrationData = JSON.parse(registrationResponse.body.toString());
+    expect(registrationData.userId).toEqual(expect.any(Number));
+
+    const loginResponse = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/login',
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'anita@unsw.edu.au',
+          password: 'password123',
+        }),
+      }
+    );
+    const returnedUserId = JSON.parse(loginResponse.body.toString()).authUserId;
+    expect(returnedUserId).toEqual(registrationData.authUserId);
+  });
+
+  test('Return an error when the email is invalid', () => {
+    const registrationResponse = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'anita@unsw.edu.au',
+          password: 'password123',
+          nameFirst: 'Anita',
+          nameLast: 'Byun',
+        },
+      }
+    );
+    const registrationData = JSON.parse(registrationResponse.body.toString());
+    expect(registrationData.userId).toEqual(expect.any(Number));
+
+    const loginResponse = request(
+      'POST', 
+      SERVER_URL + '/v1/admin/auth/login',
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'invalid_email',
+          password: 'password123',
+        }),
+      }
+    );
+    const data = JSON.parse(loginResponse.body.toString());
+    expect(data).toStrictEqual({ error: 'Invalid email address' });
+  });
+
+  test('Return an error for incorrect password', () => {
+    const registrationResponse = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'anita@unsw.edu.au',
+          password: 'password123',
+          nameFirst: 'Anita',
+          nameLast: 'Byun',
+        },
+      }
+    );
+    const registrationData = JSON.parse(registrationResponse.body.toString());
+    expect(registrationData.userId).toEqual(expect.any(Number));
+
+    const loginResponse = request(
+      'POST', 
+      SERVER_URL + '/v1/admin/auth/login', 
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'anita@unsw.edu.au',
+          password: 'incorrectpassword',
+        }),
+      }
+    );
+
+    const data = JSON.parse(loginResponse.body.toString());
+    expect(data).toStrictEqual({ error: 'Incorrect password' });
+  });
+});
