@@ -7,6 +7,10 @@ interface token {
   userId: number;
 }
 
+interface returnToken {
+  token: string;
+}
+
 interface error {
   error: string;
 }
@@ -30,7 +34,7 @@ Identical passwords and names are allowed, but not emails. Error messages are re
 @param {string} nameLast - String that contains their last name
 @returns {number} authUserId - Integer that contains their assigned authUserId
 */
-function adminAuthRegister(email: string, password: string, nameFirst: string, nameLast: string): token | error {
+function adminAuthRegister(email: string, password: string, nameFirst: string, nameLast: string): returnToken | error {
   const data = getData();
   const userArray = data.users;
   for (const user in userArray) {
@@ -71,7 +75,6 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   setData(data);
   return {
     token: uuid,
-    userId: authUserId
   };
 }
 

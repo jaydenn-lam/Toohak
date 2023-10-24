@@ -62,4 +62,4 @@ function setData(newData: dataStore) {
   return {};
 }
 
-export { getData, setData };
+export { getData, setData, token };
