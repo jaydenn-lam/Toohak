@@ -111,7 +111,6 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   } else if ('error' in response) {
     return res.status(403).json(response);
   }
-  
   res.json(response);
 });
 
