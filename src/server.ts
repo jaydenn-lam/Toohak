@@ -89,6 +89,10 @@ app.put('/v1/admin/quiz/:quizid/description', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
+/*app.get('/v1/admin/quiz/:quizid', (req: Request, res: Request) => {
+
+})
+*/
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================

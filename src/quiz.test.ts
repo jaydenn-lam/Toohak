@@ -185,6 +185,51 @@ describe('GET /v1/admin/quiz/list', () => {
   });
 });
 
+describe('GET /v1/admin/quiz/{quizid}', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const invalidToken = token + 'Invalid';
+    const error = requestQuizInfo(invalidToken, quizId);
+    expect(error).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('User is not Owner of Quiz', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const token2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').token;
+    const error = requestQuizInfo(token2, quizId);
+    expect(error).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
+  });
+  
+  test('Invalid QuizId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const invalidQuizId = quizId + 1;
+    const error = requestQuizInfo(token, invalidQuizId);
+    expect(error).toStrictEqual({ error: 'Invalid Quiz Id' });
+  })
+
+  test('Working Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const quizInfo = requestQuizInfo(token, quizId);
+    expect(quizInfo).toStrictEqual({
+      quizId: quizId,
+      name: 'Animal Quiz',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: 'Test your knowledge on animals!'
+    });
+  })
+});
+
 describe('PUT /v1/admin/quiz/{quizid}/description', () => {
   beforeEach(() => {
     request(
