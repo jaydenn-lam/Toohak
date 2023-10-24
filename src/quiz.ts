@@ -108,12 +108,13 @@ This function removes a quiz for the logged-in user.
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - Empty object.
 */
-function adminQuizRemove(authUserId: number, quizId: number): error | object {
+function adminQuizRemove(token: string, quizId: number): error | object {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
-  if (userIdExists(authUserId) === FALSE) {
-    return { error: 'Invalid User Id' };
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'Invalid Token' };
   }
   let quizIdExists = FALSE;
   for (const quiz of quizArray) {
@@ -125,12 +126,8 @@ function adminQuizRemove(authUserId: number, quizId: number): error | object {
     return { error: 'Invalid quiz Id' };
   }
   // Error check for incorrect quizid for the specified user
-  for (const quiz of quizArray) {
-    if (quiz.quizId === quizId) {
-      if (quiz.userId !== authUserId) {
-        return { error: 'Quiz Id is not owned by this user' };
-      }
-    }
+  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
   }
   // Remove a quiz
   for (let index = 0; index < data.quizzes.length; index++) {
