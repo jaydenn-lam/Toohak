@@ -8,7 +8,7 @@ import sui from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
 import process from 'process';
-import { adminAuthLogin, adminAuthRegister } from './auth';
+import { adminAuthLogin, adminAuthRegister, adminUserDetails } from './auth';
 import { adminQuizCreate } from './quiz';
 import { clear } from './other';
 
@@ -73,6 +73,17 @@ app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
   }
 
   res.json(result);
+});
+
+app.get('/v1/admin/user/details', (req: Request, res: Response) => {
+  const authuserId = req.query.userId as string;
+  const userDetails = adminUserDetails(Number(authuserId));
+
+  if ('error' in userDetails) {
+    res.status(400).json(userDetails);
+  } else {
+    res.json(userDetails);
+  }
 });
 
 // ====================================================================
