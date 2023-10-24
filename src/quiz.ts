@@ -30,15 +30,22 @@ This function given a users authUserId, provides the list of all quizzes owned b
 @param {number} authUserId - Integer that contains their assigned authUserId
 @returns {object} - An object containing quizId and name
 */
-function adminQuizList(token: token): quizList | error {
+function adminQuizList(token: string): quizList | error {
   const data = getData();
-  if (!tokenExists(token.token)) {
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray)) {
     return { error: 'Invalid Token' };
   }
   const quizArray = data.quizzes;
   const quizList : quiz[] = [];
+  let userId;
+  for (const session of tokenArray) {
+    if (session.token === token) {
+      userId = session.userId;
+    }
+  }
   for (const quiz of quizArray) {
-    if (quiz.userId === token.userId) {
+    if (quiz.userId === userId) {
       const ownedQuiz = {
         quizId: quiz.quizId,
         name: quiz.name
@@ -60,7 +67,8 @@ This function creates a quiz for the logged-in user.
 function adminQuizCreate(token: string, name: string, description: string): quizId |error {
   const data = getData();
   const quizArray = data.quizzes;
-  if (!tokenExists(token)) {
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray)) {
     return { error: 'Invalid Token' };
   }
   if (!validName(name)) {
@@ -141,17 +149,18 @@ Invalid quiz/user Ids or if the quiz isn't owned by the authUserId will give an 
 @param {number} quizId - The quizId of the quiz which needs info returned
 @returns {quizInfo} - An object containing all relevant info of the quiz
 */
-function adminQuizInfo(authUserId: number, quizId: number):error | quiz {
+function adminQuizInfo(token: string, quizId: number): error | quiz {
   const data = getData();
   const quizArray = data.quizzes;
+  const tokenArray = data.tokens;
   let quizIdExists = FALSE;
   let quizInfo: quiz = {
     quizId: 0,
     name: '',
     userId: 0,
   };
-  if (userIdExists(authUserId) === FALSE) {
-    return { error: 'Invalid User Id' };
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'Invalid Token' };
   }
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
@@ -169,8 +178,8 @@ function adminQuizInfo(authUserId: number, quizId: number):error | quiz {
   if (quizIdExists === FALSE) {
     return { error: 'Invalid Quiz Id' };
   }
-  if (quizInfo.userId !== authUserId) {
-    return { error: 'Quiz not owned by user' };
+  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
   }
   delete quizInfo.userId;
   return quizInfo;
@@ -225,12 +234,13 @@ This function updates the description of an existing quiz.
 @param {string} description - The description of the quiz.
 @returns {} - Empty object.
 */
-function adminQuizDescriptionUpdate(authUserId: number, quizId: number, description: string):error | object {
+function adminQuizDescriptionUpdate(token: string, description: string, quizId: number): error | object {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
-  if (userIdExists(authUserId) === FALSE) {
-    return { error: 'Invalid User Id' };
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'Invalid Token' };
   }
   let quizIdExists = FALSE;
   for (const quiz of quizArray) {
@@ -242,12 +252,8 @@ function adminQuizDescriptionUpdate(authUserId: number, quizId: number, descript
     return { error: 'Invalid quiz Id' };
   }
   // Error check for incorrect quizid for the specified user
-  for (const quiz of quizArray) {
-    if (quiz.quizId === quizId) {
-      if (quiz.userId !== authUserId) {
-        return { error: 'Quiz Id is not owned by this user' };
-      }
-    }
+  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
   }
   // Error checking for description
   if (description.length > 100 && description !== '') {
@@ -262,6 +268,23 @@ function adminQuizDescriptionUpdate(authUserId: number, quizId: number, descript
   }
   setData(data);
   return {};
+}
+
+function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string, tokenArray: token[]): boolean {
+  let userId;
+  for (const session of tokenArray) {
+    if (token === session.token) {
+      userId = session.userId;
+    }
+  }
+  for (const quiz of quizArray) {
+    if (quiz.quizId === quizId) {
+      if (quiz.userId !== userId) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 // Helper function for determining if string is alphanumeric
@@ -290,9 +313,8 @@ function validName(name: string) {
 }
 
 // Helper function for determining if token exists
-function tokenExists(token: string) {
-  const data = getData();
-  for (const existingToken of data.tokens) {
+function tokenExists(token: string, tokenArray: token[]) {
+  for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
       return TRUE;
     }

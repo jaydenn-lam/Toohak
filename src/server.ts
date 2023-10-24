@@ -9,8 +9,8 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthRegister } from './auth';
-import { adminQuizCreate, adminQuizList } from './quiz';
-import { clear, findUserId } from './other';
+import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList } from './quiz';
+import { clear } from './other';
 
 // Set up web app
 const app = express();
@@ -67,15 +67,40 @@ app.post('/v1/admin/quiz', (req: Request, res: Response) => {
 });
 
 app.get('/v1/admin/quiz/list', (req: Request, res: Response) => {
-  const token = {
-    token: req.query.token as string,
-    userId: findUserId(req.query.token as string)
-  };
+  const token = req.query.token as string;
   const response = adminQuizList(token);
   if ('error' in response) {
     return res.status(401).json(response);
   }
   res.json(response);
+});
+
+app.put('/v1/admin/quiz/:quizid/description', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const { token, description } = req.body;
+  const response = adminQuizDescriptionUpdate(token, description, quizId);
+  if ('error' in response && 'not owned' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response && 'Invalid Token' in response) {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const token = req.query.token as string;
+  const response = adminQuizInfo(token, quizId);
+  if ('error' in response && 'not owned' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response && 'Invalid Token' in response) {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
 });
 
 // ====================================================================
