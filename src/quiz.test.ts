@@ -299,7 +299,6 @@ describe('PUT /v1/admin/quiz/{quizid}/description', () => {
   });
 });
 
-
 describe('/v1/admin/quiz/{quizid}', () => {
   beforeEach(() => {
     request(
@@ -327,7 +326,6 @@ describe('/v1/admin/quiz/{quizid}', () => {
   test('Quiz not owned by user ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const token2 = requestAuthRegister('validem@unsw.edu.au', '4321abcd', 'First', 'Last').token;
-    const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
     const quizId2 = requestQuizCreate(token2, 'quiz2', '').quizId;
     expect(requestadminQuizRemove(token, quizId2)).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
@@ -339,5 +337,4 @@ describe('/v1/admin/quiz/{quizid}', () => {
     requestadminQuizRemove(token, quizId);
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [] });
   });
-  
 });
