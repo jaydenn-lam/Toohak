@@ -60,7 +60,7 @@ function requestQuizDescriptionUpdate(token: string, description: string, quizId
     'PUT',
     SERVER_URL + '/v1/admin/quiz/' + quizId + '/description',
     {
-      qs: {
+      json: {
         token,
         description
       },
@@ -69,7 +69,7 @@ function requestQuizDescriptionUpdate(token: string, description: string, quizId
   );
 
   return JSON.parse(res.body.toString());
-};
+}
 
 function requestQuizInfo(token: string, quizId: number) {
   const res = request(
@@ -186,6 +186,12 @@ describe('GET /v1/admin/quiz/list', () => {
 });
 
 describe('PUT /v1/admin/quiz/{quizid}/description', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
   test('Description too long', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
@@ -232,7 +238,7 @@ describe('PUT /v1/admin/quiz/{quizid}/description', () => {
       description: 'Valid New Description',
     });
   });
-}); 
+});
 
 /*
 
