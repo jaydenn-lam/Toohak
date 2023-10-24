@@ -104,7 +104,7 @@ function requestadminQuizRemove(token: string, quizId: number) {
 function requestQuiznameUpdate(token: string, quizId: number, name: string) {
   const res = request(
     'PUT',
-    SERVER_URL + '/v1/admin/quiz/' + quizId + '/description',
+    SERVER_URL + '/v1/admin/quiz/' + quizId + '/name',
     {
       json: {
         token,
@@ -365,26 +365,26 @@ describe('/v1/admin/quiz/{quizid}/name', () => {
   test('Invalid token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    expect(requestQuiznameUpdate(token + 'Invalid', quizId, 'quiz1')).toStrictEqual({ error: 'Invalid Token' });
+    expect(requestQuiznameUpdate(token + 'Invalid', quizId, 'quiz2')).toStrictEqual({ error: 'Invalid Token' });
   });
   test('Empty token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    expect(requestQuiznameUpdate('', quizId, 'quiz1')).toStrictEqual({ error: 'Invalid Token' });
+    expect(requestQuiznameUpdate('', quizId, 'quiz2')).toStrictEqual({ error: 'Invalid Token' });
   });
 
 
   test('Correct behaviour', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    expect(requestQuiznameUpdate(token, quizId, 'quiz1')).toStrictEqual({});
+    expect(requestQuiznameUpdate(token, quizId, 'quiz2')).toStrictEqual({});
   });
 
   test('Quiz not owned by user ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const token2 = requestAuthRegister('validem@unsw.edu.au', '4321abcd', 'First', 'Last').token;
     const quizId2 = requestQuizCreate(token2, 'quiz2', '').quizId;
-    expect(requestQuiznameUpdate(token, quizId2, 'quiz2')).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
+    expect(requestQuiznameUpdate(token, quizId2, 'quiz3')).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
 
   test('Normal Run', () => {
