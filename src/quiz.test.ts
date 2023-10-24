@@ -185,7 +185,7 @@ describe('GET /v1/admin/quiz/list', () => {
   });
 });
 
-describe('GET /v1/admin/quiz/{quizid}', () => {
+describe('GET /v1/admin/quiz/{quizid} (quizInfo)', () => {
   beforeEach(() => {
     request(
       'DELETE',
@@ -227,7 +227,7 @@ describe('GET /v1/admin/quiz/{quizid}', () => {
       timeLastEdited: expect.any(Number),
       description: 'Test your knowledge on animals!'
     });
-  })
+  });
 });
 
 describe('PUT /v1/admin/quiz/{quizid}/description', () => {
@@ -274,7 +274,7 @@ describe('PUT /v1/admin/quiz/{quizid}/description', () => {
     const returnedValue = requestQuizDescriptionUpdate(token, 'Valid New Description', quizId);
     expect(returnedValue).toStrictEqual({});
 
-    const quizInfo = requestQuizInfo(quizId, token);
+    const quizInfo = requestQuizInfo(token, quizId);
     expect(quizInfo).toStrictEqual({
       quizId: quizId,
       name: 'Animal Quiz',

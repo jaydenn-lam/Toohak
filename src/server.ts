@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthRegister } from './auth';
-import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizList } from './quiz';
+import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList } from './quiz';
 import { clear } from './other';
 
 // Set up web app
@@ -89,10 +89,20 @@ app.put('/v1/admin/quiz/:quizid/description', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
-/*app.get('/v1/admin/quiz/:quizid', (req: Request, res: Request) => {
+app.get('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const token = req.query.token as string;
+  const response = adminQuizInfo(token, quizId);
+  if ('error' in response && 'not owned' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response && 'Invalid Token' in response) {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
 
-})
-*/
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================

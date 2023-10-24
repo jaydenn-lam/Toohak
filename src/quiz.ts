@@ -149,17 +149,18 @@ Invalid quiz/user Ids or if the quiz isn't owned by the authUserId will give an 
 @param {number} quizId - The quizId of the quiz which needs info returned
 @returns {quizInfo} - An object containing all relevant info of the quiz
 */
-function adminQuizInfo(authUserId: number, quizId: number):error | quiz {
+function adminQuizInfo(token: string, quizId: number): error | quiz {
   const data = getData();
   const quizArray = data.quizzes;
+  const tokenArray = data.tokens;
   let quizIdExists = FALSE;
   let quizInfo: quiz = {
     quizId: 0,
     name: '',
     userId: 0,
   };
-  if (userIdExists(authUserId) === FALSE) {
-    return { error: 'Invalid User Id' };
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'Invalid Token' };
   }
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
@@ -177,8 +178,8 @@ function adminQuizInfo(authUserId: number, quizId: number):error | quiz {
   if (quizIdExists === FALSE) {
     return { error: 'Invalid Quiz Id' };
   }
-  if (quizInfo.userId !== authUserId) {
-    return { error: 'Quiz not owned by user' };
+  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
   }
   delete quizInfo.userId;
   return quizInfo;
