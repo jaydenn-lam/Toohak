@@ -2,10 +2,6 @@ import { getData, setData } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
 
-interface authUserId {
-  authUserId: number;
-}
-
 interface token {
   token: string;
   userId: number;
@@ -144,12 +140,12 @@ If the user is not found, it returns a error message, error: 'Invalid authUserId
 @param {number} authUserId - The unique identifier of the user.
 @returns {object} -  An object containing user details.
 */
-function adminUserDetails(authUserId: authUserId): user | error {
+function adminUserDetails(authUserId: number): user | error {
   // grabs the data from the data store
   const data = getData();
   const userArray = data.users;
   // finds the user with the matching UserId
-  const user = userArray.find((user) => user.userId === authUserId.authUserId);
+  const user = userArray.find((userArray) => userArray.userId === authUserId);
 
   // if no user is found return error: 'Invalid authUserId'
   if (!user) {
@@ -158,7 +154,7 @@ function adminUserDetails(authUserId: authUserId): user | error {
   // construct and return user details
   return {
     user: {
-      userId: authUserId.authUserId,
+      userId: authUserId,
       name: `${user.First_name} ${user.Last_name}`,
       email: user.email,
       numSuccessfulLogins: user.numSuccessfulLogins,
