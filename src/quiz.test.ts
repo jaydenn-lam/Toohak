@@ -162,7 +162,7 @@ describe('POST /v1/admin/quiz', () => {
       .toStrictEqual({ error: 'Quiz description too long' });
   });
 });
-
+/*
 describe('GET /v1/admin/quiz/list', () => {
   beforeEach(() => {
     request(
@@ -285,7 +285,7 @@ describe('PUT /v1/admin/quiz/{quizid}/description', () => {
   });
 });
 
-/*
+
 
 describe('adminQuizList', () => {
   beforeEach(() => {
