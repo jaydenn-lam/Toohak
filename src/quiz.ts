@@ -1,6 +1,6 @@
 
 import { getData, setData, token } from './dataStore';
-import { userIdExists, quizIdExists, findUserId } from './other';
+import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
 
@@ -191,31 +191,35 @@ Invalid user/quiz Ids will also cause an error.
 @param {string} name - The new name of the quiz
 @returns {object} - Nothing is returned
 */
-function adminQuizNameUpdate(authUserId: number, quizId: number, name: string): error | object {
+function adminQuizNameUpdate(token: string, quizId: number, name: string): error | object {
   const data = getData();
   const quizArray = data.quizzes;
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'Invalid Token' };
+  }
+
   if (name.length > 30 || name.length < 3) {
     return ({ error: 'Invalid new name' });
   }
-  if (/^[a-zA-Z0-9]+$/.test(name) === false) {
+  if (!(/^[a-zA-Z0-9]+$/.test(name))) {
     return ({ error: 'Invalid new name' });
   }
-  if (userIdExists(authUserId) === FALSE) {
-    return ({ error: 'Invalid userId' });
-  }
+
   if (quizIdExists(quizId) === FALSE) {
     return ({ error: 'Invalid quizId' });
   }
   for (const quiz of quizArray) {
-    if (quiz.quizId === quizId) {
-      if (quiz.userId !== authUserId) {
-        return ({ error: 'Quiz not owned by user' });
-      }
-    }
     if (quiz.name === name) {
       return ({ error: 'Quiz name already in use' });
     }
   }
+
+  // Error check for incorrect quizid for the specified user
+  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
       quiz.name = name;
