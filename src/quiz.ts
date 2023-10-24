@@ -1,5 +1,5 @@
 
-import { getData, setData } from './dataStore';
+import { getData, setData, token } from './dataStore';
 import { userIdExists, quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
@@ -30,23 +30,21 @@ This function given a users authUserId, provides the list of all quizzes owned b
 @param {number} authUserId - Integer that contains their assigned authUserId
 @returns {object} - An object containing quizId and name
 */
-function adminQuizList(authUserId: number): quizList | error {
+function adminQuizList(token: token): quizList | error {
   const data = getData();
+  if (!tokenExists(token.token)) {
+    return { error: 'Invalid Token' };
+  }
   const quizArray = data.quizzes;
-  const quizList = [];
-  let success = FALSE;
+  const quizList : quiz[] = [];
   for (const quiz of quizArray) {
-    if (quiz.userId === authUserId) {
+    if (quiz.userId === token.userId) {
       const ownedQuiz = {
         quizId: quiz.quizId,
         name: quiz.name
       };
       quizList.push(ownedQuiz);
-      success = TRUE;
     }
-  }
-  if (success === FALSE) {
-    return { error: 'Invalid User Id' };
   }
   return { quizzes: quizList };
 }

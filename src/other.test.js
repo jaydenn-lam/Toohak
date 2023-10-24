@@ -13,7 +13,7 @@ describe('Clear', () => {
     const userId = adminAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu');
     adminQuizCreate(userId, 'Animal Quiz', 'Test your knowledge on animals!');
     clear();
-    expect(adminQuizList(userId)).toEqual({ error: 'Invalid User Id' });
+    expect(adminQuizList(userId)).toEqual({ error: 'Invalid Token' });
     expect(adminUserDetails(userId)).toEqual({ error: 'Invalid authUserId' });
   });
 });

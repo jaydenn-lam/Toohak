@@ -75,6 +75,18 @@ app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
   res.json(result);
 });
 
+app.get('/v1/admin/quiz/list', (req: Request, res: Response) => {
+  const token = {
+    token: req.query.token as string,
+    userId: findUserId(req.query.token as string)
+  };
+  const response = adminQuizList(token);
+  if ('error' in response) {
+    return res.status(401).json(response);
+  }
+  res.json(response);
+});
+
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================
