@@ -373,7 +373,6 @@ describe('/v1/admin/quiz/{quizid}/name', () => {
     expect(requestQuiznameUpdate('', quizId, 'quiz2')).toStrictEqual({ error: 'Invalid Token' });
   });
 
-
   test('Correct behaviour', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
@@ -408,7 +407,6 @@ describe('/v1/admin/quiz/{quizid}/name', () => {
       description: ''
     });
   });
-  
   test('Invalid new name', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
