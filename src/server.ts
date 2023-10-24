@@ -76,11 +76,11 @@ app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
 });
 
 app.get('/v1/admin/user/details', (req: Request, res: Response) => {
-  const authuserId = req.query.userId as string;
-  const userDetails = adminUserDetails(Number(authuserId));
+  const token = req.query.token as string;
+  const userDetails = adminUserDetails(token);
 
   if ('error' in userDetails) {
-    res.status(400).json(userDetails);
+    res.status(401).json(userDetails);
   } else {
     res.json(userDetails);
   }

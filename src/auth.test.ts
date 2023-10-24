@@ -1,7 +1,7 @@
 import request from 'sync-request-curl';
 import { port, url } from './config.json';
+import { clear } from './other';
 const SERVER_URL = `${url}:${port}`;
-
 
 function requestAuthRegister(email: string, password: string, nameFirst: string, nameLast: string) {
   const res = request(
@@ -38,6 +38,22 @@ function requestAuthLogin(email: string, password: string) {
   );
 
   return JSON.parse(res.body.toString());
+};
+
+function requestAuthDetail(token: string) {
+
+  const res = request(
+    'GET',
+    SERVER_URL + '/v1/admin/user/details',
+    {
+      qs: {
+        token
+      },
+      timeout: 100
+    }
+  );
+
+  return JSON.parse(res.body.toString());
 }
 
 describe('adminAuthRegister', () => {
@@ -49,78 +65,294 @@ describe('adminAuthRegister', () => {
   });
 
   test('Working Case', () => {
-    const authUserId = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
-    expect(authUserId).toStrictEqual(expect.any(String));
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'William',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data.token).toStrictEqual(expect.any(String));
   });
 
   test('Multiple Working Entries with Unique Identifiers', () => {
-    const authUserId1 = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
-    expect(authUserId1).toStrictEqual(expect.any(String));
-
-    const authUserId2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').token;
-    expect(authUserId2).toStrictEqual(expect.any(String));
-
-    expect(authUserId1).not.toBe(authUserId2);
+    clear();
+    const res1 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'williaa@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'William',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data1 = JSON.parse(res1.body.toString());
+    expect(data1.token).toStrictEqual(expect.any(String));
+    const res2 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'jayden@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'Jayden',
+          nameLast: 'Lam',
+        },
+        timeout: 100
+      }
+    );
+    const data2 = JSON.parse(res2.body.toString());
+    expect(data2.token).toStrictEqual(expect.any(String));
+    expect(data1.token).not.toBe(data2.token);
   });
 
   test('Duplicate Email Error', () => {
-    requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu');
-    const error = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu');
-    expect(error).toStrictEqual({ error: 'Email has already been used' });
+    request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'William',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'William',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: 'Email has already been used' });
   });
 
   test('Invalid Email Error', () => {
-    const error1 = requestAuthRegister('InvalidEmail', '1234abcd', 'William', 'Lu');
-    expect(error1).toStrictEqual({ error: 'Email is invalid' });
-
-    const error2 = requestAuthRegister('', '1234abcd', 'William', 'Lu');
-    expect(error2).toStrictEqual({ error: 'Email is invalid' });
+    const res1 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'invalidEmail',
+          password: '1234abcd',
+          nameFirst: 'William',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data1 = JSON.parse(res1.body.toString());
+    expect(data1).toStrictEqual({ error: 'Email is invalid' });
+    const res2 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: '',
+          password: '1234abcd',
+          nameFirst: 'William',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data2 = JSON.parse(res2.body.toString());
+    expect(data2).toStrictEqual({ error: 'Email is invalid' });
   });
 
   test('Invalid character in First Name', () => {
-    const error1 = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'Invalid!', 'Lu');
-    expect(error1).toStrictEqual({ error: 'First Name contains invalid character/s' });
-
-    const error2 = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'Invalid()', 'Lu');
-    expect(error2).toStrictEqual({ error: 'First Name contains invalid character/s' });
+    const res1 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'Invalid.',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data1 = JSON.parse(res1.body.toString());
+    expect(data1).toStrictEqual({ error: 'First Name contains invalid character/s' });
+    const res2 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'Invalid()',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data2 = JSON.parse(res2.body.toString());
+    expect(data2).toStrictEqual({ error: 'First Name contains invalid character/s' });
   });
 
   test('First Name too Long Error', () => {
-    const error = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'FirstNameFirstNameFirstName', 'Lu');
-    expect(error).toStrictEqual({ error: 'First Name is too long' });
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'FirstNameFirstNameFirstNameFirstName',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: 'First Name is too long' });
   });
 
   test('First Name too Short Error', () => {
-    const error = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'W', 'Lu');
-    expect(error).toStrictEqual({ error: 'First Name is too short' });
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'W',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: 'First Name is too short' });
   });
 
   test('Invalid character in Last Name', () => {
-    const error = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Invalid!');
-    expect(error).toStrictEqual({ error: 'Last Name contains invalid character/s' });
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'William Lu',
+          nameLast: 'Lu()',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: 'Last Name contains invalid character/s' });
   });
 
   test('Last Name too long error', () => {
-    const error = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'LastNameLastNameLastNameLastName');
-    expect(error).toStrictEqual({ error: 'Last Name is too long' });
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'William Lu',
+          nameLast: 'LastNameLastNameLastNameLastName',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: 'Last Name is too long' });
   });
 
   test('Last Name too short error', () => {
-    const error = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'L');
-    expect(error).toStrictEqual({ error: 'Last Name is too short' });
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '1234abcd',
+          nameFirst: 'William Lu',
+          nameLast: 'L',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: 'Last Name is too short' });
   });
 
   test('Password too short error', () => {
-    const error = requestAuthRegister('william@unsw.edu.au', 'Short12', 'William', 'Lu');
-    expect(error).toStrictEqual({ error: 'Password is too short' });
+    const res = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: 'Short12',
+          nameFirst: 'William Lu',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: 'Password is too short' });
   });
 
   test('Password Contains 1 Num + 1 Letter', () => {
-    const error1 = requestAuthRegister('william@unsw.edu.au', 'NoNumbers', 'William', 'Lu');
-    expect(error1).toStrictEqual({ error: 'Password must contain a number and a letter' });
-
-    const error2 = requestAuthRegister('william@unsw.edu.au', '12345678', 'William', 'Lu');
-    expect(error2).toStrictEqual({ error: 'Password must contain a number and a letter' });
+    const res1 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: 'NoNumbers',
+          nameFirst: 'William Lu',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data1 = JSON.parse(res1.body.toString());
+    expect(data1).toStrictEqual({ error: 'Password must contain a number and a letter' });
+    const res2 = request(
+      'POST',
+      SERVER_URL + '/v1/admin/auth/register',
+      {
+        json: {
+          email: 'william@unsw.edu.au',
+          password: '12345678',
+          nameFirst: 'William Lu',
+          nameLast: 'Lu',
+        },
+        timeout: 100
+      }
+    );
+    const data2 = JSON.parse(res2.body.toString());
+    expect(data2).toStrictEqual({ error: 'Password must contain a number and a letter' });
   });
 });
 describe('adminAuthLogin', () => {
@@ -145,7 +377,7 @@ describe('adminAuthLogin', () => {
       }
     );
     const registrationData = JSON.parse(registrationResponse.body.toString());
-    expect(registrationData.userId).toEqual(expect.any(Number));
+    expect(registrationData.token).toEqual(expect.any(String));
 
     const loginResponse = request(
       'POST',
@@ -160,8 +392,9 @@ describe('adminAuthLogin', () => {
         }),
       }
     );
-    const returnedUserId = JSON.parse(loginResponse.body.toString()).authUserId;
-    expect(returnedUserId).toEqual(registrationData.authUserId);
+
+    const returnedUserId = JSON.parse(loginResponse.body.toString()).token;
+    expect(returnedUserId).toEqual(expect.any(String));
   });
 
   test('Return an error when the email is invalid', () => {
@@ -178,7 +411,7 @@ describe('adminAuthLogin', () => {
       }
     );
     const registrationData = JSON.parse(registrationResponse.body.toString());
-    expect(registrationData.userId).toEqual(expect.any(Number));
+    expect(registrationData.token).toEqual(expect.any(String));
 
     const loginResponse = request(
       'POST',
@@ -211,7 +444,7 @@ describe('adminAuthLogin', () => {
       }
     );
     const registrationData = JSON.parse(registrationResponse.body.toString());
-    expect(registrationData.userId).toEqual(expect.any(Number));
+    expect(registrationData.token).toEqual(expect.any(String));
 
     const loginResponse = request(
       'POST',
@@ -252,20 +485,21 @@ describe('adminUserDetail', () => {
     );
 
     const registrationData = JSON.parse(registrationResponse.body.toString());
-    const userId = registrationData.userId;
+    const userToken = registrationData.token;
+    expect(userToken).toEqual(expect.any(String));
     const res = request(
       'GET',
       SERVER_URL + '/v1/admin/user/details',
       {
-        qs: { userId: userId },
+        qs: { token: userToken },
       }
     );
     const data = JSON.parse(res.body.toString());
 
     const expectedUserDetails = {
       user: {
-        email: 'anita@unsw.edu.au',
-        name: 'Anita Byun',
+        email: "anita@unsw.edu.au",
+        name: "Anita Byun",
         numFailedPasswordsSinceLastLogin: 0,
         numSuccessfulLogins: 1,
         userId: 0,
@@ -275,7 +509,10 @@ describe('adminUserDetail', () => {
     expect(data).toEqual(expectedUserDetails);
   });
 
-  test('Return an error for an invalid authUserId', () => {
+
+
+  
+  test('Return an error for an invalid token', () => {
     const registrationResponse = request(
       'POST',
       SERVER_URL + '/v1/admin/auth/register',
@@ -290,17 +527,18 @@ describe('adminUserDetail', () => {
     );
 
     const registrationData = JSON.parse(registrationResponse.body.toString());
-    const userId = registrationData.userId;
+    const userToken = registrationData.token;
+    expect(userToken).toEqual(expect.any(String));
 
     const res = request(
       'GET',
       SERVER_URL + '/v1/admin/user/details',
       {
-        qs: { userId: userId + 1 },
+        qs: { token: 0 },
       }
     );
     const data = JSON.parse(res.body.toString());
-    expect(data).toEqual({ error: 'Invalid authUserId' });
+    expect(data).toEqual({ error: 'Invalid token' });
   });
 
   test('Test two successful logins', () => {
@@ -318,8 +556,8 @@ describe('adminUserDetail', () => {
     );
 
     const registrationData = JSON.parse(registrationResponse.body.toString());
-    const userId = registrationData.userId;
-    expect(userId).toEqual(expect.any(Number));
+    const userToken = registrationData.token;
+    expect(userToken).toEqual(expect.any(String));
 
     const loginResponse = request(
       'POST',
@@ -334,13 +572,13 @@ describe('adminUserDetail', () => {
         }),
       }
     );
-    const returnedUserId = JSON.parse(loginResponse.body.toString()).userId;
-    expect(returnedUserId).toEqual(userId);
+    const returnedUserToken = JSON.parse(loginResponse.body.toString()).token;
+    expect(returnedUserToken).toEqual(expect.any(String));
     const res = request(
       'GET',
       SERVER_URL + '/v1/admin/user/details',
       {
-        qs: { userId: userId },
+        qs: { token: returnedUserToken },
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -348,14 +586,15 @@ describe('adminUserDetail', () => {
     const expectedUserDetails = {
       user: {
         email: 'william@unsw.edu.au',
-        name: 'William Lu',
+        name: "William Lu",
         numFailedPasswordsSinceLastLogin: 0,
         numSuccessfulLogins: 2,
-        userId: userId,
+        userId: 0,
       }
     };
 
     expect(data).toEqual(expectedUserDetails);
+    
   });
 
   test('Test one unsuccessful login', () => {
@@ -373,8 +612,8 @@ describe('adminUserDetail', () => {
     );
 
     const registrationData = JSON.parse(registrationResponse.body.toString());
-    const userId = registrationData.userId;
-    expect(userId).toEqual(expect.any(Number));
+    const userToken = registrationData.token;
+    expect(userToken).toEqual(expect.any(String));
 
     const loginResponse = request(
       'POST',
@@ -395,7 +634,7 @@ describe('adminUserDetail', () => {
       'GET',
       SERVER_URL + '/v1/admin/user/details',
       {
-        qs: { userId: userId },
+        qs: { token: userToken },
       }
     );
     const data = JSON.parse(res.body.toString());
@@ -403,67 +642,70 @@ describe('adminUserDetail', () => {
     const expectedUserDetails = {
       user: {
         email: 'william@unsw.edu.au',
-        name: 'William Lu',
+        name: "William Lu",
         numFailedPasswordsSinceLastLogin: 1,
         numSuccessfulLogins: 1,
-        userId: userId,
+        userId: 0,
       }
     };
 
     expect(data).toEqual(expectedUserDetails);
+    
   });
 
-  test('Test unsuccessful login reset on success', () => {
-    const registrationData = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu');
-    const userId = registrationData.userId;
-    expect(userId).toEqual(expect.any(Number));
 
-    const errorResponse = requestAuthLogin('william@unsw.edu.au', '1234abcde');
+  test('Test unsuccessful login reset on success', () => {
+
+    const registrationData = requestAuthRegister('william@unsw.edu.au','1234abcd','William','Lu')
+    const userToken = registrationData.token;
+    expect(userToken).toEqual(expect.any(String));
+
+    const errorResponse = requestAuthLogin('william@unsw.edu.au','1234abcde');
     expect(errorResponse).toStrictEqual({ error: 'Incorrect password' });
 
-    const res1 = request(
+    const res_1 = request(
       'GET',
       SERVER_URL + '/v1/admin/user/details',
       {
-        qs: { userId: userId },
+        qs: { token: userToken },
       }
     );
-    const data1 = JSON.parse(res1.body.toString());
+    const data_1 = JSON.parse(res_1.body.toString());
 
-    const expectedUserDetails1 = {
+    const expectedUserDetails_1 = {
       user: {
         email: 'william@unsw.edu.au',
-        name: 'William Lu',
+        name: "William Lu",
         numFailedPasswordsSinceLastLogin: 1,
         numSuccessfulLogins: 1,
-        userId: userId,
+        userId: 0,
       }
     };
 
-    expect(data1).toEqual(expectedUserDetails1);
+    expect(data_1).toEqual(expectedUserDetails_1); 
 
-    const returnedUserId = requestAuthLogin('william@unsw.edu.au', '1234abcd').userId;
-    expect(returnedUserId).toEqual(userId);
+    const returnedUserToken = requestAuthLogin('william@unsw.edu.au','1234abcd').token;
+    expect(returnedUserToken).toEqual(expect.any(String));
 
-    const res2 = request(
+    const res_2 = request(
       'GET',
       SERVER_URL + '/v1/admin/user/details',
       {
-        qs: { userId: userId },
+        qs: { token: userToken },
       }
     );
-    const data2 = JSON.parse(res2.body.toString());
+    const data_2 = JSON.parse(res_2.body.toString());
 
-    const expectedUserDetails2 = {
+    const expectedUserDetails_2 = {
       user: {
         email: 'william@unsw.edu.au',
-        name: 'William Lu',
+        name: "William Lu",
         numFailedPasswordsSinceLastLogin: 0,
         numSuccessfulLogins: 2,
-        userId: userId,
+        userId: 0,
       }
     };
 
-    expect(data2).toEqual(expectedUserDetails2);
+    expect(data_2).toEqual(expectedUserDetails_2); 
   });
 });
