@@ -1,5 +1,5 @@
 
-import { getData, setData, token } from './dataStore';
+import { getData, setData, token, trash, trashQuiz } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
@@ -24,6 +24,7 @@ interface quiz {
 interface quizList {
   quizzes: quiz[];
 }
+
 
 /*
 This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
@@ -279,6 +280,25 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   return {};
 }
 
+function adminQuizViewTrash(token: string): error | trash | object {
+  const data = getData();
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray) || token === '') {
+    return { error: 'Invalid Token' };
+  };
+  const trash: trash = {
+    quizzes: []
+  }
+  for (const quiz of data.trash) {
+    const returnQuiz = {
+      quizId: quiz.quizId,
+      name: quiz.name,
+    };
+    trash.quizzes.push(returnQuiz);
+  };
+  return trash;
+};
+
 function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string, tokenArray: token[]): boolean {
   let userId;
   for (const session of tokenArray) {
@@ -338,4 +358,6 @@ export {
   adminQuizDescriptionUpdate,
   adminQuizInfo,
   adminQuizNameUpdate,
+  tokenExists,
+  adminQuizViewTrash,
 };

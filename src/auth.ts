@@ -20,6 +20,10 @@ interface user {
   }
 }
 
+interface pastPasswords {
+  pastPasswords: string[];
+}
+
 /*
 This function allows for users to be registered, and have their details stored in the data store.
 Identical passwords and names are allowed, but not emails. Error messages are returned if names, passwords or email is invalid
@@ -51,6 +55,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     return { error: 'Password must contain a number and a letter' };
   }
   const authUserId = userArray.length;
+  const pastPasswords: pastPasswords = {pastPasswords: []};
   const userData = {
     userId: authUserId,
     email: email,
@@ -59,7 +64,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     Last_name: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
     numSuccessfulLogins: 1,
-    pastPasswords: [],
+    pastPasswords: pastPasswords,
   };
   const uuid = uuidv4();
   const userToken = {

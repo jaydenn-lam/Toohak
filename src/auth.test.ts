@@ -49,7 +49,7 @@ function requestAuthDetail(token: string) {
   );
   return JSON.parse(res.body.toString());
 }
-
+/*
 function requestUserPassword(token: string, oldPassword: string, newPassword: string) {
   const res = request(
     'PUT',
@@ -65,7 +65,7 @@ function requestUserPassword(token: string, oldPassword: string, newPassword: st
   );
   return JSON.parse(res.body.toString());
 }
-
+*/
 describe('adminAuthRegister', () => {
   beforeEach(() => {
     request(
