@@ -131,7 +131,21 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   } else if ('error' in response) {
     return res.status(403).json(response);
   }
-  res.json(response);
+  res.status(200).json(response);
+});
+
+app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const { token, name } = req.body;
+  const response = adminQuizNameUpdate(token, quizId, name);
+  if ('error' in response && 'not owned' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response && 'Invalid Token' in response) {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
 });
 
 // ====================================================================

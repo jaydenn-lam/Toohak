@@ -26,13 +26,15 @@ interface dataStore {
   users: user[];
   quizzes: quiz[];
   tokens: token[];
+  trash: quiz[];
 }
 
 // YOU SHOULD MODIFY THIS OBJECT BELOW
 let data: dataStore = {
   users: [],
   quizzes: [],
-  tokens: []
+  tokens: [],
+  trash: []
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1
