@@ -113,6 +113,7 @@ function adminQuizRemove(token: string, quizId: number): error | object {
   const data = getData();
   const quizArray = data.quizzes;
   const tokenArray = data.tokens;
+  const trashArray = data.trash;
   if (!tokenExists(token, tokenArray)) {
     return { error: 'Invalid Token' };
   }
@@ -129,7 +130,14 @@ function adminQuizRemove(token: string, quizId: number): error | object {
   if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
-  // Remove a quiz
+  // Add quiz to trash and update the TimeLastEdited
+  for (const quiz in quizArray) {
+    if (quizArray[quiz].quizId === quizId) {
+      quizArray[quiz].TimeLastEdited = Math.round(Date.now() / 1000);
+      trashArray.push(quizArray[quiz]);
+    }
+  }
+  // Remove quiz from quizzes array
   for (let index = 0; index < data.quizzes.length; index++) {
     if (data.quizzes[index].quizId === quizId) {
       data.quizzes.splice(index, 1);

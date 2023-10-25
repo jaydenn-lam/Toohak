@@ -11,7 +11,8 @@ function clear() {
     {
       users: [],
       quizzes: [],
-      tokens: []
+      tokens: [],
+      trash: []
     }
   );
   return {};
