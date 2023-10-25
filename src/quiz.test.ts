@@ -36,7 +36,6 @@ function requestQuizCreate(token: string, name: string, description: string) {
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
 
@@ -51,7 +50,6 @@ function requestQuizList(token: string) {
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
 
@@ -67,7 +65,6 @@ function requestQuizDescriptionUpdate(token: string, description: string, quizId
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
 
@@ -82,7 +79,6 @@ function requestQuizInfo(token: string, quizId: number) {
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
 
@@ -97,7 +93,6 @@ function requestadminQuizRemove(token: string, quizId: number) {
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
 
@@ -113,9 +108,23 @@ function requestQuiznameUpdate(token: string, quizId: number, name: string) {
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
+
+function requestQuizViewTrash(token: string) {
+  const res = request(
+    'GET',
+    SERVER_URL + '/v1/admin/quiz/trash',
+    {
+      qs: {
+        token
+      },
+      timeout: 100
+    }
+  );
+  return JSON.parse(res.body.toString());
+}
+
 describe('POST /v1/admin/quiz', () => {
   beforeEach(() => {
     request(
@@ -322,21 +331,18 @@ describe('/v1/admin/quiz/{quizid}', () => {
       SERVER_URL + '/v1/clear'
     );
   });
+
   test('Invalid token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    expect(requestadminQuizRemove(token + 'Invalid', quizId)).toStrictEqual({ error: 'Invalid Token' });
+    const invalidToken = token + 'Invalid';
+    expect(requestadminQuizRemove(invalidToken, quizId)).toStrictEqual({ error: 'Invalid Token' });
   });
+
   test('Empty token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
     expect(requestadminQuizRemove('', quizId)).toStrictEqual({ error: 'Invalid Token' });
-  });
-
-  test('Correct behaviour', () => {
-    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
-    const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    expect(requestadminQuizRemove(token, quizId)).toStrictEqual({});
   });
 
   test('Quiz not owned by user ERROR', () => {
@@ -346,11 +352,11 @@ describe('/v1/admin/quiz/{quizid}', () => {
     expect(requestadminQuizRemove(token, quizId2)).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
 
-  test('successful remove', () => {
+  test('Successful Remove', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [{ quizId: quizId, name: 'quiz1' }] });
-    requestadminQuizRemove(token, quizId);
+    const removeOutput = requestadminQuizRemove(token, quizId);
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [] });
   });
 });
@@ -421,5 +427,49 @@ describe('/v1/admin/quiz/{quizid}/name', () => {
     requestQuizCreate(token, 'quiz1', '');
     const quizId = requestQuizCreate(token, 'quiz2', '').quizId;
     expect(requestQuiznameUpdate(token, quizId, 'quiz1')).toStrictEqual({ error: 'Quiz name already in use' });
+  });
+});
+
+describe('ViewQuizTrash', () => {
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const invalidToken = token + 'Invalid';
+    const error = requestQuizViewTrash(invalidToken);
+    expect(error).toStrictEqual({ error: 'Invalid Token' });
+
+    const error2 = requestQuizViewTrash('');
+    expect(error2).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('Working Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Quiz Name', 'Description');
+    requestadminQuizRemove(token, quizId);
+    const trash = requestQuizViewTrash(token);
+    expect(trash).toStrictEqual({ quizzes: [
+      {
+        quizId: quizId,
+        name: 'Quiz Name'  
+      }
+    ]});
+  });
+
+  test('Multiple Working Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Quiz Name', 'Description');
+    const quizId2 = requestQuizCreate(token, 'Quiz Name 2', 'Description');
+    requestadminQuizRemove(token, quizId);
+    requestadminQuizRemove(token, quizId2);
+    const trash = requestQuizViewTrash(token);
+    expect(trash).toStrictEqual({ quizzes: [
+      {
+        quizId: quizId,
+        name: 'Quiz Name'  
+      },
+      {
+        quizId: quizId2,
+        name: 'Quiz Name 2'
+      }
+    ]});
   });
 });

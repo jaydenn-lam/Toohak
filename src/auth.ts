@@ -58,7 +58,8 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     First_name: nameFirst,
     Last_name: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
-    numSuccessfulLogins: 1
+    numSuccessfulLogins: 1,
+    pastPasswords: [],
   };
   const uuid = uuidv4();
   const userToken = {
