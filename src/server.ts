@@ -75,12 +75,12 @@ app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
 });
 
 app.post('/v1/admin/auth/logout', (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  const result = adminAuthLogin(email, password);
-  if ('error' in result) {
-    return res.status(400).json(result);
+  const token = req.body.token as string;
+  const authLogout = adminAuthLogout(token); 
+  if ('error' in authLogout) {
+    return res.status(401).json(authLogout);
   }
-  res.json(result);
+  res.json(authLogout);
 });
 
 
