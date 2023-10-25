@@ -321,14 +321,16 @@ function validName(name: string) {
   }
 }
 
-// Helper function for determining if token exists
-function tokenExists(token: string, tokenArray: token[]) {
+function tokenExists(token: string) {
+  const tokenArray = getData().tokens;
+
   for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
-      return TRUE;
+      return true; // Use lowercase 'true'
     }
   }
-  return FALSE;
+
+  return false; // Use lowercase 'false'
 }
 
 export {
@@ -338,4 +340,5 @@ export {
   adminQuizDescriptionUpdate,
   adminQuizInfo,
   adminQuizNameUpdate,
+  tokenExists,
 };
