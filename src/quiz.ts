@@ -1,5 +1,5 @@
 
-import { getData, setData, token, trash } from './dataStore';
+import { getData, setData, token } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
@@ -279,25 +279,6 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   return {};
 }
 
-function adminQuizViewTrash(token: string): error | trash | object {
-  const data = getData();
-  const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray) || token === '') {
-    return { error: 'Invalid Token' };
-  }
-  const trash: trash = {
-    quizzes: []
-  };
-  for (const quiz of data.trash) {
-    const returnQuiz = {
-      quizId: quiz.quizId,
-      name: quiz.name,
-    };
-    trash.quizzes.push(returnQuiz);
-  }
-  return trash;
-}
-
 function adminTrashEmpty(token: string, quizzes: number[]) {
   const data = getData();
   if (!tokenExists(token, data.tokens)) {
@@ -393,7 +374,5 @@ export {
   adminQuizDescriptionUpdate,
   adminQuizInfo,
   adminQuizNameUpdate,
-  tokenExists,
-  adminQuizViewTrash,
   adminTrashEmpty,
 };
