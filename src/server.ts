@@ -9,11 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails } from './auth';
-<<<<<<< HEAD
-import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminQuizViewTrash } from './quiz';
-=======
-import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty } from './quiz';
->>>>>>> abfdee2357f997a18a754819af277984c80d2d31
+import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminQuizViewTrash, adminTrashEmpty } from './quiz';
 import { clear } from './other';
 
 // Set up web app

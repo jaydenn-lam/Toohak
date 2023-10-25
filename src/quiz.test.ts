@@ -111,7 +111,6 @@ function requestQuiznameUpdate(token: string, quizId: number, name: string) {
   return JSON.parse(res.body.toString());
 }
 
-
 function requestQuizViewTrash(token: string) {
   const res = request(
     'GET',
@@ -511,6 +510,12 @@ describe('ViewQuizTrash', () => {
 });
 
 describe('DELETE /v1/admin/quiz/trash/empty', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
   test('Success', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;

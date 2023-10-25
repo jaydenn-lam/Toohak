@@ -55,7 +55,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     return { error: 'Password must contain a number and a letter' };
   }
   const authUserId = userArray.length;
-  const pastPasswords: pastPasswords = {pastPasswords: []};
+  const pastPasswords: pastPasswords = { pastPasswords: [] };
   const userData = {
     userId: authUserId,
     email: email,
