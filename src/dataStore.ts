@@ -8,7 +8,6 @@ interface user {
   numSuccessfulLogins: number;
 }
 
-
 interface trashQuiz {
   quizId: number;
   name: string;
