@@ -9,7 +9,11 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails } from './auth';
+<<<<<<< HEAD
 import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminQuizViewTrash } from './quiz';
+=======
+import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty } from './quiz';
+>>>>>>> abfdee2357f997a18a754819af277984c80d2d31
 import { clear } from './other';
 
 // Set up web app
@@ -153,6 +157,20 @@ app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {
     return res.status(401).json(response);
   } else if ('error' in response) {
     return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
+
+app.delete('/v1/admin/quiz/trash/empty', (req: Request, res: Response) => {
+  const token = req.query.token as string;
+  const quizzes = JSON.parse(req.query.quizzes as string);
+  const response = adminTrashEmpty(token, quizzes);
+  if ('error' in response && response.error === 'Invalid quizId') {
+    return res.status(400).json(response);
+  } else if ('error' in response && response.error === 'Invalid Token') {
+    return res.status(401).json(response);
+  } else if ('error' in response && response.error === 'User does not own quiz') {
+    return res.status(403).json(response);
   }
   res.status(200).json(response);
 });
