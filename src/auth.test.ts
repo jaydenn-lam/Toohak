@@ -53,6 +53,23 @@ function requestAuthDetail(token: string) {
   return JSON.parse(res.body.toString());
 }
 
+function requestAdminLogout(token: string) {
+  const res = request(
+    'POST',
+    SERVER_URL + '/v1/admin/auth/logout',
+    {
+      json: {
+        token
+      },
+      timeout: 100
+    }
+  );
+
+  return JSON.parse(res.body.toString());
+}
+  
+
+
 describe('adminAuthRegister', () => {
   beforeEach(() => {
     request(
@@ -247,3 +264,35 @@ describe('adminUserDetail', () => {
     expect(userDetails2).toEqual(expectedUserDetails);
   });
 });
+
+
+describe('adminAuthLogout', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('Working Case', () => {
+    const registerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').token;
+    const adminLogout1 = requestAdminLogout(registerToken);
+    const adminLogout2 = requestAdminLogout(loginToken);
+    expect(adminLogout1).toEqual({});
+    expect(adminLogout2).toEqual({});
+  });
+
+  test('Token is empty', () => {
+    const emptyToken = '';
+    const adminLogout1 = requestAdminLogout(emptyToken);
+    expect(adminLogout1).toEqual({ "error": "error" });
+  });
+
+  test('Token is invalid', () => {
+    const invalidToken = 'invalid-token';
+    const adminLogout1 = requestAdminLogout(invalidToken);
+    expect(adminLogout1).toEqual({ "error": "error" });
+  });
+});
+
