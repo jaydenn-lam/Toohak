@@ -322,7 +322,7 @@ function validName(name: string) {
 }
 
 // Helper function for determining if token exists
-function tokenExists(token: string, tokenArray: token[]): boolean{
+function tokenExists(token: string, tokenArray: token[]): boolean {
   for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
       return true;
