@@ -16,7 +16,6 @@ function requestAuthRegister(email: string, password: string, nameFirst: string,
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
 
@@ -34,7 +33,6 @@ function requestAuthLogin(email: string, password: string) {
       }),
     }
   );
-
   return JSON.parse(res.body.toString());
 }
 
@@ -49,10 +47,25 @@ function requestAuthDetail(token: string) {
       timeout: 100
     }
   );
-
   return JSON.parse(res.body.toString());
 }
-
+/*
+function requestUserPassword(token: string, oldPassword: string, newPassword: string) {
+  const res = request(
+    'PUT',
+    SERVER_URL + '/v1/admin/user/password',
+    {
+      json: {
+        token,
+        oldPassword,
+        newPassword
+      },
+      timeout: 100
+    }
+  );
+  return JSON.parse(res.body.toString());
+}
+*/
 describe('adminAuthRegister', () => {
   beforeEach(() => {
     request(
@@ -247,3 +260,32 @@ describe('adminUserDetail', () => {
     expect(userDetails2).toEqual(expectedUserDetails);
   });
 });
+
+/*
+describe('adminUserPassword', () => {
+  test('Invalid Token Error', () => {
+    const token1 = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const invalidToken = token1 + 'Invalid';
+    const error1 = requestUserPassword(invalidToken, '1234abcd', 'NewPassword123');
+    expect(error1).toStrictEqual({ error: 'Invalid Token' });
+
+    const token2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').token;
+    const error2 = requestUserPassword('', '1234abcd', 'NewPassword123');
+    expect(error2).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('Incorrect Old Password Error', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const error = requestUserPassword(token, 'WrongPassword123', 'NewPassword123');
+    expect(error).toStrictEqual({ error: 'Incorrect Password' });
+  });
+
+  test('Old Password = New Password Error', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const error = requestUserPassword(token, '1234abcd', '1234abcd');
+    expect(error).toStrictEqual({ error: 'The new password cannot equal the old password' })
+  });
+
+  test('')
+});
+*/

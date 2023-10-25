@@ -8,6 +8,15 @@ interface user {
   numSuccessfulLogins: number;
 }
 
+interface trashQuiz {
+  quizId: number;
+  name: string;
+}
+
+interface trash {
+  quizzes: trashQuiz[];
+}
+
 interface quiz {
   quizId: number;
   name: string;
@@ -34,7 +43,7 @@ let data: dataStore = {
   users: [],
   quizzes: [],
   tokens: [],
-  trash: []
+  trash: [],
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1
@@ -64,4 +73,4 @@ function setData(newData: dataStore) {
   return {};
 }
 
-export { getData, setData, token };
+export { getData, setData, token, trash, trashQuiz };
