@@ -158,9 +158,9 @@ app.delete('/v1/admin/quiz/trash/empty', (req: Request, res: Response) => {
     return res.status(401).json(response);
   } else if ('error' in response && response.error === 'User does not own quiz') {
     return res.status(403).json(response);
-  } 
+  }
   res.status(200).json(response);
-})
+});
 
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================

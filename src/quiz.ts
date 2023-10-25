@@ -282,20 +282,20 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
 function adminTrashEmpty(token: string, quizzes: number[]) {
   const data = getData();
   if (!tokenExists(token, data.tokens)) {
-    return { error: 'Invalid Token'};
+    return { error: 'Invalid Token' };
   }
   for (const quizId of quizzes) {
-    if(!tokenOwnsQuiz(data.trash, quizId, token, data.tokens)) {
-      return { error: 'User does not own quiz'};
+    if (!tokenOwnsQuiz(data.trash, quizId, token, data.tokens)) {
+      return { error: 'User does not own quiz' };
     }
     if (!quizExistsInTrash(quizId)) {
-      return { error: 'Invalid quizId'};
+      return { error: 'Invalid quizId' };
     }
   }
   for (const quiz of quizzes) {
     for (const trashedQuiz of data.trash) {
       if (trashedQuiz.quizId === quiz) {
-        const index = data.trash.indexOf(trashedQuiz)
+        const index = data.trash.indexOf(trashedQuiz);
         data.trash.splice(index);
       }
     }
