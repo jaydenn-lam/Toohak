@@ -2,15 +2,6 @@ import { getData, setData } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
 
-interface authUserId {
-  authUserId: number;
-}
-
-interface token {
-  token: string;
-  userId: number;
-}
-
 interface returnToken {
   token: string;
 }
@@ -144,24 +135,31 @@ function passwordChecker(password: string): boolean {
 <adminUserDetails finds a user with a matching UserId and returns user details which includes their authUserId
 first name and last name, email address, number of successful logins and number of failed passwords since last login.
 If the user is not found, it returns a error message, error: 'Invalid authUserId'.
-@param {number} authUserId - The unique identifier of the user.
+@param {number} token - The unique token of the user.
 @returns {object} -  An object containing user details.
 */
-function adminUserDetails(authUserId: authUserId): user | error {
+function adminUserDetails(token: string): user | error {
   // grabs the data from the data store
   const data = getData();
+  const tokenArray = data.tokens;
   const userArray = data.users;
-  // finds the user with the matching UserId
-  const user = userArray.find((user) => user.userId === authUserId.authUserId);
 
-  // if no user is found return error: 'Invalid authUserId'
-  if (!user) {
-    return { error: 'Invalid authUserId' };
+  // finds the token with the matching token
+  const userToken = tokenArray.find((tokenArray) => tokenArray.token === token);
+
+  if (!userToken) {
+    return { error: 'Invalid token' };
   }
+  // find the user with the matching userToken
+  const user = userArray.find((userArray) => userArray.userId === userToken.userId);
+  // if no user is found return error: 'Invalid authUserId'
   // construct and return user details
+  if (!user) {
+    return { error: 'Invalid token' };
+  }
   return {
     user: {
-      userId: authUserId.authUserId,
+      userId: user.userId,
       name: `${user.First_name} ${user.Last_name}`,
       email: user.email,
       numSuccessfulLogins: user.numSuccessfulLogins,
@@ -178,7 +176,7 @@ successful login by 1 and resets failed passwords to 0.
 @param {string} password - Password of the user
 @returns {number} - The unique identifier of the user.
 */
-function adminAuthLogin(email: string, password: string): token | error {
+function adminAuthLogin(email: string, password: string): returnToken | error {
   // grabs the data from the data store
   const data = getData();
   const userArray = data.users;
@@ -199,11 +197,16 @@ function adminAuthLogin(email: string, password: string): token | error {
   user.numSuccessfulLogins += 1;
   user.numFailedPasswordsSinceLastLogin = 0;
   // update the data store
+
+  const uuid = uuidv4();
+  const userToken = {
+    token: uuid,
+    userId: user.userId
+  };
+  data.tokens.push(userToken);
   setData(data);
-  const authUserId = user.userId;
   return {
-    token: uuidv4(),
-    userId: authUserId
+    token: uuid,
   };
 }
 

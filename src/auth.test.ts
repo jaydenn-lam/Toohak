@@ -20,6 +20,39 @@ function requestAuthRegister(email: string, password: string, nameFirst: string,
   return JSON.parse(res.body.toString());
 }
 
+function requestAuthLogin(email: string, password: string) {
+  const res = request(
+    'POST',
+    SERVER_URL + '/v1/admin/auth/login',
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    }
+  );
+
+  return JSON.parse(res.body.toString());
+}
+
+function requestAuthDetail(token: string) {
+  const res = request(
+    'GET',
+    SERVER_URL + '/v1/admin/user/details',
+    {
+      qs: {
+        token
+      },
+      timeout: 100
+    }
+  );
+
+  return JSON.parse(res.body.toString());
+}
+
 describe('adminAuthRegister', () => {
   beforeEach(() => {
     request(
@@ -101,5 +134,116 @@ describe('adminAuthRegister', () => {
 
     const error2 = requestAuthRegister('william@unsw.edu.au', '12345678', 'William', 'Lu');
     expect(error2).toStrictEqual({ error: 'Password must contain a number and a letter' });
+  });
+});
+
+describe('adminAuthLogin', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('should return new token on successful login', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').token;
+    expect(loginToken).toEqual(expect.any(String));
+    expect(loginToken).not.toEqual(token);
+  });
+
+  test('Return an error when the email is invalid', () => {
+    requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu');
+    const error = requestAuthLogin('invalid_email', '1234abcd');
+    expect(error).toEqual({ error: 'Invalid email address' });
+  });
+
+  test('Return an error for incorrect password', () => {
+    requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu');
+    const error = requestAuthLogin('william@unsw.edu.au', 'incorrectpassword');
+    expect(error).toEqual({ error: 'Incorrect password' });
+  });
+});
+
+describe('adminUserDetail', () => {
+  beforeEach(() => {
+    request('DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('Return user details for a valid authUserId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const userDetail = requestAuthDetail(token);
+    const expectedUserDetails = {
+      user: {
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 0,
+        numSuccessfulLogins: 1,
+        userId: 0,
+      }
+    };
+    expect(userDetail).toEqual(expectedUserDetails);
+  });
+
+  test('Return an error for an invalid token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const invalidToken = token + 'Invalid';
+    const error = requestAuthDetail(invalidToken);
+    expect(error).toEqual({ error: 'Invalid token' });
+  });
+
+  test('Test two successful logins', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').token;
+    const userDetails1 = requestAuthDetail(token);
+    const userDetails2 = requestAuthDetail(loginToken);
+    const expectedUserDetails = {
+      user: {
+        userId: 0,
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 0,
+        numSuccessfulLogins: 2
+      }
+    };
+    expect(userDetails1).toEqual(expectedUserDetails);
+    expect(userDetails2).toEqual(expectedUserDetails);
+  });
+
+  test('Test one unsuccessful login', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    requestAuthLogin('william@unsw.edu.au', 'IncorrectPassword');
+    const userDetail = requestAuthDetail(token);
+    const expectedUserDetails = {
+      user: {
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 1,
+        numSuccessfulLogins: 1,
+        userId: 0,
+      }
+    };
+    expect(userDetail).toEqual(expectedUserDetails);
+  });
+
+  test('Test unsuccessful login reset on success', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    requestAuthLogin('william@unsw.edu.au', 'IncorrectPassword');
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').token;
+    const userDetails1 = requestAuthDetail(token);
+    const userDetails2 = requestAuthDetail(loginToken);
+    const expectedUserDetails = {
+      user: {
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 0,
+        numSuccessfulLogins: 2,
+        userId: 0,
+      }
+    };
+    expect(userDetails1).toEqual(expectedUserDetails);
+    expect(userDetails2).toEqual(expectedUserDetails);
   });
 });
