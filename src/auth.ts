@@ -1,6 +1,7 @@
 import { getData, setData } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
+import { tokenExists } from './quiz';
 
 interface returnToken {
   token: string;
@@ -210,9 +211,19 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   };
 }
 
-function adminAuthLogout(token: string): {} | error {
-  
-  return {}
+function adminAuthLogout(token: string): object | error {
+  if (tokenIsValid(token)) {
+    return {};
+  } else {
+    return { error: 'invalid token' };
+  }
+}
+function tokenIsValid(token: string): boolean {
+  const tokenArray = getData().tokens;
+  if (token.length === 0 || !tokenExists(token, tokenArray)) {
+    return false;
+  }
+  return true;
 }
 
 export {
