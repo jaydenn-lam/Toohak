@@ -131,14 +131,12 @@ function adminQuizRemove(token: string, quizId: number): error | object {
     return { error: 'Quiz Id is not owned by this user' };
   }
   // Add quiz to trash and update the TimeLastEdited
-  
   for (const quiz in quizArray) {
     if (quizArray[quiz].quizId === quizId) {
       quizArray[quiz].TimeLastEdited = Math.round(Date.now() / 1000);
       trashArray.push(quizArray[quiz]);
     }
   }
-  
   // Remove quiz from quizzes array
   for (let index = 0; index < data.quizzes.length; index++) {
     if (data.quizzes[index].quizId === quizId) {
