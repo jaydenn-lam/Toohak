@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout } from './auth';
-import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate } from './quiz';
+import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate } from './quiz';
 import { clear } from './other';
 
 // Set up web app
@@ -75,13 +75,14 @@ app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
 });
 
 app.post('/v1/admin/auth/logout', (req: Request, res: Response) => {
-  const { token } = req.body;
-  const authLogout = adminAuthLogout(token);
+  const { token} = req.body;
+  const authLogout = adminAuthLogout(token); 
   if ('error' in authLogout) {
     return res.status(401).json(authLogout);
   }
   res.json(authLogout);
 });
+
 
 app.get('/v1/admin/user/details', (req: Request, res: Response) => {
   const token = req.query.token as string;
@@ -134,6 +135,18 @@ app.get('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
 app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   const token = req.query.token as string;
   const response = adminQuizRemove(token, parseInt(req.params.quizid));
+  if ('error' in response && response.error === 'Invalid Token') {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(403).json(response);
+  }
+  res.status(200).json(response);
+});
+
+
+app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
+  const token = req.query.token as string;
+  const response = adminQuizRestore(token, parseInt(req.params.quizid));
   if ('error' in response && response.error === 'Invalid Token') {
     return res.status(401).json(response);
   } else if ('error' in response) {
