@@ -278,6 +278,60 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   setData(data);
   return {};
 }
+/*
+This function restores a quiz for the logged-in user.
+@param {number} token - The user's session token.
+@param {number} quizId - The quiz's assigned quizId.
+@returns {} - Empty object.
+*/
+function adminQuizRestore(token: string, quizId: number): error | object {
+  // Error checking and early return
+  const data = getData();
+  let quizName ='';
+  const quizArray = data.quizzes;
+  const tokenArray = data.tokens;
+  const trashArray = data.trash;
+
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'Invalid Token' };
+  }
+  let quizIdExists = FALSE;
+  for (const quiz of trashArray) {
+    if (quiz.quizId === quizId) {
+      quizName = quiz.name;
+      quizIdExists = TRUE;
+    }
+  }
+  if (quizIdExists === FALSE) {
+    return { error: 'Invalid quiz Id' };
+  }
+  // Error check for incorrect quizid for the specified user
+  if (!tokenOwnsQuiz(trashArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  
+  // Error check if the quiz already exists
+  for(const quiz in quizArray){
+    if(quizArray[quiz].name == quizName){
+      return { error: 'Quiz Name already exists' };
+    }
+  }
+  // Add quiz to trash and update the TimeLastEdited
+  for (const quiz in trashArray) {
+    if (trashArray[quiz].quizId === quizId) {
+      trashArray[quiz].TimeLastEdited = Math.round(Date.now() / 1000);
+      quizArray.push(trashArray[quiz]);
+    }
+  }
+  // Remove quiz from trash array
+  for (let index = 0; index < data.trash.length; index++) {
+    if (data.trash[index].quizId === quizId) {
+      data.trash.splice(index, 1);
+    }
+  }
+  setData(data);
+  return {};
+}
 
 function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string, tokenArray: token[]): boolean {
   let userId;
@@ -322,13 +376,13 @@ function validName(name: string) {
 }
 
 // Helper function for determining if token exists
-function tokenExists(token: string, tokenArray: token[]): boolean {
+function tokenExists(token: string, tokenArray: token[]) {
   for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
-      return true;
+      return TRUE;
     }
   }
-  return false;
+  return FALSE;
 }
 
 export {
@@ -338,5 +392,6 @@ export {
   adminQuizDescriptionUpdate,
   adminQuizInfo,
   adminQuizNameUpdate,
+  adminQuizRestore,
   tokenExists,
 };
