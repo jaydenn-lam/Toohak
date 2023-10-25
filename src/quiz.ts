@@ -321,16 +321,14 @@ function validName(name: string) {
   }
 }
 
-function tokenExists(token: string) {
-  const tokenArray = getData().tokens;
-
+// Helper function for determining if token exists
+function tokenExists(token: string, tokenArray: token[]): boolean{
   for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
-      return true; // Use lowercase 'true'
+      return true;
     }
   }
-
-  return false; // Use lowercase 'false'
+  return false;
 }
 
 export {
