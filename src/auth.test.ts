@@ -247,6 +247,3 @@ describe('adminUserDetail', () => {
     expect(userDetails2).toEqual(expectedUserDetails);
   });
 });
-
-
-
