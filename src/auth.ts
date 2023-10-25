@@ -210,8 +210,14 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   };
 }
 
+function adminAuthLogout(token: string): {} | error {
+  
+  return {}
+}
+
 export {
   adminUserDetails,
   adminAuthRegister,
   adminAuthLogin,
+  adminAuthLogout,
 };
