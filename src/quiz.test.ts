@@ -345,6 +345,14 @@ describe('/v1/admin/quiz/{quizid}', () => {
     expect(requestadminQuizRemove('', quizId)).toStrictEqual({ error: 'Invalid Token' });
   });
 
+  test('Invalid quizId ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
+    const invalidQuizId = quizId + 1;
+    const error = requestadminQuizRemove(token, invalidQuizId);
+    expect(error).toStrictEqual({ error: 'Invalid quiz Id' });
+  });
+
   test('Quiz not owned by user ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const token2 = requestAuthRegister('validem@unsw.edu.au', '4321abcd', 'First', 'Last').token;
@@ -357,6 +365,7 @@ describe('/v1/admin/quiz/{quizid}', () => {
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [{ quizId: quizId, name: 'quiz1' }] });
     const removeOutput = requestadminQuizRemove(token, quizId);
+    expect(removeOutput).toStrictEqual({});
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [] });
   });
 });
@@ -431,6 +440,12 @@ describe('/v1/admin/quiz/{quizid}/name', () => {
 });
 
 describe('ViewQuizTrash', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
   test('Invalid Token', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const invalidToken = token + 'Invalid';
@@ -443,33 +458,37 @@ describe('ViewQuizTrash', () => {
 
   test('Working Case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
-    const quizId = requestQuizCreate(token, 'Quiz Name', 'Description');
+    const quizId = requestQuizCreate(token, 'Quiz Name', 'Description').quizId;
     requestadminQuizRemove(token, quizId);
     const trash = requestQuizViewTrash(token);
-    expect(trash).toStrictEqual({ quizzes: [
-      {
-        quizId: quizId,
-        name: 'Quiz Name'  
-      }
-    ]});
+    expect(trash).toStrictEqual({
+      quizzes: [
+        {
+          quizId: quizId,
+          name: 'Quiz Name'
+        }
+      ]
+    });
   });
 
   test('Multiple Working Case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
-    const quizId = requestQuizCreate(token, 'Quiz Name', 'Description');
-    const quizId2 = requestQuizCreate(token, 'Quiz Name 2', 'Description');
+    const quizId = requestQuizCreate(token, 'Quiz Name', 'Description').quizId;
+    const quizId2 = requestQuizCreate(token, 'Quiz Name 2', 'Description').quizId;
     requestadminQuizRemove(token, quizId);
     requestadminQuizRemove(token, quizId2);
     const trash = requestQuizViewTrash(token);
-    expect(trash).toStrictEqual({ quizzes: [
-      {
-        quizId: quizId,
-        name: 'Quiz Name'  
-      },
-      {
-        quizId: quizId2,
-        name: 'Quiz Name 2'
-      }
-    ]});
+    expect(trash).toStrictEqual({
+      quizzes: [
+        {
+          quizId: quizId,
+          name: 'Quiz Name'
+        },
+        {
+          quizId: quizId2,
+          name: 'Quiz Name 2'
+        }
+      ]
+    });
   });
 });
