@@ -153,14 +153,22 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
 
 app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
   const token = req.query.token as string;
-  const response = adminQuizRestore(token, parseInt(req.params.quizid));
-  if ('error' in response && response.error === 'Invalid Token') {
-    return res.status(401).json(response);
-  } else if ('error' in response) {
-    return res.status(403).json(response);
+  const response = adminQuizRestore(token, parseInt(req.params.quizid), req.body.name);
+  if ('error' in response) {
+    if (response.error === 'Invalid Token') {
+      return res.status(401).json(response);
+    } else if (response.error === 'Quiz not found in the trash') {
+      return res.status(400).json(response); // Return a 400 Bad Request response
+    } else if (response.error === 'Quiz name already in use') {
+      return res.status(400).json(response);
+    } else {
+      return res.status(403).json(response);
+    }
   }
   res.status(200).json(response);
 });
+
+
 
 app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {
   const quizId = parseInt(req.params.quizid);
