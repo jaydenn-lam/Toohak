@@ -328,7 +328,10 @@ describe('GET /v1/admin/quiz/{quizid} (quizInfo)', () => {
       name: 'Animal Quiz',
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
-      description: 'Test your knowledge on animals!'
+      description: 'Test your knowledge on animals!',
+      numQuestions: 0,
+      questions: [],
+      duration: 0,
     });
   });
 });
@@ -384,6 +387,9 @@ describe('PUT /v1/admin/quiz/{quizid}/description', () => {
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
       description: 'Valid New Description',
+      numQuestions: 0,
+      questions: [],
+      duration: 0,
     });
   });
 });
@@ -468,7 +474,10 @@ describe('/v1/admin/quiz/{quizid}/name', () => {
       name: 'quiz1',
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
-      description: ''
+      description: '',
+      numQuestions: 0,
+      questions: [],
+      duration: 0,
     });
     requestQuiznameUpdate(token, quizId, 'newquiz1');
     const QuizInfo2 = requestQuizInfo(token, quizId);
@@ -477,7 +486,10 @@ describe('/v1/admin/quiz/{quizid}/name', () => {
       name: 'newquiz1',
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
-      description: ''
+      description: '',
+      numQuestions: 0,
+      questions: [],
+      duration: 0,
     });
   });
   test('Invalid new name', () => {
@@ -687,7 +699,46 @@ describe('POST /v1/admin/quiz/{quizId}/question', () => {
         }
       ]
     };
-    expect(requestQuestionCreate(token, quizId, questionbody)).toStrictEqual({ questionId: expect.any(Number) });
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    expect(questionId).toStrictEqual(expect.any(Number));
+    const quizInfo = requestQuizInfo(token, quizId);
+    expect(quizInfo).toStrictEqual({
+      quizId: quizId,
+      name: 'Animal Quiz',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: 'Test yourr knowledge on animals!',
+      numQuestions: 1,
+      questions: [
+        {
+          questionId: expect.any(Number),
+          question: 'Who is the Monarch of England?',
+          duration: 4,
+          points: 5,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'Prince Charles',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice one',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice two',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        }
+      ],
+      duration: 4,
+    });
   });
 
   test('Question too short ERROR', () => {

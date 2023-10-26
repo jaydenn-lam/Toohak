@@ -1,5 +1,5 @@
 
-import { getData, setData, token, trash } from './dataStore';
+import { getData, setData, token, trash, Question, Answer } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
@@ -12,6 +12,13 @@ interface quizId {
   quizId: number;
 }
 
+interface questionBodyType {
+  question: string;
+  duration: number;
+  points: number;
+  answers: Answer[];
+}
+
 interface quiz {
   quizId: number;
   name: string;
@@ -19,10 +26,17 @@ interface quiz {
   timeLastEdited?: number;
   description?: string;
   userId?: number;
+  numQuestions?: number;
+  questions?: questionBodyType[];
+  duration?: number;
 }
 
 interface quizList {
   quizzes: quiz[];
+}
+
+interface questionId {
+  questionId: number
 }
 
 /*
@@ -88,6 +102,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   if (description.length > 100) {
     return { error: 'Quiz description too long' };
   }
+  const emptyQuestions: Question[] = [];
   const quizId = quizArray.length;
   const quizData = {
     quizId: quizId,
@@ -97,16 +112,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
     Description: description,
     userId: findUserId(token),
     numQuestions: 0,
-    questions: [{
-      questionId: 1,
-      question: 'Who is the Monarch of England?',
-      duration: 4,
-      points: 5,
-      answers: [{
-        answer: 'Prince Charles',
-        correct: true
-      }]
-    }],
+    questions: emptyQuestions,
     duration: 0
   };
   data.quizzes.push(quizData);
@@ -188,7 +194,10 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
         timeCreated: quiz.TimeCreated,
         timeLastEdited: quiz.TimeLastEdited,
         description: quiz.Description,
-        userId: quiz.userId
+        userId: quiz.userId,
+        numQuestions: quiz.numQuestions,
+        questions: quiz.questions,
+        duration: quiz.duration
       };
     }
   }
@@ -402,22 +411,6 @@ function adminTrashEmpty(token: string, quizzes: number[]) {
   return {};
 }
 
-interface Answer {
-  answer: string;
-  correct: boolean;
-}
-
-interface questionBodyType {
-  question: string;
-  duration: number;
-  points: number;
-  answers: Answer[];
-}
-
-interface questionId {
-  questionId: number
-}
-
 function adminQuizQuestionCreate(token: string, quizId: number, questionBody: questionBodyType): error | questionId {
   // Error checking and early return
   const data = getData();
@@ -426,7 +419,6 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
   if (!tokenExists(token, tokenArray)) {
     return { error: 'Invalid Token' };
   }
-
   const errorExists = questionPropertyErrorCheck(questionBody);
   if (errorExists != null) {
     return { error: errorExists };
@@ -450,24 +442,46 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
     }
   }
 
+  let answerTotal = 0;
+  for (const quiz of quizArray) {
+    if (quiz.questions.length > 0) {
+      for (const question of quiz.questions) {
+        answerTotal = answerTotal + question.answers.length;
+      }
+    }
+  }
+
+  const answerArray: Answer[] = [];
+  for (const index in questionBody.answers) {
+    answerTotal++;
+    const selectedString: string = getRandomColour();
+    const answerObject: Answer = {
+      answerId: answerTotal,
+      answer: questionBody.answers[index].answer,
+      correct: questionBody.answers[index].correct,
+      colour: selectedString,
+    };
+    answerArray.push(answerObject);
+  }
+
   // Adds the question
   let questionId = 0;
   for (const quiz of data.quizzes) {
     if (quiz.quizId === quizId) {
-      quiz.questions.pop();
       questionId = quiz.questions.length;
       quiz.questions.push({
         questionId: questionId,
         question: questionBody.question,
         duration: questionBody.duration,
         points: questionBody.points,
-        answers: questionBody.answers
+        answers: answerArray,
       });
       quiz.numQuestions++;
       quiz.duration = quiz.duration + questionBody.duration;
       quiz.TimeLastEdited = quiz.TimeCreated;
     }
   }
+
   return { questionId: questionId };
 }
 
@@ -642,6 +656,12 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   data.quizzes[quizId].TimeLastEdited = Math.round(Date.now() / 1000);
   setData(data);
   return {};
+}
+
+function getRandomColour(): string {
+  const strings: string[] = ['red', 'blue', 'green', 'yellow', 'purple', 'brown', 'orange'];
+  const randomIndex: number = Math.floor(Math.random() * strings.length);
+  return strings[randomIndex];
 }
 
 export {

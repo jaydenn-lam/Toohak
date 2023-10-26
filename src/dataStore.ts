@@ -10,16 +10,18 @@ interface user {
 }
 
 interface Answer {
-  answer: string,
-  correct: boolean
+  answerId: number;
+  answer: string;
+  correct: boolean;
+  colour: string;
 }
 
 interface Question {
-  questionId: number,
-  question: string,
-  duration: number,
-  points: number,
-  answers: Answer[]
+  questionId: number;
+  question: string;
+  duration: number;
+  points: number;
+  answers: Answer[];
 }
 
 interface quiz {
@@ -90,4 +92,4 @@ function setData(newData: dataStore) {
   return {};
 }
 
-export { getData, setData, token, trash, trashQuiz };
+export { getData, setData, token, trash, trashQuiz, Question, Answer };
