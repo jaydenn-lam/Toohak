@@ -449,20 +449,20 @@ describe('/v1/admin/quiz/{quizid}/restore', () => {
   test('Invalid token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    requestadminQuizRemove(token,quizId);
+    requestadminQuizRemove(token, quizId);
     expect(requestadminQuizRestore(token + 'Invalid', quizId)).toStrictEqual({ error: 'Invalid Token' });
   });
   test('Empty token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    requestadminQuizRemove(token,quizId);
+    requestadminQuizRemove(token, quizId);
     expect(requestadminQuizRestore('', quizId)).toStrictEqual({ error: 'Invalid Token' });
   });
 
   test('Correct behaviour', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    requestadminQuizRemove(token,quizId);
+    requestadminQuizRemove(token, quizId);
     expect(requestadminQuizRestore(token, quizId)).toStrictEqual({});
   });
 
@@ -470,15 +470,15 @@ describe('/v1/admin/quiz/{quizid}/restore', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const token2 = requestAuthRegister('validem@unsw.edu.au', '4321abcd', 'First', 'Last').token;
     const quizId2 = requestQuizCreate(token2, 'quiz2', '').quizId;
-    requestadminQuizRemove(token2,quizId2);
+    requestadminQuizRemove(token2, quizId2);
     expect(requestadminQuizRestore(token, quizId2)).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
 
   test('successful restore', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    requestadminQuizRemove(token,quizId);
-    requestadminQuizRestore(token,quizId);
+    requestadminQuizRemove(token, quizId);
+    requestadminQuizRestore(token, quizId);
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [{ quizId: quizId, name: 'quiz1' }] });
   });
 });
