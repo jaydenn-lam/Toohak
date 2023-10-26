@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails } from './auth';
-import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty } from './quiz';
+import { adminQuizCreate, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash } from './quiz';
 import { clear } from './other';
 
 // Set up web app
@@ -109,6 +109,16 @@ app.put('/v1/admin/quiz/:quizid/description', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
+app.get('/v1/admin/quiz/trash', (req: Request, res: Response) => {
+  const token = req.query.token as string;
+  const response = adminQuizViewTrash(token);
+  if ('error' in response) {
+    return res.status(401).json(response);
+  }
+  res.status(200).json(response);
+});
+
+
 app.get('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   const quizId = parseInt(req.params.quizid);
   const token = req.query.token as string;
@@ -148,6 +158,8 @@ app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
+
+
 app.delete('/v1/admin/quiz/trash/empty', (req: Request, res: Response) => {
   const token = req.query.token as string;
   const quizzes = JSON.parse(req.query.quizzes as string);
@@ -161,6 +173,8 @@ app.delete('/v1/admin/quiz/trash/empty', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+
+
 
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
