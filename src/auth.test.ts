@@ -67,6 +67,22 @@ function requestAdminLogout(token: string) {
   return JSON.parse(res.body.toString());
 }
 
+function requestPasswordUpdate(token: string, oldPassword: string, newPassword: string) {
+  const res = request (
+    'PUT',
+    SERVER_URL + '/v1/admin/user/password',
+    {
+      json: {
+        token,
+        oldPassword,
+        newPassword
+      },
+      timeout: 100
+    }
+  );
+  return JSON.parse(res.body.toString());
+}
+
 describe('adminAuthRegister', () => {
   beforeEach(() => {
     request(
@@ -294,5 +310,58 @@ describe('adminAuthLogout', () => {
     const adminLogout2 = requestAdminLogout(invalidToken2);
     expect(adminLogout1).toEqual({ error: 'invalid token' });
     expect(adminLogout2).toEqual({ error: 'invalid token' });
+  });
+});
+
+describe('userPasswordUpdate', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('Invalid Token ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const invalidToken = token + 'Invalid';
+    const invalidError = requestPasswordUpdate(invalidToken, '1234abcd', 'NewPassword123');
+    const blankError = requestPasswordUpdate('', '1234abcd', 'NewPassword123');
+
+    expect(invalidError).toStrictEqual({ error: 'Invalid Token' });
+    expect(blankError).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('Incorrect Old Password ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const error = requestPasswordUpdate(token, 'IncorrectPassword123', 'NewPassword123');
+    expect(error).toStrictEqual({ error: 'Password is incorrect' });
+  });
+
+  test('Old Password = New Password ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const error = requestPasswordUpdate(token, '1234abcd', '1234abcd');
+    expect(error).toStrictEqual({ error: 'New password cannot be the same as the old password' });
+  });
+
+  test('New Password Previously Used ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    requestPasswordUpdate(token, '1234abcd', 'NewPassword123');
+    const error = requestPasswordUpdate(token, 'NewPassword123', '1234abcd');
+    expect(error).toStrictEqual({ error: 'New password cannot be the same as a past password' });
+  });
+
+  test('New Password is too short ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const error = requestPasswordUpdate(token, '1234abcd', 'Short12');
+    expect(error).toStrictEqual({ error: 'New password is too short' });
+  });
+
+  test('Invalid new password ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const numberError = requestPasswordUpdate(token, '1234abcd', 'NoNumbers');
+    const letterError = requestPasswordUpdate(token, '1234abcd', '12345678');
+
+    expect(numberError).toStrictEqual({ error: 'New password must contain at least 1 number and 1 letter' });
+    expect(letterError).toStrictEqual({ error: 'New password must contain at least 1 number and 1 letter' });
   });
 });
