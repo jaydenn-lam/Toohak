@@ -293,7 +293,7 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   const tokenArray = data.tokens;
   const trashArray = data.trash;
 
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token, tokenArray) || token === '') {
     return { error: 'Invalid Token' };
   }
   let quizIdExists = false;

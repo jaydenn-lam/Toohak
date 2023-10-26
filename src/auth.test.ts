@@ -68,7 +68,7 @@ function requestAdminLogout(token: string) {
 }
 
 function requestPasswordUpdate(token: string, oldPassword: string, newPassword: string) {
-  const res = request (
+  const res = request(
     'PUT',
     SERVER_URL + '/v1/admin/user/password',
     {
