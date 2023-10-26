@@ -527,7 +527,7 @@ describe('/v1/admin/quiz/{quizid}/restore', () => {
   test('Quiz ID refers to a quiz that is not currently in the trash', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
-    requestQuizRemove(token,quizId);
+    requestQuizRemove(token, quizId);
     const error = requestadminQuizRestore(token, quizId + 1 )
     expect(error).toStrictEqual({ error: 'Invalid quiz Id' });
     });

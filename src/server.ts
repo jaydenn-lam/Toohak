@@ -157,17 +157,14 @@ app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
   if ('error' in response) {
     if (response.error === 'Invalid Token') {
       return res.status(401).json(response);
-    } else if (response.error === 'Quiz not found in the trash') {
-      return res.status(400).json(response); // Return a 400 Bad Request response
     } else if (response.error === 'Quiz name already in use') {
-      return res.status(400).json(response);
+      return res.status(400).json(response); 
     } else {
       return res.status(403).json(response);
     }
   }
   res.status(200).json(response);
 });
-
 
 
 app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {

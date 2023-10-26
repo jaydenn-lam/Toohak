@@ -59,7 +59,8 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     First_name: nameFirst,
     Last_name: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
-    numSuccessfulLogins: 1
+    numSuccessfulLogins: 1,
+    pastPasswords: [password],
   };
   const uuid = uuidv4();
   const userToken = {
@@ -220,11 +221,11 @@ successful login by 1 and resets failed passwords to 0.
 @returns {number} - The unique identifier of the user.
 */
 function adminAuthLogout(token: string): object | error {
+  const data = getData();
+  const tokenArray = data.tokens;
   if (token === '') {
     return { error: 'Token not found' };
   }
-  const data = getData();
-  const tokenArray = data.tokens;
   if (!tokenExists(token, tokenArray)) {
     return { error: 'invalid token' };
   }
