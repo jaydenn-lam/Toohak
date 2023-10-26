@@ -528,9 +528,9 @@ describe('/v1/admin/quiz/{quizid}/restore', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
     requestQuizRemove(token, quizId);
-    const error = requestadminQuizRestore(token, quizId + 1 )
+    const error = requestadminQuizRestore(token, quizId + 1);
     expect(error).toStrictEqual({ error: 'Invalid quiz Id' });
-    });
+  });
 });
 
 describe('ViewQuizTrash', () => {

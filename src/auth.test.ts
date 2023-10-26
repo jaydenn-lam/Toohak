@@ -298,7 +298,7 @@ describe('adminAuthLogout', () => {
   test('Token is empty', () => {
     const emptyToken = '';
     const adminLogout1 = requestAdminLogout(emptyToken);
-    expect(adminLogout1).toEqual({ error: 'Token not found'  });
+    expect(adminLogout1).toEqual({ error: 'Invalid Token' });
   });
 
   test('Token is invalid', () => {
@@ -308,8 +308,8 @@ describe('adminAuthLogout', () => {
     const invalidToken2 = loginToken + 'Invalid';
     const adminLogout1 = requestAdminLogout(invalidToken);
     const adminLogout2 = requestAdminLogout(invalidToken2);
-    expect(adminLogout1).toEqual({ error: 'invalid token' });
-    expect(adminLogout2).toEqual({ error: 'invalid token' });
+    expect(adminLogout1).toEqual({ error: 'Invalid Token' });
+    expect(adminLogout2).toEqual({ error: 'Invalid Token' });
   });
 });
 
