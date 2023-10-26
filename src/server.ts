@@ -75,14 +75,13 @@ app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
 });
 
 app.post('/v1/admin/auth/logout', (req: Request, res: Response) => {
-  const { token} = req.body;
-  const authLogout = adminAuthLogout(token); 
+  const { token } = req.body;
+  const authLogout = adminAuthLogout(token);
   if ('error' in authLogout) {
     return res.status(401).json(authLogout);
   }
   res.json(authLogout);
 });
-
 
 app.get('/v1/admin/user/details', (req: Request, res: Response) => {
   const token = req.query.token as string;
@@ -142,7 +141,6 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
-
 
 app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
   const token = req.query.token as string;
