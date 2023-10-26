@@ -6,6 +6,7 @@ interface user {
   Last_name: string;
   numFailedPasswordsSinceLastLogin: number;
   numSuccessfulLogins: number;
+  pastPasswords: string[];
 }
 
 interface Answer {

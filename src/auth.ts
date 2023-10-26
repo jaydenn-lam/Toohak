@@ -59,7 +59,8 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     First_name: nameFirst,
     Last_name: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
-    numSuccessfulLogins: 1
+    numSuccessfulLogins: 1,
+    pastPasswords: [password],
   };
   const uuid = uuidv4();
   const userToken = {
@@ -218,6 +219,48 @@ function adminAuthLogout(token: string): object | error {
     return { error: 'invalid token' };
   }
 }
+
+function adminPasswordUpdate(token: string, oldPassword: string, newPassword: string): object | error {
+  const data = getData();
+  const tokenArray = data.tokens;
+  const userArray = data.users;
+  let userId;
+  if (!tokenExists(token, tokenArray) || token === '') {
+    return { error: 'Invalid Token' };
+  }
+  if (newPassword.length < 8) {
+    return { error: 'New password is too short' };
+  }
+  if (!passwordChecker(newPassword)) {
+    return { error: 'New password must contain at least 1 number and 1 letter' };
+  }
+
+  for (const existingToken of tokenArray) {
+    if (existingToken.token === token) {
+      userId = existingToken.userId;
+    }
+  }
+  for (const existingUser of userArray) {
+    if (existingUser.userId === userId) {
+      if (oldPassword !== existingUser.password) {
+        return { error: 'Password is incorrect' };
+      }
+      if (newPassword === oldPassword) {
+        return { error: 'New password cannot be the same as the old password' };
+      }
+      for (const oldPasswords of existingUser.pastPasswords) {
+        if (newPassword === oldPasswords) {
+          return { error: 'New password cannot be the same as a past password' };
+        }
+      }
+      existingUser.pastPasswords.push(newPassword);
+      existingUser.password = newPassword;
+    }
+  }
+  setData(data);
+  return {};
+}
+
 function tokenIsValid(token: string): boolean {
   const tokenArray = getData().tokens;
   if (token.length === 0 || !tokenExists(token, tokenArray)) {
@@ -231,4 +274,5 @@ export {
   adminAuthRegister,
   adminAuthLogin,
   adminAuthLogout,
+  adminPasswordUpdate,
 };
