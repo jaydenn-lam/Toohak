@@ -227,19 +227,19 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   let userId;
   if (!tokenExists(token, tokenArray) || token === '') {
     return { error: 'Invalid Token' };
-  };
+  }
   if (newPassword.length < 8) {
     return { error: 'New password is too short' };
   }
   if (!passwordChecker(newPassword)) {
     return { error: 'New password must contain at least 1 number and 1 letter' };
   }
-  
+
   for (const existingToken of tokenArray) {
     if (existingToken.token === token) {
       userId = existingToken.userId;
     }
-  };
+  }
   for (const existingUser of userArray) {
     if (existingUser.userId === userId) {
       if (oldPassword !== existingUser.password) {
@@ -255,13 +255,11 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
       }
       existingUser.pastPasswords.push(newPassword);
       existingUser.password = newPassword;
-    };
-  };
+    }
+  }
   setData(data);
   return {};
-};
-
-
+}
 
 function tokenIsValid(token: string): boolean {
   const tokenArray = getData().tokens;

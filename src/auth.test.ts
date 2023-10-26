@@ -313,7 +313,7 @@ describe('adminAuthLogout', () => {
   });
 });
 
-describe('userPasswordUpdate', () => {
+describe('adminPasswordUpdate', () => {
   beforeEach(() => {
     request(
       'DELETE',
