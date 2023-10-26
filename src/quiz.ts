@@ -319,7 +319,6 @@ function adminQuizRestore(token: string, quizId: number, name: string): error | 
       return ({ error: 'Quiz name already in use' });
     }
   }
-
   // Error check if the quiz already exists
   for (const quiz of quizArray) {
     if (quiz.name === quizName) {
@@ -465,7 +464,7 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   const tokenArray = data.tokens;
   const userArray = data.users;
   // check if the token provided valid
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token, tokenArray) || token === '') {
     return { error: 'Invalid Token' };
   }
   if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
@@ -491,17 +490,24 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   }
   for (const user of userArray) {
     if (user.email === userEmail) {
-      return { error: 'userEmail is the currently logged in user' };
+      return { error: 'userEmail is the current logged in user' };
+    }
+  }
+  let userId2 = -1;
+  for (const user of userArray) {
+    if (user.email === userEmail) {
+      userId2 = user.userId;
+      break;
     }
   }
   for (const quiz of quizArray) {
-    if (quiz.userId === userId) {
+    if (quiz.userId === userId2) {
       if (quiz.name === quizArray[quizId].name) {
         return { error: 'Quiz ID refers to a quiz that has a name that is already used by the target user' };
       }
     }
   }
-  data.quizzes[quizId].userId = userId;
+  data.quizzes[quizId].userId = userId2;
   data.quizzes[quizId].TimeLastEdited = Math.round(Date.now() / 1000);
   setData(data);
   return {};
