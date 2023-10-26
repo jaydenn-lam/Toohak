@@ -38,6 +38,15 @@ interface token {
   userId: number;
 }
 
+interface trashQuiz {
+  quizId: number;
+  name: string;
+}
+
+interface trash {
+  quizzes: trashQuiz[];
+}
+
 interface dataStore {
   users: user[];
   quizzes: quiz[];
@@ -80,4 +89,4 @@ function setData(newData: dataStore) {
   return {};
 }
 
-export { getData, setData, token };
+export { getData, setData, token, trash, trashQuiz };
