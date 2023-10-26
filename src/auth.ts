@@ -211,68 +211,44 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
     token: uuid,
   };
 }
-
+/*
+<adminAuthLogin finds a user with a matching email address and returns their authUserId, If no user
+is found it returns an error. it checks if the provided password matches the stored password and if it
+doesn't, it increments numFailedPasswordsSinceLastLogin by 1 and returns an error. If the login is successful it increments
+successful login by 1 and resets failed passwords to 0.
+@param {string} email - Email address of the user.
+@param {string} password - Password of the user
+@returns {number} - The unique identifier of the user.
+*/
 function adminAuthLogout(token: string): object | error {
-  if (tokenIsValid(token)) {
-    return {};
-  } else {
-    return { error: 'invalid token' };
-  }
-}
-
-function adminPasswordUpdate(token: string, oldPassword: string, newPassword: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
-  const userArray = data.users;
-  let userId;
-  if (!tokenExists(token, tokenArray) || token === '') {
-    return { error: 'Invalid Token' };
+  if (token === '') {
+    return { error: 'Token not found' };
   }
-  if (newPassword.length < 8) {
-    return { error: 'New password is too short' };
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'invalid token' };
   }
-  if (!passwordChecker(newPassword)) {
-    return { error: 'New password must contain at least 1 number and 1 letter' };
-  }
-
-  for (const existingToken of tokenArray) {
-    if (existingToken.token === token) {
-      userId = existingToken.userId;
+  // Initialize the tokenIndex to -1 (indicating not found)
+  let tokenIndex = -1;
+  // Find the index of the token in the data store
+  for (const [index, session] of tokenArray.entries()) {
+    if (token === session.token) {
+      // Set the tokenIndex to the index where the token was found
+      tokenIndex = index;
+      break;
     }
   }
-  for (const existingUser of userArray) {
-    if (existingUser.userId === userId) {
-      if (oldPassword !== existingUser.password) {
-        return { error: 'Password is incorrect' };
-      }
-      if (newPassword === oldPassword) {
-        return { error: 'New password cannot be the same as the old password' };
-      }
-      for (const oldPasswords of existingUser.pastPasswords) {
-        if (newPassword === oldPasswords) {
-          return { error: 'New password cannot be the same as a past password' };
-        }
-      }
-      existingUser.pastPasswords.push(newPassword);
-      existingUser.password = newPassword;
-    }
+  if (tokenIndex !== -1) {
+    // Remove the token from the data store
+    tokenArray.splice(tokenIndex, 1);
+    setData(data);
   }
-  setData(data);
   return {};
 }
-
-function tokenIsValid(token: string): boolean {
-  const tokenArray = getData().tokens;
-  if (token.length === 0 || !tokenExists(token, tokenArray)) {
-    return false;
-  }
-  return true;
-}
-
 export {
   adminUserDetails,
   adminAuthRegister,
   adminAuthLogin,
   adminAuthLogout,
-  adminPasswordUpdate,
 };

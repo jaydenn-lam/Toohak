@@ -298,7 +298,7 @@ describe('adminAuthLogout', () => {
   test('Token is empty', () => {
     const emptyToken = '';
     const adminLogout1 = requestAdminLogout(emptyToken);
-    expect(adminLogout1).toEqual({ error: 'invalid token' });
+    expect(adminLogout1).toEqual({ error: 'Token not found'  });
   });
 
   test('Token is invalid', () => {

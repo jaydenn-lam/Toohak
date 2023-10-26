@@ -8,7 +8,7 @@ import sui from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
 import process from 'process';
-import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout, adminPasswordUpdate } from './auth';
+import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout } from './auth';
 import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash } from './quiz';
 import { clear } from './other';
 
@@ -153,14 +153,19 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
 
 app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
   const token = req.query.token as string;
-  const response = adminQuizRestore(token, parseInt(req.params.quizid));
-  if ('error' in response && response.error === 'Invalid Token') {
-    return res.status(401).json(response);
-  } else if ('error' in response) {
-    return res.status(403).json(response);
+  const response = adminQuizRestore(token, parseInt(req.params.quizid), req.body.name);
+  if ('error' in response) {
+    if (response.error === 'Invalid Token') {
+      return res.status(401).json(response);
+    } else if (response.error === 'Quiz name already in use') {
+      return res.status(400).json(response); 
+    } else {
+      return res.status(403).json(response);
+    }
   }
   res.status(200).json(response);
 });
+
 
 app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {
   const quizId = parseInt(req.params.quizid);
@@ -186,17 +191,6 @@ app.delete('/v1/admin/quiz/trash/empty', (req: Request, res: Response) => {
     return res.status(401).json(response);
   } else if ('error' in response && response.error === 'User does not own quiz') {
     return res.status(403).json(response);
-  }
-  res.status(200).json(response);
-});
-
-app.put('/v1/admin/user/password', (req: Request, res: Response) => {
-  const { token, oldPassword, newPassword } = req.body;
-  const response = adminPasswordUpdate(token, oldPassword, newPassword);
-  if ('error' in response && 'Invalid Token' in response) {
-    return res.status(401).json(response);
-  } else if ('error' in response) {
-    return res.status(400).json(response);
   }
   res.status(200).json(response);
 });

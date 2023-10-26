@@ -284,7 +284,7 @@ This function restores a quiz for the logged-in user.
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - Empty object.
 */
-function adminQuizRestore(token: string, quizId: number): error | object {
+function adminQuizRestore(token: string, quizId: number, name: string): error | object {
   // Error checking and early return
   const data = getData();
   // Initialize quizName as an empty string
@@ -313,6 +313,11 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   // Error check for incorrect quizId for the specified user
   if (!tokenOwnsQuiz(trashArray, quizId, token, tokenArray)) {
     return { error: 'Quiz Id is not owned by this user' };
+  }
+  for (const quiz of quizArray) {
+    if (quiz.name === name) {
+      return ({ error: 'Quiz name already in use' });
+    }
   }
 
   // Error check if the quiz already exists
