@@ -8,6 +8,19 @@ interface user {
   numSuccessfulLogins: number;
 }
 
+interface Answer {
+  answer: string,
+  correct: boolean
+}
+
+interface Question {
+  questionId: number,
+  question: string,
+  duration: number,
+  points: number,
+  answers: Answer[]
+}
+
 interface quiz {
   quizId: number;
   name: string;
@@ -15,6 +28,9 @@ interface quiz {
   TimeLastEdited: number;
   Description: string;
   userId: number;
+  numQuestions: number;
+  questions: Question[];
+  duration: number;
 }
 
 interface token {
