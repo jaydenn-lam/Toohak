@@ -1,5 +1,5 @@
 
-import { getData, setData, token } from './dataStore';
+import { getData, setData, token, trash } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
@@ -342,7 +342,62 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   return {};
 }
 
-function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string, tokenArray: token[]): boolean {
+function adminQuizViewTrash(token: string): error | trash {
+  const data = getData();
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray) || token === '') {
+    return { error: 'Invalid Token' };
+  }
+  const trash: trash = {
+    quizzes: []
+  };
+  for (const quiz of data.trash) {
+    const returnQuiz = {
+      quizId: quiz.quizId,
+      name: quiz.name,
+    };
+    trash.quizzes.push(returnQuiz);
+  }
+  return trash;
+}
+
+function adminTrashEmpty(token: string, quizzes: number[]) {
+  const data = getData();
+  if (!tokenExists(token, data.tokens)) {
+    return { error: 'Invalid Token' };
+  }
+  for (const quizId of quizzes) {
+    if (!tokenOwnsQuiz(data.trash, quizId, token, data.tokens)) {
+      return { error: 'User does not own quiz' };
+    }
+    if (!quizExistsInTrash(quizId)) {
+      return { error: 'Invalid quizId' };
+    }
+  }
+  for (const quiz of quizzes) {
+    for (const trashedQuiz of data.trash) {
+      if (trashedQuiz.quizId === quiz) {
+        const index = data.trash.indexOf(trashedQuiz);
+        data.trash.splice(index);
+      }
+    }
+  }
+  return {};
+}
+
+// Helper function for determining if quizId is in the trash
+function quizExistsInTrash(quizId: number) {
+  const data = getData();
+  for (const quiz of data.trash) {
+    if (quiz.quizId === quizId) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+// Helper function for determining if the user of the token owns the quiz.
+function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string, tokenArray: token[]) {
   let userId;
   for (const session of tokenArray) {
     if (token === session.token) {
@@ -352,11 +407,11 @@ function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string, tokenAr
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
       if (quiz.userId !== userId) {
-        return false;
+        return FALSE;
       }
     }
   }
-  return true;
+  return TRUE;
 }
 
 // Helper function for determining if string is alphanumeric
@@ -457,4 +512,6 @@ export {
   adminQuizRestore,
   tokenExists,
   adminQuizTransfer,
+  adminQuizViewTrash,
+  adminTrashEmpty,
 };
