@@ -210,22 +210,41 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
     token: uuid,
   };
 }
-
+/*
+<adminAuthLogin finds a user with a matching email address and returns their authUserId, If no user
+is found it returns an error. it checks if the provided password matches the stored password and if it
+doesn't, it increments numFailedPasswordsSinceLastLogin by 1 and returns an error. If the login is successful it increments
+successful login by 1 and resets failed passwords to 0.
+@param {string} email - Email address of the user.
+@param {string} password - Password of the user
+@returns {number} - The unique identifier of the user.
+*/
 function adminAuthLogout(token: string): object | error {
-  if (tokenIsValid(token)) {
-    return {};
-  } else {
+  if (token === '') {
+    return { error: 'Token not found' };
+  }
+  const data = getData();
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray)) {
     return { error: 'invalid token' };
   }
-}
-function tokenIsValid(token: string): boolean {
-  const tokenArray = getData().tokens;
-  if (token.length === 0 || !tokenExists(token, tokenArray)) {
-    return false;
+  // Initialize the tokenIndex to -1 (indicating not found)
+  let tokenIndex = -1;
+  // Find the index of the token in the data store
+  for (const [index, session] of tokenArray.entries()) {
+    if (token === session.token) {
+      // Set the tokenIndex to the index where the token was found
+      tokenIndex = index;
+      break;
+    }
   }
-  return true;
+  if (tokenIndex !== -1) {
+    // Remove the token from the data store
+    tokenArray.splice(tokenIndex, 1);
+    setData(data);
+  }
+  return {};
 }
-
 export {
   adminUserDetails,
   adminAuthRegister,
