@@ -1,4 +1,5 @@
 
+import { arrayBuffer } from 'stream/consumers';
 import { getData, setData, token, trash, Question, Answer } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
@@ -47,7 +48,7 @@ This function given a users authUserId, provides the list of all quizzes owned b
 function adminQuizList(token: string): quizList | error {
   const data = getData();
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   const quizArray = data.quizzes;
@@ -82,7 +83,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   const data = getData();
   const quizArray = data.quizzes;
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   if (!validName(name)) {
@@ -132,7 +133,7 @@ function adminQuizRemove(token: string, quizId: number): error | object {
   const quizArray = data.quizzes;
   const tokenArray = data.tokens;
   const trashArray = data.trash;
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   let quizIdExists = FALSE;
@@ -182,7 +183,7 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
     name: '',
     userId: 0,
   };
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   for (const quiz of quizArray) {
@@ -224,7 +225,7 @@ function adminQuizNameUpdate(token: string, quizId: number, name: string): error
   const data = getData();
   const quizArray = data.quizzes;
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
 
@@ -269,7 +270,7 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   const data = getData();
   const quizArray = data.quizzes;
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   let quizIdExists = FALSE;
@@ -314,7 +315,7 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   const tokenArray = data.tokens;
   const trashArray = data.trash;
 
-  if (!tokenExists(token, tokenArray) || token === '') {
+  if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
   let quizIdExists = false;
@@ -371,7 +372,7 @@ function adminQuizRestore(token: string, quizId: number): error | object {
 function adminQuizViewTrash(token: string): error | trash {
   const data = getData();
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray) || token === '') {
+  if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
   const trash: trash = {
@@ -389,7 +390,7 @@ function adminQuizViewTrash(token: string): error | trash {
 
 function adminTrashEmpty(token: string, quizzes: number[]) {
   const data = getData();
-  if (!tokenExists(token, data.tokens)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   for (const quizId of quizzes) {
@@ -416,7 +417,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
   const data = getData();
   const quizArray = data.quizzes;
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   const errorExists = questionPropertyErrorCheck(questionBody);
@@ -595,7 +596,9 @@ function validName(name: string) {
   }
 }
 // Helper function for determining if token exists
-function tokenExists(token: string, tokenArray: token[]) {
+function tokenExists(token: string) {
+  const data = getData();
+  const tokenArray = data.tokens;
   for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
       return TRUE;
@@ -616,7 +619,7 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   const tokenArray = data.tokens;
   const userArray = data.users;
   // check if the token provided valid
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
@@ -658,10 +661,94 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   return {};
 }
 
+function adminQuizQuestionMove(token: string, quizId: number, questionId: number, newPosition: number): error | object | number {
+  const data = getData();
+  let quizIndex = 0;
+  const quizArray = data.quizzes;
+  const tokenArray = data.tokens;
+  const currentPosition = positionFinder(questionId, quizId);
+  //return {currentPosition};
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  };
+  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  if (!questionIdExists(questionId, quizId)) {
+    return { error: 'Invalid questionId' };
+  }
+  if (newPosition === currentPosition) {
+    return { error: 'New position cannot be the current position' }
+  }
+  if (newPosition < 0 || newPosition > questionArrayLength(quizId)) {
+    return { error: 'New position must be in the length of the question array' };
+  }
+  for (const existingQuiz of quizArray) {
+    if (existingQuiz.quizId === quizId) { 
+      const questionArray = existingQuiz.questions;
+      const moverQuestion = questionArray[currentPosition]
+      questionArray.splice(currentPosition, 1);
+      questionArray.splice(newPosition, 0, moverQuestion)
+      data.quizzes[quizIndex].questions = questionArray;
+    } else {
+      quizIndex ++;
+    }
+  };
+  setData(data);
+  return {};
+};
+
+function questionArrayLength(quizId: number): number {
+  const data = getData();
+  const quizArray = data.quizzes;
+  for (const quiz of quizArray) {
+    if (quiz.quizId === quizId) {
+      return quiz.questions.length - 1;
+    };
+  };
+  return 0;
+};
+
 function getRandomColour(): string {
   const strings: string[] = ['red', 'blue', 'green', 'yellow', 'purple', 'brown', 'orange'];
   const randomIndex: number = Math.floor(Math.random() * strings.length);
   return strings[randomIndex];
+}
+
+function questionIdExists(questionId: number, quizId: number): boolean {
+  const data = getData();
+  let quiz;
+  const quizArray = data.quizzes;
+  for (const existingQuiz of quizArray) {
+    if (existingQuiz.quizId === quizId) {
+      quiz = existingQuiz
+    }
+  }
+  for (const question of quiz.questions) {
+    if (question.questionId === questionId) {
+      return true;
+    }
+  }
+  return false;
+};
+
+function positionFinder(questionId: number, quizId: number): number {
+  const data = getData();
+  const quizArray = data.quizzes;
+  let position = 0;
+  let questionArray;
+  for (const existingQuiz of quizArray) {
+    if (existingQuiz.quizId === quizId) {
+      questionArray = existingQuiz.questions;
+    }
+  }
+  let index;
+  for (const qIndex in questionArray) {
+    if (questionArray[qIndex].questionId === questionId) {
+      position = parseInt(qIndex);
+    }
+  }
+  return position;
 }
 
 export {
@@ -676,5 +763,6 @@ export {
   adminQuizTransfer,
   adminQuizViewTrash,
   adminTrashEmpty,
-  adminQuizQuestionCreate
+  adminQuizQuestionCreate,
+  adminQuizQuestionMove,
 };

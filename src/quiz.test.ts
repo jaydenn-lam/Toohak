@@ -193,7 +193,7 @@ function requestQuestionCreate(token: string, quizId: number, questionBody: ques
 function requestQuestionMove(token: string, quizId: number, questionId: number, newPosition: number) {
   const res = request(
     'PUT',
-    SERVER_URL + `/v1/admin/quiz/${quizId}/question/${questionId}/move`,
+    SERVER_URL + '/v1/admin/quiz/' + quizId + '/question/' + questionId + '/move',
     {
       json: {
         token,
@@ -1159,6 +1159,27 @@ describe('quiz/QuestionMove', () => {
     ]
   };
 
+  const questionBody3: questionBodyType = {
+      question: 'Who is the best boxer?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Mike Tyson',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+  
+
   beforeEach(() => {
     request(
       'DELETE',
@@ -1169,9 +1190,10 @@ describe('quiz/QuestionMove', () => {
   test('Working Case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    requestQuestionCreate(token, quizId, questionBody1);
-    const moverQuestionId = requestQuestionCreate(token, quizId, questionBody2);
-    requestQuestionMove(token, quizId, moverQuestionId, 0);
+    const moverQuestionId = requestQuestionCreate(token, quizId, questionBody1).questionId;
+    requestQuestionCreate(token, quizId, questionBody2);
+    requestQuestionCreate(token, quizId, questionBody3);
+    requestQuestionMove(token, quizId, moverQuestionId, 2);
     
     const quizInfo = requestQuizInfo(token, quizId);
     expect(quizInfo).toStrictEqual({
@@ -1180,7 +1202,7 @@ describe('quiz/QuestionMove', () => {
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
       description: 'Test your knowledge on animals!',
-      numQuestions: 1,
+      numQuestions: 3,
       questions: [
         {
           questionId: expect.any(Number),
@@ -1191,6 +1213,32 @@ describe('quiz/QuestionMove', () => {
             {
               answerId: expect.any(Number),
               answer: 'Joe Biden',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice one',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice two',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        },
+        {
+          questionId: expect.any(Number),
+          question: 'Who is the best boxer?',
+          duration: 4,
+          points: 5,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'Mike Tyson',
               colour: expect.any(String),
               correct: true,
             },
@@ -1233,16 +1281,16 @@ describe('quiz/QuestionMove', () => {
               correct: false,
             }
           ]
-        }
+        },
       ],
-      duration: 8,
+      duration: 12,
     });
   });
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    const questionId = requestQuestionCreate(token, quizId, questionBody1);
+    const questionId = requestQuestionCreate(token, quizId, questionBody1).questionId;
     const invalidToken = token + 'Invalid';
 
     const invalidError = requestQuestionMove(invalidToken, quizId, questionId, 1);
@@ -1255,17 +1303,17 @@ describe('quiz/QuestionMove', () => {
   test('User is not owner of quiz ERROR', () => {
     const originalToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(originalToken, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    const questionId = requestQuestionCreate(originalToken, quizId, questionBody1);
+    const questionId = requestQuestionCreate(originalToken, quizId, questionBody1).questionId;
     const newToken = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').token;
     
     const error = requestQuestionMove(newToken, quizId, questionId, 1);
-    expect(error).toStrictEqual({ error: 'User is not an owner of this quiz' });
+    expect(error).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
 
   test('Invalid questionId ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    const questionId = requestQuestionCreate(token, quizId, questionBody1);
+    const questionId = requestQuestionCreate(token, quizId, questionBody1).questionId;
     const invalidQuestionId = questionId + 1;
 
     const error = requestQuestionMove(token, quizId, invalidQuestionId, 0);
@@ -1276,7 +1324,7 @@ describe('quiz/QuestionMove', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     requestQuestionCreate(token, quizId, questionBody1);
-    const position1QuestionId = requestQuestionCreate(token, quizId, questionBody2);
+    const position1QuestionId = requestQuestionCreate(token, quizId, questionBody2).questionId;
 
     const error = requestQuestionMove(token, quizId, position1QuestionId, 1);
     expect(error).toStrictEqual({ error: 'New position cannot be the current position' });
@@ -1286,7 +1334,7 @@ describe('quiz/QuestionMove', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     requestQuestionCreate(token, quizId, questionBody1);
-    const moverQuestionId = requestQuestionCreate(token, quizId, questionBody2);
+    const moverQuestionId = requestQuestionCreate(token, quizId, questionBody2).questionId;
 
     const negativeError = requestQuestionMove(token, quizId, moverQuestionId, -1);
     expect(negativeError).toStrictEqual({ error: 'New position must be in the length of the question array' });
