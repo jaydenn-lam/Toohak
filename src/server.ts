@@ -9,8 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout, adminPasswordUpdate, adminDetailsUpdate } from './auth';
-import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizTransfer, adminQuizQuestionCreate } from './quiz';
-
+import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove, adminQuizTransfer } from './quiz';
 import { clear } from './other';
 
 // Set up web app
@@ -245,6 +244,21 @@ app.put('/v1/admin/user/password', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
+app.put('/v1/admin/quiz/:quizid/question/:questionid/move', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const questionId = parseInt(req.params.questionid);
+  const { token, newPosition } = req.body;
+  const response = adminQuizQuestionMove(token, quizId, questionId, newPosition);
+  if ('error' in response && 'not an owner' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response && 'Token Invalid' in response) {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
+
 app.put('/v1/admin/user/details', (req: Request, res: Response) => {
   const { token, email, nameFirst, nameLast } = req.body;
   const response = adminDetailsUpdate(token, email, nameFirst, nameLast);
@@ -255,6 +269,7 @@ app.put('/v1/admin/user/details', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================

@@ -224,7 +224,7 @@ successful login by 1 and resets failed passwords to 0.
 function adminAuthLogout(token: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray) || token === '') {
+  if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
   // Initialize the tokenIndex to -1 (indicating not found)
@@ -250,7 +250,7 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   const tokenArray = data.tokens;
   const userArray = data.users;
   let userId;
-  if (!tokenExists(token, tokenArray) || token === '') {
+  if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
   if (newPassword.length < 8) {
@@ -300,7 +300,7 @@ function adminDetailsUpdate (token: string, email: string, nameFirst: string, na
   if (InvalidErrorMessage) {
     return InvalidErrorMessage;
   }
-  if (!tokenExists(token, data.tokens)) {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   const user = findUserId(token);
