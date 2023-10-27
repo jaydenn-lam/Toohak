@@ -489,6 +489,44 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
   return { questionId: questionId };
 }
 
+function adminQuestionDelete(token: string, quizId: number, questionId: number): error | object {
+  const data = getData();
+  const quizArray = data.quizzes;
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  let quizIdExists = FALSE;
+  for (const quiz of quizArray) {
+    if (quiz.quizId === quizId) {
+      quizIdExists = TRUE;
+    }
+  }
+  if (quizIdExists === FALSE) {
+    return { error: 'Invalid quiz Id' };
+  }
+  // Error check for incorrect quizid for the specified user
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  if (!questionIdExists(questionId, quizId)) {
+    return { error: 'Invalid questionId' };
+  }
+  // Update the TimeLastEdited and delete question
+  for (const quiz in quizArray) {
+    if (quizArray[quiz].quizId === quizId) {
+      quizArray[quiz].TimeLastEdited = Math.round(Date.now() / 1000);
+      for (const question of quizArray[quiz].questions) {
+        if (question.questionId === questionId) {
+          const index = data.quizzes[quiz].questions.indexOf(question);
+          data.quizzes[quiz].questions.splice(index, 1);
+        }
+      }
+    }
+  }
+  setData(data);
+  return {};
+}
+
 // Helper function for common types of errors in the questionBody returns a string
 // with the error message or null
 function questionPropertyErrorCheck(questionBody: questionBodyType): string | null {
@@ -813,5 +851,6 @@ export {
   adminTrashEmpty,
   adminQuizQuestionCreate,
   adminQuizQuestionMove,
+  adminQuestionDelete,
   adminQuizQuestionDuplicate
 };

@@ -282,6 +282,21 @@ function requestadminQuizTransfer(token: string, quizId: number, userEmail: stri
   return JSON.parse(res.body.toString());
 }
 
+function requestQuestionDelete(token: string, quizId: number, questionId: number) {
+  const res = request(
+    'DELETE',
+    SERVER_URL + '/v1/admin/quiz/' + quizId + '/question/' + questionId,
+    {
+      qs: {
+        token
+      },
+      timeout: 100
+    }
+  );
+
+  return JSON.parse(res.body.toString());
+}
+
 function requestQuestionDuplicate(token: string, quizId: number, questionId: number) {
   const res = request(
     'POST',
@@ -1431,7 +1446,7 @@ describe('quiz/QuestionMove', () => {
   });
 });
 
-describe('POST quizQuestionDuplicate', () => {
+describe('DELETE /v1/admin/quiz/:quizid/question/:questionid', () => {
   beforeEach(() => {
     request(
       'DELETE',
@@ -1439,6 +1454,68 @@ describe('POST quizQuestionDuplicate', () => {
     );
   });
 
+  const questionBody: questionBodyType = {
+    question: 'Who is the Monarch of England?',
+    duration: 4,
+    points: 5,
+    answers: [
+      {
+        answer: 'Prince Charles',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+
+  test('Success', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    expect(requestQuestionDelete(token, quizId, questionId)).toStrictEqual({});
+  });
+
+  test('Invalid questionId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    const invalidQuestionId = questionId + 1;
+    console.log(token);
+    console.log(quizId);
+    console.log(invalidQuestionId);
+    expect(requestQuestionDelete(token, quizId, invalidQuestionId)).toStrictEqual({ error: 'Invalid questionId' });
+  });
+
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    const invalidToken = token + 'Invalid';
+    expect(requestQuestionDelete(invalidToken, quizId, questionId)).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('User does not own this quiz', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    const tokenNotOwner = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestQuestionDelete(tokenNotOwner, quizId, questionId)).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
+  });
+});
+
+describe('POST quizQuestionDuplicate', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
   test('Working case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
