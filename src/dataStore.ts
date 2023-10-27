@@ -9,6 +9,21 @@ interface user {
   pastPasswords: string[];
 }
 
+interface Answer {
+  answerId: number;
+  answer: string;
+  correct: boolean;
+  colour: string;
+}
+
+interface Question {
+  questionId: number;
+  question: string;
+  duration: number;
+  points: number;
+  answers: Answer[];
+}
+
 interface quiz {
   quizId: number;
   name: string;
@@ -16,6 +31,9 @@ interface quiz {
   TimeLastEdited: number;
   Description: string;
   userId: number;
+  numQuestions: number;
+  questions: Question[];
+  duration: number;
 }
 
 interface token {
@@ -74,4 +92,4 @@ function setData(newData: dataStore) {
   return {};
 }
 
-export { getData, setData, token, trash, trashQuiz };
+export { getData, setData, token, trash, trashQuiz, Question, Answer };

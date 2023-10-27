@@ -1,5 +1,5 @@
 
-import { getData, setData, token, trash } from './dataStore';
+import { getData, setData, token, trash, Question, Answer } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
@@ -12,6 +12,13 @@ interface quizId {
   quizId: number;
 }
 
+interface questionBodyType {
+  question: string;
+  duration: number;
+  points: number;
+  answers: Answer[];
+}
+
 interface quiz {
   quizId: number;
   name: string;
@@ -19,11 +26,19 @@ interface quiz {
   timeLastEdited?: number;
   description?: string;
   userId?: number;
+  numQuestions?: number;
+  questions?: questionBodyType[];
+  duration?: number;
 }
 
 interface quizList {
   quizzes: quiz[];
 }
+
+interface questionId {
+  questionId: number
+}
+
 /*
 This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
 @param {number} authUserId - Integer that contains their assigned authUserId
@@ -96,6 +111,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
       }
     }
   }
+  const emptyQuestions: Question[] = [];
   const quizId = quizArray.length;
   const quizData = {
     quizId: quizId,
@@ -103,7 +119,10 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
     TimeCreated: Math.round(Date.now() / 1000),
     TimeLastEdited: Math.round(Date.now() / 1000),
     Description: description,
-    userId: findUserId(token)
+    userId: findUserId(token),
+    numQuestions: 0,
+    questions: emptyQuestions,
+    duration: 0
   };
   data.quizzes.push(quizData);
   setData(data);
@@ -184,7 +203,10 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
         timeCreated: quiz.TimeCreated,
         timeLastEdited: quiz.TimeLastEdited,
         description: quiz.Description,
-        userId: quiz.userId
+        userId: quiz.userId,
+        numQuestions: quiz.numQuestions,
+        questions: quiz.questions,
+        duration: quiz.duration
       };
     }
   }
@@ -292,7 +314,7 @@ This function restores a quiz for the logged-in user.
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - Empty object.
 */
-function adminQuizRestore(token: string, quizId: number, name: string): error | object {
+function adminQuizRestore(token: string, quizId: number): error | object {
   // Error checking and early return
   const data = getData();
   // Initialize quizName as an empty string
@@ -323,7 +345,7 @@ function adminQuizRestore(token: string, quizId: number, name: string): error | 
     return { error: 'Quiz Id is not owned by this user' };
   }
   for (const quiz of quizArray) {
-    if (quiz.name === name) {
+    if (quiz.name === quizName) {
       return ({ error: 'Quiz name already in use' });
     }
   }
@@ -395,6 +417,136 @@ function adminTrashEmpty(token: string, quizzes: number[]) {
     }
   }
   return {};
+}
+
+function adminQuizQuestionCreate(token: string, quizId: number, questionBody: questionBodyType): error | questionId {
+  // Error checking and early return
+  const data = getData();
+  const quizArray = data.quizzes;
+  const tokenArray = data.tokens;
+  if (!tokenExists(token, tokenArray)) {
+    return { error: 'Invalid Token' };
+  }
+  const errorExists = questionPropertyErrorCheck(questionBody);
+  if (errorExists != null) {
+    return { error: errorExists };
+  }
+  // Error check for incorrect quizid for the specified user
+  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+
+  const incorrectAnswerType = answerTypeError(questionBody);
+  if (incorrectAnswerType != null) {
+    return { error: incorrectAnswerType };
+  }
+
+  // Checks for invalid quiz duration
+  for (const quiz of quizArray) {
+    if (quiz.quizId === quizId) {
+      if ((quiz.duration + questionBody.duration) > 180) {
+        return { error: 'Question duration is too long' };
+      }
+    }
+  }
+
+  let answerTotal = 0;
+  for (const quiz of quizArray) {
+    if (quiz.questions.length > 0) {
+      for (const question of quiz.questions) {
+        answerTotal = answerTotal + question.answers.length;
+      }
+    }
+  }
+
+  const answerArray: Answer[] = [];
+  for (const index in questionBody.answers) {
+    answerTotal++;
+    const selectedString: string = getRandomColour();
+    const answerObject: Answer = {
+      answerId: answerTotal,
+      answer: questionBody.answers[index].answer,
+      correct: questionBody.answers[index].correct,
+      colour: selectedString,
+    };
+    answerArray.push(answerObject);
+  }
+
+  // Adds the question
+  let questionId = 0;
+  for (const quiz of data.quizzes) {
+    if (quiz.quizId === quizId) {
+      questionId = quiz.questions.length;
+      quiz.questions.push({
+        questionId: questionId,
+        question: questionBody.question,
+        duration: questionBody.duration,
+        points: questionBody.points,
+        answers: answerArray,
+      });
+      quiz.numQuestions++;
+      quiz.duration = quiz.duration + questionBody.duration;
+      quiz.TimeLastEdited = quiz.TimeCreated;
+    }
+  }
+
+  return { questionId: questionId };
+}
+
+// Helper function for common types of errors in the questionBody returns a string
+// with the error message or null
+function questionPropertyErrorCheck(questionBody: questionBodyType): string | null {
+  if (questionBody.question.length < 5) {
+    return 'Question too short';
+  }
+  if (questionBody.question.length > 50) {
+    return 'Question too long';
+  }
+  if (questionBody.answers.length < 2) {
+    return 'Too little answers';
+  }
+  if (questionBody.answers.length > 6) {
+    return 'Number of answers greater than 6';
+  }
+  if (questionBody.duration < 0) {
+    return 'Question duration is negative';
+  }
+  if (questionBody.points < 1) {
+    return 'Question points is zero or negative';
+  }
+  if (questionBody.points > 10) {
+    return 'Question points exceeded max value';
+  }
+  return null;
+}
+
+// Helper function for incorrect answer type returns error string or null
+function answerTypeError(questionBody: questionBodyType): string | null {
+  for (const answer of questionBody.answers) {
+    if (answer.answer.length < 1) {
+      return 'Length of an answer is less than 1 character';
+    }
+    if (answer.answer.length > 30) {
+      return 'Length of an answer is greater than 30 characters';
+    }
+  }
+  for (const answer in questionBody.answers) {
+    for (const check in questionBody.answers) {
+      if (questionBody.answers[answer].answer === questionBody.answers[check].answer && answer !== check) {
+        return 'Duplicate answers';
+      }
+    }
+  }
+  let error = true;
+  for (const answer of questionBody.answers) {
+    if (answer.correct === true) {
+      error = false;
+    }
+  }
+  if (error) {
+    return 'No correct answers';
+  }
+  return null;
 }
 
 // Helper function for determining if quizId is in the trash
@@ -520,6 +672,12 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   return {};
 }
 
+function getRandomColour(): string {
+  const strings: string[] = ['red', 'blue', 'green', 'yellow', 'purple', 'brown', 'orange'];
+  const randomIndex: number = Math.floor(Math.random() * strings.length);
+  return strings[randomIndex];
+}
+
 export {
   adminQuizList,
   adminQuizCreate,
@@ -532,4 +690,5 @@ export {
   adminQuizTransfer,
   adminQuizViewTrash,
   adminTrashEmpty,
+  adminQuizQuestionCreate
 };
