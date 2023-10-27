@@ -17,6 +17,66 @@ interface questionBodyType {
   answers: Answer[];
 }
 
+const questionBody1: questionBodyType = {
+  question: 'Who is the Monarch of England?',
+  duration: 4,
+  points: 5,
+  answers: [
+    {
+      answer: 'Prince Charles',
+      correct: true,
+    },
+    {
+      answer: 'Choice one',
+      correct: false,
+    },
+    {
+      answer: 'Choice two',
+      correct: false,
+    }
+  ]
+};
+
+const questionBody2: questionBodyType = {
+  question: 'Who is the President of the US?',
+  duration: 4,
+  points: 5,
+  answers: [
+    {
+      answer: 'Joe Biden',
+      correct: true,
+    },
+    {
+      answer: 'Choice one',
+      correct: false,
+    },
+    {
+      answer: 'Choice two',
+      correct: false,
+    }
+  ]
+};
+
+const questionBody3: questionBodyType = {
+  question: 'Who is the best boxer?',
+  duration: 4,
+  points: 5,
+  answers: [
+    {
+      answer: 'Mike Tyson',
+      correct: true,
+    },
+    {
+      answer: 'Choice one',
+      correct: false,
+    },
+    {
+      answer: 'Choice two',
+      correct: false,
+    }
+  ]
+};
+
 function requestAuthRegister(email: string, password: string, nameFirst: string, nameLast: string) {
   const res = request(
     'POST',
@@ -233,9 +293,22 @@ function requestQuestionDelete(token: string, quizId: number, questionId: number
       timeout: 100
     }
   );
+}
 
+function requestQuestionDuplicate(token: string, quizId: number, questionId: number) {
+  const res = request(
+    'POST',
+    SERVER_URL + `/v1/admin/quiz/${quizId}/question/${questionId}/duplicate`,
+    {
+      json: {
+        token,
+      },
+      timeout: 100
+    }
+  );
   return JSON.parse(res.body.toString());
 }
+
 
 describe('POST /v1/admin/quiz', () => {
   beforeEach(() => {
@@ -1208,66 +1281,6 @@ describe('POST /v1/admin/quiz/{quizId}/question', () => {
 });
 
 describe('quiz/QuestionMove', () => {
-  const questionBody1: questionBodyType = {
-    question: 'Who is the Monarch of England?',
-    duration: 4,
-    points: 5,
-    answers: [
-      {
-        answer: 'Prince Charles',
-        correct: true,
-      },
-      {
-        answer: 'Choice one',
-        correct: false,
-      },
-      {
-        answer: 'Choice two',
-        correct: false,
-      }
-    ]
-  };
-
-  const questionBody2: questionBodyType = {
-    question: 'Who is the President of the US?',
-    duration: 4,
-    points: 5,
-    answers: [
-      {
-        answer: 'Joe Biden',
-        correct: true,
-      },
-      {
-        answer: 'Choice one',
-        correct: false,
-      },
-      {
-        answer: 'Choice two',
-        correct: false,
-      }
-    ]
-  };
-
-  const questionBody3: questionBodyType = {
-    question: 'Who is the best boxer?',
-    duration: 4,
-    points: 5,
-    answers: [
-      {
-        answer: 'Mike Tyson',
-        correct: true,
-      },
-      {
-        answer: 'Choice one',
-        correct: false,
-      },
-      {
-        answer: 'Choice two',
-        correct: false,
-      }
-    ]
-  };
-
   beforeEach(() => {
     request(
       'DELETE',
@@ -1492,5 +1505,146 @@ describe('DELETE /v1/admin/quiz/:quizid/question/:questionid', () => {
     const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
     const tokenNotOwner = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     expect(requestQuestionDelete(tokenNotOwner, quizId, questionId)).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
+  });
+});
+
+describe('POST quizQuestionDuplicate', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+  test('Working case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId1 = requestQuestionCreate(token, quizId, questionBody1).questionId;
+    requestQuestionCreate(token, quizId, questionBody2);
+
+    const duplicateQuestionId = requestQuestionDuplicate(token, quizId, questionId1).newQuestionId;
+    expect(duplicateQuestionId).toStrictEqual(expect.any(Number));
+
+    const quizInfo = requestQuizInfo(token, quizId);
+    expect(quizInfo).toStrictEqual({
+      quizId: quizId,
+      name: 'Animal Quiz',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: 'Test your knowledge on animals!',
+      numQuestions: 3,
+      questions: [
+        {
+          questionId: expect.any(Number),
+          question: 'Who is the Monarch of England?',
+          duration: 4,
+          points: 5,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'Prince Charles',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice one',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice two',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        },
+        {
+          questionId: expect.any(Number),
+          question: 'Who is the Monarch of England?',
+          duration: 4,
+          points: 5,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'Prince Charles',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice one',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice two',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        },
+        {
+          questionId: expect.any(Number),
+          question: 'Who is the President of the US?',
+          duration: 4,
+          points: 5,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'Joe Biden',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice one',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice two',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        }
+      ],
+      duration: 12,
+    });
+  });
+
+  test('Invalid Token ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody1).questionId;
+    const invalidToken = token + 'Invalid';
+
+    const invalidError = requestQuestionDuplicate(invalidToken, quizId, questionId);
+    expect(invalidError).toStrictEqual({ error: 'Invalid Token' });
+
+    const emptyError = requestQuestionDuplicate('', quizId, questionId);
+    expect(emptyError).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('User is not an owner of the quiz ERROR', () => {
+    const originalToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(originalToken, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(originalToken, quizId, questionBody1).questionId;
+    const newToken = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').token;
+
+    const error = requestQuestionDuplicate(newToken, quizId, questionId);
+    expect(error).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
+  });
+
+  test('Invalid questionId ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody1).questionId;
+    const invalidQuestionId = questionId + 1;
+    const error = requestQuestionDuplicate(token, quizId, invalidQuestionId);
+    expect(error).toStrictEqual({ error: 'Invalid questionId' });
   });
 });
