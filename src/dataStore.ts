@@ -1,9 +1,11 @@
+import fs from 'fs';
+
 interface user {
   userId: number;
   email: string;
   password: string;
-  First_name: string;
-  Last_name: string;
+  firstName: string;
+  lastName: string;
   numFailedPasswordsSinceLastLogin: number;
   numSuccessfulLogins: number;
   pastPasswords: string[];
@@ -83,12 +85,17 @@ Example usage
 
 // Use get() to access the data
 function getData(): dataStore {
+  // const json = fs.readFileSync('./data.json');
+  // const newData = JSON.parse(String(json));
+
   return data;
 }
 
 // Use set(newData) to pass in the entire data object, with modifications made
 function setData(newData: dataStore) {
   data = newData;
+  const savedData = JSON.stringify(data);
+  fs.writeFileSync('./data.json', savedData);
   return {};
 }
 
