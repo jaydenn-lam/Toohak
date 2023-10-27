@@ -293,6 +293,8 @@ function requestQuestionDelete(token: string, quizId: number, questionId: number
       timeout: 100
     }
   );
+
+  return JSON.parse(res.body.toString());
 }
 
 function requestQuestionDuplicate(token: string, quizId: number, questionId: number) {
@@ -308,7 +310,6 @@ function requestQuestionDuplicate(token: string, quizId: number, questionId: num
   );
   return JSON.parse(res.body.toString());
 }
-
 
 describe('POST /v1/admin/quiz', () => {
   beforeEach(() => {
