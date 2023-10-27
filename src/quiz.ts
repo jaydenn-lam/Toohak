@@ -700,6 +700,8 @@ function adminQuizQuestionMove(token: string, quizId: number, questionId: number
       const moverQuestion = questionArray[currentPosition];
       questionArray.splice(currentPosition, 1);
       questionArray.splice(newPosition, 0, moverQuestion);
+      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      data.quizzes = quizArray;
       data.quizzes[quizIndex].questions = questionArray;
     } else {
       quizIndex++;
