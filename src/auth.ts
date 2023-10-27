@@ -200,7 +200,6 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   user.numSuccessfulLogins += 1;
   user.numFailedPasswordsSinceLastLogin = 0;
   // update the data store
-
   const uuid = uuidv4();
   const userToken = {
     token: uuid,
@@ -213,23 +212,20 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   };
 }
 /*
-<adminAuthLogout function logs out a user by removing their token from the data store.
-It checks if the provided token is valid, and if not, it returns an error.
+<adminAuthLogout function logs out a user by removing their token from the data store. 
+It checks if the provided token is valid, and if not, it returns an error. 
 @param {string} token - The unique token of the user to log out.
 @returns {object | error} - An empty object if successful, or an error object if the token is invalid.
 */
 function adminAuthLogout(token: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
-
   // Check if the token is valid or empty
   if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
-
   // Initialize the tokenIndex to -1 (indicating not found)
   let tokenIndex = -1;
-
   // Find the index of the token in the data store
   for (const [index, session] of tokenArray.entries()) {
     if (token === session.token) {
@@ -238,7 +234,6 @@ function adminAuthLogout(token: string): object | error {
       break;
     }
   }
-
   if (tokenIndex !== -1) {
     // Remove the token from the data store
     tokenArray.splice(tokenIndex, 1);
@@ -246,11 +241,10 @@ function adminAuthLogout(token: string): object | error {
   }
   return {};
 }
-
 /*
-<adminPasswordUpdate function allows a user to update their password.
-It checks if the provided token is valid and ensures that the new password meets certain criteria.
-It also checks if the old password matches the stored password and enforces that the new password is not the same as the old one or any past passwords.
+<adminPasswordUpdate function allows a user to update their password. 
+It checks if the provided token is valid and ensures that the new password meets certain criteria. 
+It also checks if the old password matches the stored password and enforces that the new password is not the same as the old one or any past passwords. 
 @param {string} token - The unique token of the user.
 @param {string} oldPassword - The old password of the user.
 @param {string} newPassword - The new password to set.
@@ -261,12 +255,10 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   const tokenArray = data.tokens;
   const userArray = data.users;
   let userId;
-
   // Check if the token is valid or empty
   if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
-  }
-
+  } 
   // Check if the new password meets criteria
   if (newPassword.length < 8) {
     return { error: 'New password is too short' };
@@ -274,7 +266,6 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   if (!passwordChecker(newPassword)) {
     return { error: 'New password must contain at least 1 number and 1 letter' };
   }
-
   for (const existingToken of tokenArray) {
     if (existingToken.token === token) {
       userId = existingToken.userId;
@@ -301,7 +292,7 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   return {};
 }
 /*
-<adminDetailsUpdate function allows a user to update their email and name.
+<adminDetailsUpdate function allows a user to update their email and name. 
 It checks if the provided token is valid, if the email is not already in use, and if the email and names are valid.
 If any of the checks fail, it returns an error. Otherwise, it updates the user's information in the data store.
 @param {string} token - The unique token of the user.
@@ -333,7 +324,6 @@ function adminDetailsUpdate(token: string, email: string, nameFirst: string, nam
   }
   // Find the user to edit based on the token
   const user = findUserId(token);
-
   // Update user's information in the data store
   for (let userToEdit of data.users) {
     if (userToEdit.userId === user) {
