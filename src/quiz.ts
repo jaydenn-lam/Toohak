@@ -94,13 +94,22 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   if (name.length > 30) {
     return { error: 'Quiz name too long' };
   }
-  for (const quiz in quizArray) {
-    if (quizArray[quiz].name === name) {
-      return { error: 'Name already being used' };
+  let adminUserId;
+
+  for (const tokenVal in tokenArray) {
+    if (tokenArray[tokenVal].token === token) {
+      adminUserId = tokenArray[tokenVal].userId;
     }
   }
   if (description.length > 100) {
     return { error: 'Quiz description too long' };
+  }
+  for (const quiz in quizArray) {
+    if (quizArray[quiz].name === name) {
+      if (quizArray[quiz].userId === adminUserId) {
+        return { error: 'Name already being used' };
+      }
+    }
   }
   const emptyQuestions: Question[] = [];
   const quizId = quizArray.length;
@@ -340,7 +349,6 @@ function adminQuizRestore(token: string, quizId: number): error | object {
       return ({ error: 'Quiz name already in use' });
     }
   }
-
   // Error check if the quiz already exists
   for (const quiz of quizArray) {
     if (quiz.name === quizName) {
@@ -603,7 +611,6 @@ function tokenExists(token: string, tokenArray: token[]) {
   }
   return FALSE;
 }
-
 /*
 This function restores a quiz for the logged-in user.
 @param {number} token - The user's session token.
@@ -616,7 +623,7 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   const tokenArray = data.tokens;
   const userArray = data.users;
   // check if the token provided valid
-  if (!tokenExists(token, tokenArray)) {
+  if (!tokenExists(token, tokenArray) || token === '') {
     return { error: 'Invalid Token' };
   }
   if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
@@ -640,19 +647,26 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
       break;
     }
   }
+  for (const user in userArray) {
+    if (userArray[user].email === userEmail && userArray[user].userId === userId) {
+      return { error: 'userEmail is the current logged in user' };
+    }
+  }
+  let userId2 = -1;
   for (const user of userArray) {
     if (user.email === userEmail) {
-      return { error: 'userEmail is the currently logged in user' };
+      userId2 = user.userId;
+      break;
     }
   }
   for (const quiz of quizArray) {
-    if (quiz.userId === userId) {
+    if (quiz.userId === userId2) {
       if (quiz.name === quizArray[quizId].name) {
         return { error: 'Quiz ID refers to a quiz that has a name that is already used by the target user' };
       }
     }
   }
-  data.quizzes[quizId].userId = userId;
+  data.quizzes[quizId].userId = userId2;
   data.quizzes[quizId].TimeLastEdited = Math.round(Date.now() / 1000);
   setData(data);
   return {};

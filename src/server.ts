@@ -9,7 +9,8 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout, adminPasswordUpdate, adminDetailsUpdate } from './auth';
-import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate } from './quiz';
+import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizTransfer, adminQuizQuestionCreate } from './quiz';
+
 import { clear } from './other';
 
 // Set up web app
@@ -214,6 +215,19 @@ app.put('/v1/admin/user/password', (req: Request, res: Response) => {
   const response = adminPasswordUpdate(token, oldPassword, newPassword);
   if ('error' in response && 'Invalid Token' in response) {
     return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
+
+app.post('/v1/admin/quiz/:quizid/transfer', (req: Request, res: Response) => {
+  const { token, userEmail } = req.body;
+  const response = adminQuizTransfer(token, userEmail, parseInt(req.params.quizid));
+  if ('error' in response && response.error === 'Invalid Token') {
+    return res.status(401).json(response);
+  } else if ('error' in response && response.error === 'Quiz Id is not owned by this user') {
+    return res.status(403).json(response);
   } else if ('error' in response) {
     return res.status(400).json(response);
   }
