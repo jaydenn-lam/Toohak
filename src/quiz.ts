@@ -527,6 +527,66 @@ function adminQuestionDelete(token: string, quizId: number, questionId: number):
   return {};
 }
 
+function adminQuestionUpdate(token: string, quizId: number, questionBody: questionBodyType, questionId: number): object | error {
+  // Error checking and early return
+  const data = getData();
+  const quizArray = data.quizzes;
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  // Error check for incorrect quizid for the specified user
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  const errorExists = questionPropertyErrorCheck(questionBody);
+  if (errorExists != null) {
+    return { error: errorExists };
+  }
+  const incorrectAnswerType = answerTypeError(questionBody);
+  if (incorrectAnswerType != null) {
+    return { error: incorrectAnswerType };
+  }
+
+  // Checks for invalid quiz duration
+  for (const quiz of quizArray) {
+    if (quiz.quizId === quizId) {
+      if ((quiz.duration + questionBody.duration) > 180) {
+        return { error: 'Question duration is too long' };
+      }
+    }
+  }
+
+  // Update duration of quiz
+  for (const quiz of quizArray) {
+    if (quiz.quizId === quizId) {
+      if (quiz.duration !== questionBody.duration) {
+        quiz.duration = quiz.duration + questionBody.duration;
+      }
+    }
+  }
+
+  // Update question details
+  for (const quiz of quizArray) {
+    if (quiz.quizId === quizId) {
+      for (const question of quiz.questions) {
+        if (question.questionId === questionId) {
+          question.question = questionBody.question;
+          question.duration = questionBody.duration;
+          question.points = questionBody.points;
+          for (const index in question.answers) {
+            question.answers[index].answer = questionBody.answers[index].answer;
+            question.answers[index].correct = questionBody.answers[index].correct;
+            question.answers[index].colour = getRandomColour();
+          }
+        }
+      }
+      quiz.TimeLastEdited = Math.round(Date.now() / 1000);
+    }
+  }
+
+  return {};
+}
+
 // Helper function for common types of errors in the questionBody returns a string
 // with the error message or null
 function questionPropertyErrorCheck(questionBody: questionBodyType): string | null {
@@ -852,5 +912,6 @@ export {
   adminQuizQuestionCreate,
   adminQuizQuestionMove,
   adminQuestionDelete,
-  adminQuizQuestionDuplicate
+  adminQuizQuestionDuplicate,
+  adminQuestionUpdate
 };

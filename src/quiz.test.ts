@@ -311,6 +311,21 @@ function requestQuestionDuplicate(token: string, quizId: number, questionId: num
   return JSON.parse(res.body.toString());
 }
 
+function requestQuestionUpdate(token: string, quizId: number, questionBody: questionBodyType, questionId: number) {
+  const res = request(
+    'PUT',
+    SERVER_URL + '/v1/admin/quiz/' + quizId + '/question/' + questionId,
+    {
+      json: {
+        token,
+        questionBody,
+      },
+      timeout: 100
+    }
+  );
+  return JSON.parse(res.body.toString());
+}
+
 describe('POST /v1/admin/quiz', () => {
   beforeEach(() => {
     request(
@@ -1486,9 +1501,6 @@ describe('DELETE /v1/admin/quiz/:quizid/question/:questionid', () => {
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
     const invalidQuestionId = questionId + 1;
-    console.log(token);
-    console.log(quizId);
-    console.log(invalidQuestionId);
     expect(requestQuestionDelete(token, quizId, invalidQuestionId)).toStrictEqual({ error: 'Invalid questionId' });
   });
 
@@ -1647,5 +1659,790 @@ describe('POST quizQuestionDuplicate', () => {
     const invalidQuestionId = questionId + 1;
     const error = requestQuestionDuplicate(token, quizId, invalidQuestionId);
     expect(error).toStrictEqual({ error: 'Invalid questionId' });
+  });
+});
+
+describe('PUT /v1/admin/quiz/{quizId}/question/{questionId}', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('Success case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const quizInfo = requestQuizInfo(token, quizId);
+    expect(quizInfo).toStrictEqual({
+      quizId: quizId,
+      name: 'Animal Quiz',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: 'Test yourr knowledge on animals!',
+      numQuestions: 1,
+      questions: [
+        {
+          questionId: expect.any(Number),
+          question: 'Who is the Monarch of England?',
+          duration: 4,
+          points: 5,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'Prince Charles',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice one',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice two',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        }
+      ],
+      duration: 4,
+    });
+    const updateQuestion: questionBodyType = {
+      question: 'What is the colour of the sky',
+      duration: 3,
+      points: 2,
+      answers: [
+        {
+          answer: 'blue',
+          correct: true,
+        },
+        {
+          answer: 'pink',
+          correct: false,
+        },
+        {
+          answer: 'red',
+          correct: false,
+        }
+      ]
+    };
+    requestQuestionUpdate(token, quizId, updateQuestion, questionId);
+    const quizInfo2 = requestQuizInfo(token, quizId);
+    expect(quizInfo2).toStrictEqual({
+      quizId: quizId,
+      name: 'Animal Quiz',
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: 'Test yourr knowledge on animals!',
+      numQuestions: 1,
+      questions: [
+        {
+          questionId: expect.any(Number),
+          question: 'What is the colour of the sky',
+          duration: 3,
+          points: 2,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'blue',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'pink',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'red',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        }
+      ],
+      duration: 7,
+    });
+  });
+
+  test('Question too short ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Wh?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Question too short' });
+  });
+
+  test('Question too long ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Whoooooooooooooooooooooooooooooooooooooooooooooooooooooooooo?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Question too long' });
+  });
+
+  test('Too little number of answers ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Too little answers' });
+  });
+
+  test('Number of answers greater than 6 ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        },
+        {
+          answer: 'Choice three',
+          correct: true,
+        },
+        {
+          answer: 'Choice four',
+          correct: false,
+        },
+        {
+          answer: 'Choice five',
+          correct: false,
+        },
+        {
+          answer: 'Choice invalid',
+          correct: false,
+        }
+      ]
+    };
+    const errortype = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errortype).toStrictEqual({ error: 'Number of answers greater than 6' });
+  });
+
+  test('Question Duration is a negative number ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: -4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Question duration is negative' });
+  });
+
+  test('Question Duration is a greater than 3 mins ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 400,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Question duration is too long' });
+  });
+
+  test('Number of points less than 1 ERROR ', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: -5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Question points is zero or negative' });
+  });
+
+  test('Number of points greater than 10 ERROR ', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 11,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Question points exceeded max value' });
+  });
+
+  test('Answer length is too small ERROR ', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: '',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Length of an answer is less than 1 character' });
+  });
+
+  test('Answer length too large ERROR ', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Crnumbernumbernumbernumbernumbernumbernumber',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Length of an answer is greater than 30 characters' });
+  });
+
+  test('Answer strings are duplicate within question ERROR ', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Choice one',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Duplicate answers' });
+  });
+
+  test('No correct answers ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Crnumber',
+          correct: false,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token, quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'No correct answers' });
+  });
+
+  test('invalid token ERROR ', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test yourr knowledge on animals!').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Prince Charles',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId = requestQuestionCreate(token, quizId, questionbody).questionId;
+    const updatebody: questionBodyType = {
+      question: 'Who is the Monarch of Australia?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Crnumber',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const errorType = requestQuestionUpdate(token + 'invalid', quizId, updatebody, questionId);
+    expect(errorType).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('Quiz not owned by user ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const token2 = requestAuthRegister('validem@unsw.edu.au', '4321abcd', 'First', 'Last').token;
+    const quizId = requestQuizCreate(token, 'quiz2', '').quizId;
+    const quizId2 = requestQuizCreate(token2, 'quiz2', '').quizId;
+    const questionbody: questionBodyType = {
+      question: 'Who is the Monarch of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Crnumber',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    requestQuestionCreate(token, quizId, questionbody);
+    const questionbody2: questionBodyType = {
+      question: 'Who is the of England?',
+      duration: 4,
+      points: 5,
+      answers: [
+        {
+          answer: 'Crnumber',
+          correct: true,
+        },
+        {
+          answer: 'Choice one',
+          correct: false,
+        },
+        {
+          answer: 'Choice two',
+          correct: false,
+        }
+      ]
+    };
+    const questionId2 = requestQuestionCreate(token2, quizId2, questionbody2).questionId;
+    const errorType = requestQuestionUpdate(token, quizId2, questionbody2, questionId2);
+    expect(errorType).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
 });

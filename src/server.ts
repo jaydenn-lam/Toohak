@@ -11,7 +11,7 @@ import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout, adminPasswordUpdate, adminDetailsUpdate } from './auth';
 import {
   adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove,
-  adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove, adminQuizTransfer, adminQuizQuestionDuplicate, adminQuestionDelete
+  adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove, adminQuizTransfer, adminQuizQuestionDuplicate, adminQuestionDelete, adminQuestionUpdate
 } from './quiz';
 import { clear } from './other';
 
@@ -297,6 +297,21 @@ app.post('/v1/admin/quiz/:quizid/question/:questionid/duplicate', (req: Request,
     return res.status(401).json(response);
   } else if ('error' in response && 'owner' in response) {
     return res.status(403).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
+
+app.put('/v1/admin/quiz/:quizid/question/:questionid', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const questionId = parseInt(req.params.questionid);
+  const { token, questionBody } = req.body;
+  const response = adminQuestionUpdate(token, quizId, questionBody, questionId);
+  if ('error' in response && 'not owned' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response && response.error === 'Invalid Token') {
+    return res.status(401).json(response);
   } else if ('error' in response) {
     return res.status(400).json(response);
   }
