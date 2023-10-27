@@ -57,8 +57,8 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     userId: authUserId,
     email: email,
     password: password,
-    First_name: nameFirst,
-    Last_name: nameLast,
+    firstName: nameFirst,
+    lastName: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
     numSuccessfulLogins: 1,
     pastPasswords: [password],
@@ -163,7 +163,7 @@ function adminUserDetails(token: string): user | error {
   return {
     user: {
       userId: user.userId,
-      name: `${user.First_name} ${user.Last_name}`,
+      name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       numSuccessfulLogins: user.numSuccessfulLogins,
       numFailedPasswordsSinceLastLogin: user.numFailedPasswordsSinceLastLogin,
@@ -327,18 +327,12 @@ function adminDetailsUpdate(token: string, email: string, nameFirst: string, nam
   // Update user's information in the data store
   for (let userToEdit of data.users) {
     if (userToEdit.userId === user) {
-      const newDetails = {
-        userId: userToEdit.userId,
-        email: email,
-        password: userToEdit.password,
-        firstName: nameFirst,
-        lastName: nameLast,
-        numFailedPasswordsSinceLastLogin: userToEdit.numFailedPasswordsSinceLastLogin,
-        numSuccessfulLogins: userToEdit.numSuccessfulLogins
-      };
-      userToEdit = Object.assign(newDetails);
+      userToEdit.email = email;
+      userToEdit.firstName = nameFirst;
+      userToEdit.lastName = nameLast;
     }
   }
+  setData(data);
   return {};
 }
 
