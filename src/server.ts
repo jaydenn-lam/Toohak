@@ -8,7 +8,7 @@ import sui from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
 import process from 'process';
-import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout, adminPasswordUpdate } from './auth';
+import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout, adminPasswordUpdate, adminDetailsUpdate } from './auth';
 import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove } from './quiz';
 import { clear } from './other';
 
@@ -239,6 +239,17 @@ app.put('/v1/admin/quiz/:quizid/question/:questionid/move', (req: Request, res: 
   if ('error' in response && 'not an owner' in response) {
     return res.status(403).json(response);
   } else if ('error' in response && 'Token Invalid' in response) {
+    return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
+
+app.put('/v1/admin/user/details', (req: Request, res: Response) => {
+  const { token, email, nameFirst, nameLast } = req.body;
+  const response = adminDetailsUpdate(token, email, nameFirst, nameLast);
+  if ('error' in response && response.error === 'Invalid Token') {
     return res.status(401).json(response);
   } else if ('error' in response) {
     return res.status(400).json(response);

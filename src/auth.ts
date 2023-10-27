@@ -2,6 +2,7 @@ import { getData, setData } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
 import { tokenExists } from './quiz';
+import { findUserId } from './other';
 
 interface returnToken {
   token: string;
@@ -223,7 +224,7 @@ successful login by 1 and resets failed passwords to 0.
 function adminAuthLogout(token: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
-  if (!tokenExists(token, tokenArray) || token === '') {
+  if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
   // Initialize the tokenIndex to -1 (indicating not found)
@@ -249,7 +250,7 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   const tokenArray = data.tokens;
   const userArray = data.users;
   let userId;
-  if (!tokenExists(token, tokenArray) || token === '') {
+  if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
   if (newPassword.length < 8) {
@@ -285,10 +286,46 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   return {};
 }
 
+function adminDetailsUpdate (token: string, email: string, nameFirst: string, nameLast: string) {
+  const data = getData();
+  for (const user in data.users) {
+    if (data.users[user].email === email) {
+      return { error: 'Email has already been used' };
+    }
+  }
+  if (validator.isEmail(email) === false) {
+    return { error: 'Email is invalid' };
+  }
+  const InvalidErrorMessage = NameIsInvalid(nameFirst, nameLast);
+  if (InvalidErrorMessage) {
+    return InvalidErrorMessage;
+  }
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  const user = findUserId(token);
+  for (let userToEdit of data.users) {
+    if (userToEdit.userId === user) {
+      const newDetails = {
+        userId: userToEdit.userId,
+        email: email,
+        password: userToEdit.password,
+        firstName: nameFirst,
+        lastName: nameLast,
+        numFailedPasswordsSinceLastLogin: userToEdit.numFailedPasswordsSinceLastLogin,
+        numSuccessfulLogins: userToEdit.numSuccessfulLogins
+      };
+      userToEdit = Object.assign(newDetails);
+    }
+  }
+  return {};
+}
+
 export {
   adminUserDetails,
   adminAuthRegister,
   adminAuthLogin,
   adminAuthLogout,
   adminPasswordUpdate,
+  adminDetailsUpdate
 };

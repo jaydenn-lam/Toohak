@@ -174,7 +174,6 @@ function requestTrashEmpty(token: string, quizzesArray: number[]) {
   return JSON.parse(res.body.toString());
 }
 
-
 function requestQuestionCreate(token: string, quizId: number, questionBody: questionBodyType) {
   const res = request(
     'POST',
@@ -1118,7 +1117,6 @@ describe('POST /v1/admin/quiz/{quizId}/question', () => {
 });
 
 describe('quiz/QuestionMove', () => {
-
   const questionBody1: questionBodyType = {
     question: 'Who is the Monarch of England?',
     duration: 4,
@@ -1160,25 +1158,24 @@ describe('quiz/QuestionMove', () => {
   };
 
   const questionBody3: questionBodyType = {
-      question: 'Who is the best boxer?',
-      duration: 4,
-      points: 5,
-      answers: [
-        {
-          answer: 'Mike Tyson',
-          correct: true,
-        },
-        {
-          answer: 'Choice one',
-          correct: false,
-        },
-        {
-          answer: 'Choice two',
-          correct: false,
-        }
-      ]
-    };
-  
+    question: 'Who is the best boxer?',
+    duration: 4,
+    points: 5,
+    answers: [
+      {
+        answer: 'Mike Tyson',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
 
   beforeEach(() => {
     request(
@@ -1194,7 +1191,7 @@ describe('quiz/QuestionMove', () => {
     requestQuestionCreate(token, quizId, questionBody2);
     requestQuestionCreate(token, quizId, questionBody3);
     requestQuestionMove(token, quizId, moverQuestionId, 2);
-    
+
     const quizInfo = requestQuizInfo(token, quizId);
     expect(quizInfo).toStrictEqual({
       quizId: quizId,
@@ -1294,10 +1291,10 @@ describe('quiz/QuestionMove', () => {
     const invalidToken = token + 'Invalid';
 
     const invalidError = requestQuestionMove(invalidToken, quizId, questionId, 1);
-    expect(invalidError).toStrictEqual({ error: 'Invalid Token' })
+    expect(invalidError).toStrictEqual({ error: 'Invalid Token' });
 
     const emptyError = requestQuestionMove('', quizId, questionId, 1);
-    expect(emptyError).toStrictEqual({ error: 'Invalid Token' })
+    expect(emptyError).toStrictEqual({ error: 'Invalid Token' });
   });
 
   test('User is not owner of quiz ERROR', () => {
@@ -1305,7 +1302,7 @@ describe('quiz/QuestionMove', () => {
     const quizId = requestQuizCreate(originalToken, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     const questionId = requestQuestionCreate(originalToken, quizId, questionBody1).questionId;
     const newToken = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').token;
-    
+
     const error = requestQuestionMove(newToken, quizId, questionId, 1);
     expect(error).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });

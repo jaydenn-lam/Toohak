@@ -1,5 +1,3 @@
-
-import { arrayBuffer } from 'stream/consumers';
 import { getData, setData, token, trash, Question, Answer } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
@@ -82,7 +80,6 @@ This function creates a quiz for the logged-in user.
 function adminQuizCreate(token: string, name: string, description: string): quizId |error {
   const data = getData();
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
@@ -371,7 +368,6 @@ function adminQuizRestore(token: string, quizId: number): error | object {
 
 function adminQuizViewTrash(token: string): error | trash {
   const data = getData();
-  const tokenArray = data.tokens;
   if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
@@ -661,16 +657,16 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   return {};
 }
 
-function adminQuizQuestionMove(token: string, quizId: number, questionId: number, newPosition: number): error | object | number {
+function adminQuizQuestionMove(token: string, quizId: number, questionId: number, newPosition: number): error | object {
   const data = getData();
   let quizIndex = 0;
   const quizArray = data.quizzes;
   const tokenArray = data.tokens;
   const currentPosition = positionFinder(questionId, quizId);
-  //return {currentPosition};
+  // return {currentPosition};
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
-  };
+  }
   if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
@@ -678,25 +674,25 @@ function adminQuizQuestionMove(token: string, quizId: number, questionId: number
     return { error: 'Invalid questionId' };
   }
   if (newPosition === currentPosition) {
-    return { error: 'New position cannot be the current position' }
+    return { error: 'New position cannot be the current position' };
   }
   if (newPosition < 0 || newPosition > questionArrayLength(quizId)) {
     return { error: 'New position must be in the length of the question array' };
   }
   for (const existingQuiz of quizArray) {
-    if (existingQuiz.quizId === quizId) { 
+    if (existingQuiz.quizId === quizId) {
       const questionArray = existingQuiz.questions;
-      const moverQuestion = questionArray[currentPosition]
+      const moverQuestion = questionArray[currentPosition];
       questionArray.splice(currentPosition, 1);
-      questionArray.splice(newPosition, 0, moverQuestion)
+      questionArray.splice(newPosition, 0, moverQuestion);
       data.quizzes[quizIndex].questions = questionArray;
     } else {
-      quizIndex ++;
+      quizIndex++;
     }
-  };
+  }
   setData(data);
   return {};
-};
+}
 
 function questionArrayLength(quizId: number): number {
   const data = getData();
@@ -704,10 +700,10 @@ function questionArrayLength(quizId: number): number {
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
       return quiz.questions.length - 1;
-    };
-  };
+    }
+  }
   return 0;
-};
+}
 
 function getRandomColour(): string {
   const strings: string[] = ['red', 'blue', 'green', 'yellow', 'purple', 'brown', 'orange'];
@@ -721,7 +717,7 @@ function questionIdExists(questionId: number, quizId: number): boolean {
   const quizArray = data.quizzes;
   for (const existingQuiz of quizArray) {
     if (existingQuiz.quizId === quizId) {
-      quiz = existingQuiz
+      quiz = existingQuiz;
     }
   }
   for (const question of quiz.questions) {
@@ -730,7 +726,7 @@ function questionIdExists(questionId: number, quizId: number): boolean {
     }
   }
   return false;
-};
+}
 
 function positionFinder(questionId: number, quizId: number): number {
   const data = getData();
@@ -742,7 +738,6 @@ function positionFinder(questionId: number, quizId: number): number {
       questionArray = existingQuiz.questions;
     }
   }
-  let index;
   for (const qIndex in questionArray) {
     if (questionArray[qIndex].questionId === questionId) {
       position = parseInt(qIndex);
