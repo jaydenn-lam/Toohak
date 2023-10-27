@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { adminAuthLogin, adminAuthRegister, adminUserDetails, adminAuthLogout, adminPasswordUpdate, adminDetailsUpdate } from './auth';
-import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove, adminQuizTransfer } from './quiz';
+import { adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove, adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove, adminQuizTransfer, adminQuestionDelete } from './quiz';
 import { clear } from './other';
 
 // Set up web app
@@ -264,6 +264,21 @@ app.put('/v1/admin/user/details', (req: Request, res: Response) => {
   const response = adminDetailsUpdate(token, email, nameFirst, nameLast);
   if ('error' in response && response.error === 'Invalid Token') {
     return res.status(401).json(response);
+  } else if ('error' in response) {
+    return res.status(400).json(response);
+  }
+  res.status(200).json(response);
+});
+
+app.delete('/v1/admin/quiz/:quizid/question/:questionid', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const questionId = parseInt(req.params.questionid);
+  const token = req.query.token as string;
+  const response = adminQuestionDelete(token, quizId, questionId);
+  if ('error' in response && response.error === 'Invalid Token') {
+    return res.status(401).json(response);
+  } else if ('error' in response && response.error === 'Quiz Id is not owned by this user') {
+    return res.status(403).json(response);
   } else if ('error' in response) {
     return res.status(400).json(response);
   }

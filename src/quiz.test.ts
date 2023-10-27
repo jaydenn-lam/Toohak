@@ -222,6 +222,21 @@ function requestadminQuizTransfer(token: string, quizId: number, userEmail: stri
   return JSON.parse(res.body.toString());
 }
 
+function requestQuestionDelete(token: string, quizId: number, questionId: number) {
+  const res = request(
+    'DELETE',
+    SERVER_URL + '/v1/admin/quiz/' + quizId + '/question/' + questionId,
+    {
+      qs: {
+        token
+      },
+      timeout: 100
+    }
+  );
+
+  return JSON.parse(res.body.toString());
+}
+
 describe('POST /v1/admin/quiz', () => {
   beforeEach(() => {
     request(
@@ -1414,5 +1429,68 @@ describe('quiz/QuestionMove', () => {
 
     const overError = requestQuestionMove(token, quizId, moverQuestionId, 2);
     expect(overError).toStrictEqual({ error: 'New position must be in the length of the question array' });
+  });
+});
+
+describe('DELETE /v1/admin/quiz/:quizid/question/:questionid', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  const questionBody: questionBodyType = {
+    question: 'Who is the Monarch of England?',
+    duration: 4,
+    points: 5,
+    answers: [
+      {
+        answer: 'Prince Charles',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+
+  test('Success', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    expect(requestQuestionDelete(token, quizId, questionId)).toStrictEqual({});
+  });
+
+  test('Invalid questionId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    const invalidQuestionId = questionId + 1;
+    console.log(token);
+    console.log(quizId);
+    console.log(invalidQuestionId);
+    expect(requestQuestionDelete(token, quizId, invalidQuestionId)).toStrictEqual({ error: 'Invalid questionId' });
+  });
+
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    const invalidToken = token + 'Invalid';
+    expect(requestQuestionDelete(invalidToken, quizId, questionId)).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('User does not own this quiz', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionBody).questionId;
+    const tokenNotOwner = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestQuestionDelete(tokenNotOwner, quizId, questionId)).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
 });
