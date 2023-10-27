@@ -292,7 +292,7 @@ function requestQuestionDuplicate(token: string, quizId: number, questionId: num
       },
       timeout: 100
     }
-  )
+  );
   return JSON.parse(res.body.toString());
 }
 
@@ -1442,11 +1442,11 @@ describe('POST quizQuestionDuplicate', () => {
   test('Working case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    requestQuestionCreate(token, quizId, questionBody1);
-    const questionId2 = requestQuestionCreate(token, quizId, questionBody2);
+    const questionId1 = requestQuestionCreate(token, quizId, questionBody1).questionId;
+    requestQuestionCreate(token, quizId, questionBody2);
 
-    const duplicateQuestionId = requestQuestionDuplicate(token, quizId, questionId2).questionId;
-    expect(duplicateQuestionId).toStrictEqual(expect.any(String));
+    const duplicateQuestionId = requestQuestionDuplicate(token, quizId, questionId1).newQuestionId;
+    expect(duplicateQuestionId).toStrictEqual(expect.any(Number));
 
     const quizInfo = requestQuizInfo(token, quizId);
     expect(quizInfo).toStrictEqual({
@@ -1455,8 +1455,34 @@ describe('POST quizQuestionDuplicate', () => {
       timeCreated: expect.any(Number),
       timeLastEdited: expect.any(Number),
       description: 'Test your knowledge on animals!',
-      numQuestions: 2,
+      numQuestions: 3,
       questions: [
+        {
+          questionId: expect.any(Number),
+          question: 'Who is the Monarch of England?',
+          duration: 4,
+          points: 5,
+          answers: [
+            {
+              answerId: expect.any(Number),
+              answer: 'Prince Charles',
+              colour: expect.any(String),
+              correct: true,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice one',
+              colour: expect.any(String),
+              correct: false,
+            },
+            {
+              answerId: expect.any(Number),
+              answer: 'Choice two',
+              colour: expect.any(String),
+              correct: false,
+            }
+          ]
+        },
         {
           questionId: expect.any(Number),
           question: 'Who is the Monarch of England?',
@@ -1508,16 +1534,16 @@ describe('POST quizQuestionDuplicate', () => {
               correct: false,
             }
           ]
-        },
+        }
       ],
-      duration: 8,
+      duration: 12,
     });
   });
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    const questionId = requestQuestionCreate(token, quizId, questionBody1);
+    const questionId = requestQuestionCreate(token, quizId, questionBody1).questionId;
     const invalidToken = token + 'Invalid';
 
     const invalidError = requestQuestionDuplicate(invalidToken, quizId, questionId);
@@ -1530,9 +1556,9 @@ describe('POST quizQuestionDuplicate', () => {
   test('User is not an owner of the quiz ERROR', () => {
     const originalToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(originalToken, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    const questionId = requestQuestionCreate(originalToken, quizId, questionBody1);
+    const questionId = requestQuestionCreate(originalToken, quizId, questionBody1).questionId;
     const newToken = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').token;
-    
+
     const error = requestQuestionDuplicate(newToken, quizId, questionId);
     expect(error).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
@@ -1540,9 +1566,8 @@ describe('POST quizQuestionDuplicate', () => {
   test('Invalid questionId ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
-    const questionId = requestQuestionCreate(token, quizId, questionBody1);
+    const questionId = requestQuestionCreate(token, quizId, questionBody1).questionId;
     const invalidQuestionId = questionId + 1;
-
     const error = requestQuestionDuplicate(token, quizId, invalidQuestionId);
     expect(error).toStrictEqual({ error: 'Invalid questionId' });
   });

@@ -1,4 +1,4 @@
-import { getData, setData, token, trash, Question, Answer } from './dataStore';
+import { getData, setData, trash, Question, Answer } from './dataStore';
 import { quizIdExists, findUserId } from './other';
 const TRUE = 1;
 const FALSE = 0;
@@ -9,6 +9,10 @@ interface error {
 
 interface quizId {
   quizId: number;
+}
+
+interface newQuestionId {
+  newQuestionId: number;
 }
 
 interface questionBodyType {
@@ -138,7 +142,6 @@ function adminQuizRemove(token: string, quizId: number): error | object {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   const trashArray = data.trash;
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
@@ -153,7 +156,7 @@ function adminQuizRemove(token: string, quizId: number): error | object {
     return { error: 'Invalid quiz Id' };
   }
   // Error check for incorrect quizid for the specified user
-  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
   // Add quiz to trash and update the TimeLastEdited
@@ -183,7 +186,6 @@ Invalid quiz/user Ids or if the quiz isn't owned by the authUserId will give an 
 function adminQuizInfo(token: string, quizId: number): error | quiz {
   const data = getData();
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   let quizIdExists = FALSE;
   let quizInfo: quiz = {
     quizId: 0,
@@ -212,7 +214,7 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
   if (quizIdExists === FALSE) {
     return { error: 'Invalid Quiz Id' };
   }
-  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
   delete quizInfo.userId;
@@ -231,7 +233,6 @@ Invalid user/quiz Ids will also cause an error.
 function adminQuizNameUpdate(token: string, quizId: number, name: string): error | object {
   const data = getData();
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
@@ -253,7 +254,7 @@ function adminQuizNameUpdate(token: string, quizId: number, name: string): error
   }
 
   // Error check for incorrect quizid for the specified user
-  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
 
@@ -276,7 +277,6 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
@@ -290,7 +290,7 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
     return { error: 'Invalid quiz Id' };
   }
   // Error check for incorrect quizid for the specified user
-  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
   // Error checking for description
@@ -319,7 +319,6 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   // Initialize quizName as an empty string
   let quizName = '';
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   const trashArray = data.trash;
 
   if (!tokenExists(token) || token === '') {
@@ -340,7 +339,7 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   }
 
   // Error check for incorrect quizId for the specified user
-  if (!tokenOwnsQuiz(trashArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(trashArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
   for (const quiz of quizArray) {
@@ -399,7 +398,7 @@ function adminTrashEmpty(token: string, quizzes: number[]) {
     return { error: 'Invalid Token' };
   }
   for (const quizId of quizzes) {
-    if (!tokenOwnsQuiz(data.trash, quizId, token, data.tokens)) {
+    if (!tokenOwnsQuiz(data.trash, quizId, token)) {
       return { error: 'User does not own quiz' };
     }
     if (!quizExistsInTrash(quizId)) {
@@ -421,7 +420,6 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
@@ -430,7 +428,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
     return { error: errorExists };
   }
   // Error check for incorrect quizid for the specified user
-  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
 
@@ -559,7 +557,9 @@ function quizExistsInTrash(quizId: number) {
 }
 
 // Helper function for determining if the user of the token owns the quiz.
-function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string, tokenArray: token[]) {
+function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string) {
+  const data = getData();
+  const tokenArray = data.tokens;
   let userId;
   for (const session of tokenArray) {
     if (token === session.token) {
@@ -626,7 +626,7 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
-  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
   // checks if the user email provided exists in the userArray
@@ -676,13 +676,12 @@ function adminQuizQuestionMove(token: string, quizId: number, questionId: number
   const data = getData();
   let quizIndex = 0;
   const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
   const currentPosition = positionFinder(questionId, quizId);
   // return {currentPosition};
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
-  if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
   if (!questionIdExists(questionId, quizId)) {
@@ -709,6 +708,43 @@ function adminQuizQuestionMove(token: string, quizId: number, questionId: number
   }
   setData(data);
   return {};
+}
+
+function adminQuizQuestionDuplicate(token: string, quizId: number, questionId: number): newQuestionId | error | object {
+  const data = getData();
+  const quizArray = data.quizzes;
+  let quizIndex = 0;
+  let newQuestionId = 0;
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  if (!questionIdExists(questionId, quizId)) {
+    return { error: 'Invalid questionId' };
+  }
+  const currentPosition = positionFinder(questionId, quizId);
+  for (const existingQuiz of quizArray) {
+    if (existingQuiz.quizId === quizId) {
+      const questionArray = existingQuiz.questions;
+      const newDuplicate = questionArray[currentPosition];
+      newQuestionId = questionArray.length + 1;
+
+      newDuplicate.questionId = newQuestionId;
+      questionArray.splice(currentPosition + 1, 0, newDuplicate);
+      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      existingQuiz.duration = existingQuiz.duration + newDuplicate.duration;
+      existingQuiz.numQuestions++;
+
+      data.quizzes = quizArray;
+      data.quizzes[quizIndex].questions = questionArray;
+    } else {
+      quizIndex++;
+    }
+  }
+  setData(data);
+  return { newQuestionId };
 }
 
 function questionArrayLength(quizId: number): number {
@@ -777,4 +813,5 @@ export {
   adminTrashEmpty,
   adminQuizQuestionCreate,
   adminQuizQuestionMove,
+  adminQuizQuestionDuplicate
 };
