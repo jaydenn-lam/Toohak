@@ -83,6 +83,23 @@ function requestPasswordUpdate(token: string, oldPassword: string, newPassword: 
   return JSON.parse(res.body.toString());
 }
 
+function requestDetailsUpdate(token: string, email: string, nameFirst: string, nameLast: string) {
+  const res = request(
+    'PUT',
+    SERVER_URL + '/v1/admin/user/details',
+    {
+      json: {
+        token,
+        email,
+        nameFirst,
+        nameLast
+      },
+      timeout: 100
+    });
+
+  return JSON.parse(res.body.toString());
+}
+
 describe('adminAuthRegister', () => {
   beforeEach(() => {
     request(
@@ -363,5 +380,66 @@ describe('adminPasswordUpdate', () => {
 
     expect(numberError).toStrictEqual({ error: 'New password must contain at least 1 number and 1 letter' });
     expect(letterError).toStrictEqual({ error: 'New password must contain at least 1 number and 1 letter' });
+  });
+});
+
+describe('PUT /v1/admin/user/details', () => {
+  beforeEach(() => {
+    request(
+      'DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('Success', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'Jayden', 'Lam')).toStrictEqual({});
+  });
+
+  test('Invalid Email', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'INVALIDEMAIL', 'Jayden', 'Lam')).toStrictEqual({ error: 'Email is invalid' });
+  });
+
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const invalidToken = token + 'Invalid';
+    expect(requestDetailsUpdate(invalidToken, 'jayden@unsw.edu.au', 'Jayden', 'Lam')).toStrictEqual({ error: 'Invalid Token' });
+  });
+
+  test('Email already being used', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    requestAuthRegister('alreadyused@unsw.edu.au', '1234abcd', 'John', 'Smith');
+    expect(requestDetailsUpdate(token, 'alreadyused@unsw.edu.au', 'Jayden', 'Lam')).toStrictEqual({ error: 'Email has already been used' });
+  });
+
+  test('First name too short', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'J', 'Lam')).toStrictEqual({ error: 'First Name is too short' });
+  });
+
+  test('First name too long', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'Namethatisveryveryveryveryverylong', 'Lam')).toStrictEqual({ error: 'First Name is too long' });
+  });
+
+  test('Last name too short', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'Jayden', 'L')).toStrictEqual({ error: 'Last Name is too short' });
+  });
+
+  test('Last name too long', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'Jayden', 'Namethatisveryveryveryveryverylong')).toStrictEqual({ error: 'Last Name is too long' });
+  });
+
+  test('Last name invalid character(s)', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'Jayden', 'Lam?)(9')).toStrictEqual({ error: 'Last Name contains invalid character/s' });
+  });
+
+  test('First name invalid character(s)', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    expect(requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'Jayden?)(9', 'Lam')).toStrictEqual({ error: 'First Name contains invalid character/s' });
   });
 });
