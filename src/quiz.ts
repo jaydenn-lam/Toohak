@@ -511,8 +511,8 @@ function adminQuestionDelete(token: string, quizId: number, questionId: number):
   if (!tokenOwnsQuiz(quizArray, quizId, token, tokenArray)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
-  if (!questionIdExists(quizId, questionId)) {
-    return { error: 'Invalid question Id' };
+  if (!questionIdExists(questionId, quizId)) {
+    return { error: 'Invalid questionId' };
   }
   // Update the TimeLastEdited and delete question
   for (const quiz in quizArray) {
