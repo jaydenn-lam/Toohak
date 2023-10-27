@@ -24,7 +24,6 @@ interface quiz {
 interface quizList {
   quizzes: quiz[];
 }
-
 /*
 This function given a users authUserId, provides the list of all quizzes owned by the currently logged in user.
 @param {number} authUserId - Integer that contains their assigned authUserId
@@ -80,13 +79,22 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   if (name.length > 30) {
     return { error: 'Quiz name too long' };
   }
-  for (const quiz in quizArray) {
-    if (quizArray[quiz].name === name) {
-      return { error: 'Name already being used' };
+  let adminUserId;
+
+  for (const tokenVal in tokenArray) {
+    if (tokenArray[tokenVal].token === token) {
+      adminUserId = tokenArray[tokenVal].userId;
     }
   }
   if (description.length > 100) {
     return { error: 'Quiz description too long' };
+  }
+  for (const quiz in quizArray) {
+    if (quizArray[quiz].name === name) {
+      if (quizArray[quiz].userId === adminUserId) {
+        return { error: 'Name already being used' };
+      }
+    }
   }
   const quizId = quizArray.length;
   const quizData = {
@@ -451,7 +459,6 @@ function tokenExists(token: string, tokenArray: token[]) {
   }
   return FALSE;
 }
-
 /*
 This function restores a quiz for the logged-in user.
 @param {number} token - The user's session token.
@@ -488,8 +495,8 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
       break;
     }
   }
-  for (const user of userArray) {
-    if (user.email === userEmail) {
+  for (const user in userArray) {
+    if (userArray[user].email === userEmail && userArray[user].userId === userId) {
       return { error: 'userEmail is the current logged in user' };
     }
   }

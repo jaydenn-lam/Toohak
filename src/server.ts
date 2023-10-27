@@ -206,22 +206,17 @@ app.put('/v1/admin/user/password', (req: Request, res: Response) => {
 });
 
 app.post('/v1/admin/quiz/:quizid/transfer', (req: Request, res: Response) => {
-  const {token, userEmail} = req.body;
-  const response = adminQuizTransfer(token, userEmail,  parseInt(req.params.quizid));
+  const { token, userEmail } = req.body;
+  const response = adminQuizTransfer(token, userEmail, parseInt(req.params.quizid));
   if ('error' in response && response.error === 'Invalid Token') {
     return res.status(401).json(response);
-  } else if ('error' in response && response.error == 'Quiz Id is not owned by this user') {
+  } else if ('error' in response && response.error === 'Quiz Id is not owned by this user') {
     return res.status(403).json(response);
-  } else if('error' in response){
+  } else if ('error' in response) {
     return res.status(400).json(response);
   }
   res.status(200).json(response);
 });
-
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
-
 
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
