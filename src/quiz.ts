@@ -50,17 +50,20 @@ This function given a users authUserId, provides the list of all quizzes owned b
 function adminQuizList(token: string): quizList | error {
   const data = getData();
   const tokenArray = data.tokens;
+  // Checking if valid token is given
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   const quizArray = data.quizzes;
   const quizList : quiz[] = [];
   let userId;
+  // Get the userId
   for (const session of tokenArray) {
     if (session.token === token) {
       userId = session.userId;
     }
   }
+  // Updating a quiz list with perameters
   for (const quiz of quizArray) {
     if (quiz.userId === userId) {
       const ownedQuiz = {
@@ -85,20 +88,19 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   const data = getData();
   const tokenArray = data.tokens;
   const quizArray = data.quizzes;
+  // checking for valid token
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   if (!validName(name)) {
     return { error: 'Invalid character(s) in name' };
   }
-  if (name.length < 3) {
-    return { error: 'Quiz name too short' };
+  // Error checking for valid name length
+  if (nameLengthError(name) !== null) {
+    return { error: nameLengthError(name) };
   }
-  if (name.length > 30) {
-    return { error: 'Quiz name too long' };
-  }
-  let adminUserId;
 
+  let adminUserId;
   for (const tokenVal in tokenArray) {
     if (tokenArray[tokenVal].token === token) {
       adminUserId = tokenArray[tokenVal].userId;
@@ -107,6 +109,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   if (description.length > 100) {
     return { error: 'Quiz description too long' };
   }
+  // Error check for invalid
   for (const quiz in quizArray) {
     if (quizArray[quiz].name === name) {
       if (quizArray[quiz].userId === adminUserId) {
@@ -114,6 +117,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
       }
     }
   }
+  // Creating quiz including properties of questions
   const emptyQuestions: Question[] = [];
   const quizId = quizArray.length;
   const quizData = {
@@ -143,6 +147,7 @@ function adminQuizRemove(token: string, quizId: number): error | object {
   const data = getData();
   const quizArray = data.quizzes;
   const trashArray = data.trash;
+  // Error check for valid token
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
@@ -152,6 +157,7 @@ function adminQuizRemove(token: string, quizId: number): error | object {
       quizIdExists = TRUE;
     }
   }
+  // Check for invalid quiz
   if (quizIdExists === FALSE) {
     return { error: 'Invalid quiz Id' };
   }
@@ -166,7 +172,7 @@ function adminQuizRemove(token: string, quizId: number): error | object {
       trashArray.push(quizArray[quiz]);
     }
   }
-  // Remove quiz from quizzes array
+  // Remove quiz from quizzes array (permanently)
   for (let index = 0; index < data.quizzes.length; index++) {
     if (data.quizzes[index].quizId === quizId) {
       data.quizzes.splice(index, 1);
@@ -184,6 +190,7 @@ Invalid quiz/user Ids or if the quiz isn't owned by the authUserId will give an 
 @returns {quizInfo} - An object containing all relevant info of the quiz
 */
 function adminQuizInfo(token: string, quizId: number): error | quiz {
+  // Check Error cases and early return
   const data = getData();
   const quizArray = data.quizzes;
   let quizIdExists = FALSE;
@@ -192,9 +199,11 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
     name: '',
     userId: 0,
   };
+  // valid token exists
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
+  // update quizInfo which contains details about questions for each quiz
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
       quizIdExists = TRUE;
@@ -214,6 +223,7 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
   if (quizIdExists === FALSE) {
     return { error: 'Invalid Quiz Id' };
   }
+  // The quiz is not owned by this user
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
@@ -236,14 +246,13 @@ function adminQuizNameUpdate(token: string, quizId: number, name: string): error
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
-
+  // Error checking for invalid name given
   if (name.length > 30 || name.length < 3) {
     return ({ error: 'Invalid new name' });
   }
   if (!(/^[a-zA-Z0-9]+$/.test(name))) {
     return ({ error: 'Invalid new name' });
   }
-
   if (quizIdExists(quizId) === FALSE) {
     return ({ error: 'Invalid quizId' });
   }
@@ -257,7 +266,7 @@ function adminQuizNameUpdate(token: string, quizId: number, name: string): error
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
-
+  // Finds the name and updates the name of the quiz
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
       quiz.name = name;
@@ -309,7 +318,7 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
 }
 /*
 This function restores a quiz for the logged-in user.
-@param {number} token - The user's session token.
+@param {string} token - The user's session token.
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - Empty object.
 */
@@ -347,7 +356,7 @@ function adminQuizRestore(token: string, quizId: number): error | object {
       return ({ error: 'Quiz name already in use' });
     }
   }
-  // Error check if the quiz already exists
+  // Error check if the quiz name already exists
   for (const quiz of quizArray) {
     if (quiz.name === quizName) {
       return { error: 'Quiz Name already exists' };
@@ -373,9 +382,14 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   setData(data);
   return {};
 }
-
+/*
+The function allows to view the quizzes that are in trash
+@param {string} token - The user's session token.
+@returns {Array} - An array that contains quizzes.
+*/
 function adminQuizViewTrash(token: string): error | trash {
   const data = getData();
+  // Test for invalid token passed into function
   if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
@@ -391,12 +405,19 @@ function adminQuizViewTrash(token: string): error | trash {
   }
   return trash;
 }
-
+/*
+The function empties the trash when called
+@param {string} token - The user's session token.
+@param {number} quizId - The quiz's assigned quizId.
+@returns {} - An empty object
+*/
 function adminTrashEmpty(token: string, quizzes: number[]) {
   const data = getData();
+  // Test for invalid token
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
+  // check whether user owns the quiz provided
   for (const quizId of quizzes) {
     if (!tokenOwnsQuiz(data.trash, quizId, token)) {
       return { error: 'User does not own quiz' };
@@ -405,6 +426,7 @@ function adminTrashEmpty(token: string, quizzes: number[]) {
       return { error: 'Invalid quizId' };
     }
   }
+  // Empty the trash implementation
   for (const quiz of quizzes) {
     for (const trashedQuiz of data.trash) {
       if (trashedQuiz.quizId === quiz) {
@@ -415,7 +437,13 @@ function adminTrashEmpty(token: string, quizzes: number[]) {
   }
   return {};
 }
-
+/*
+Given some basic details as parameters function creates a question for the particular quiz
+@param {string} token - The user's session token.
+@param {number} quizId - The quiz's assigned quizId.
+@param {object} questionBody - a stub for a question with parameters.
+@returns {number} - A unique questionId for the created question
+*/
 function adminQuizQuestionCreate(token: string, quizId: number, questionBody: questionBodyType): error | questionId {
   // Error checking and early return
   const data = getData();
@@ -445,7 +473,8 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
       }
     }
   }
-
+  // Determines the the total number of answers in all questions and quizzes
+  // to assign an answerId to each created answer
   let answerTotal = 0;
   for (const quiz of quizArray) {
     if (quiz.questions.length > 0) {
@@ -454,7 +483,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
       }
     }
   }
-
+  // Create an array of all answers for that question that need to be created
   const answerArray: Answer[] = [];
   for (const index in questionBody.answers) {
     answerTotal++;
@@ -485,13 +514,19 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
       quiz.TimeLastEdited = quiz.TimeCreated;
     }
   }
-
   return { questionId: questionId };
 }
-
+/*
+Given some basic details about a specific question delete from the quiz
+@param {string} token - The user's session token.
+@param {number} quizId - The quiz's assigned quizId.
+@param {number} questionId - A questions assigned questionId
+@returns {number} - A unique questionId for the created question
+*/
 function adminQuestionDelete(token: string, quizId: number, questionId: number): error | object {
   const data = getData();
   const quizArray = data.quizzes;
+  // Test for valid token Id
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
@@ -526,7 +561,14 @@ function adminQuestionDelete(token: string, quizId: number, questionId: number):
   setData(data);
   return {};
 }
-
+/*
+Given some basic details as parameters function updates a question for the particular quiz
+@param {string} token - The user's session token.
+@param {number} quizId - The quiz's assigned quizId.
+@param {object} questionBody - a stub for a question with parameters.
+@param {number} questionId - The quiz's assigned quizId.
+@returns {} - An empty object
+*/
 function adminQuestionUpdate(token: string, quizId: number, questionBody: questionBodyType, questionId: number): object | error {
   // Error checking and early return
   const data = getData();
@@ -580,11 +622,178 @@ function adminQuestionUpdate(token: string, quizId: number, questionBody: questi
           }
         }
       }
+      // Update time last edited
       quiz.TimeLastEdited = Math.round(Date.now() / 1000);
     }
   }
 
   return {};
+}
+
+/*
+This function transfers a quiz given basic parameters
+@param {string} token - The user's session token.
+@param {string} userEmail - The new owner's email.
+@returns {} - Empty object.
+*/
+function adminQuizTransfer(token: string, userEmail: string, quizId: number): error | object {
+  const data = getData();
+  const quizArray = data.quizzes;
+  const tokenArray = data.tokens;
+  const userArray = data.users;
+  // check if the token provided valid
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  // checks if the user email provided exists in the userArray
+  let realEmail = false;
+  for (const user of userArray) {
+    if (user.email === userEmail) {
+      realEmail = true;
+      break;
+    }
+  }
+  if (!realEmail) {
+    return { error: 'userEmail does not exist' };
+  }
+  let userId = -1;
+  for (const tokenValues of tokenArray) {
+    if (tokenValues.token === token) {
+      userId = tokenValues.userId;
+      break;
+    }
+  }
+  for (const user in userArray) {
+    if (userArray[user].email === userEmail && userArray[user].userId === userId) {
+      return { error: 'userEmail is the current logged in user' };
+    }
+  }
+  let userId2 = -1;
+  for (const user of userArray) {
+    if (user.email === userEmail) {
+      userId2 = user.userId;
+      break;
+    }
+  }
+  // Error check for repeating name
+  for (const quiz of quizArray) {
+    if (quiz.userId === userId2) {
+      if (quiz.name === quizArray[quizId].name) {
+        return { error: 'Quiz ID refers to a quiz that has a name that is already used by the target user' };
+      }
+    }
+  }
+  data.quizzes[quizId].userId = userId2;
+  data.quizzes[quizId].TimeLastEdited = Math.round(Date.now() / 1000);
+  setData(data);
+  return {};
+}
+/*
+This function move a question from one position to another
+@param {string} token - The user's session token.
+@param {number} quizId - unique quizid
+@param {number} questionId - unique questionId
+@param {number} newPosition - new position at which the question is sent to
+@returns {} - Empty object.
+*/
+function adminQuizQuestionMove(token: string, quizId: number, questionId: number, newPosition: number): error | object {
+  const data = getData();
+  let quizIndex = 0;
+  const quizArray = data.quizzes;
+  const currentPosition = positionFinder(questionId, quizId);
+  // return {currentPosition};
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  // Error checking and early return
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  if (!questionIdExists(questionId, quizId)) {
+    return { error: 'Invalid questionId' };
+  }
+  if (newPosition === currentPosition) {
+    return { error: 'New position cannot be the current position' };
+  }
+  if (newPosition < 0 || newPosition > questionArrayLength(quizId)) {
+    return { error: 'New position must be in the length of the question array' };
+  }
+  // moves question to desired place
+  for (const existingQuiz of quizArray) {
+    if (existingQuiz.quizId === quizId) {
+      const questionArray = existingQuiz.questions;
+      const moverQuestion = questionArray[currentPosition];
+      questionArray.splice(currentPosition, 1);
+      questionArray.splice(newPosition, 0, moverQuestion);
+      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      data.quizzes = quizArray;
+      data.quizzes[quizIndex].questions = questionArray;
+    } else {
+      quizIndex++;
+    }
+  }
+  setData(data);
+  return {};
+}
+/*
+This function duplicates a question after the source
+@param {string} token - The user's session token.
+@param {number} quizId - unique quizid
+@param {number} questionId - unique questionId
+@param {number} newPosition - new position at which the question is sent to
+@returns {number} - newQuestionId - the id of the new question.
+*/
+function adminQuizQuestionDuplicate(token: string, quizId: number, questionId: number): newQuestionId | error | object {
+  const data = getData();
+  const quizArray = data.quizzes;
+  let quizIndex = 0;
+  let newQuestionId = 0;
+  // Simple parameter error checks and early return
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
+    return { error: 'Quiz Id is not owned by this user' };
+  }
+  if (!questionIdExists(questionId, quizId)) {
+    return { error: 'Invalid questionId' };
+  }
+  // Implementation of duplicating the question
+  const currentPosition = positionFinder(questionId, quizId);
+  for (const existingQuiz of quizArray) {
+    if (existingQuiz.quizId === quizId) {
+      const questionArray = existingQuiz.questions;
+      const newDuplicate = questionArray[currentPosition];
+      newQuestionId = questionArray.length + 1;
+
+      newDuplicate.questionId = newQuestionId;
+      questionArray.splice(currentPosition + 1, 0, newDuplicate);
+      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      existingQuiz.duration = existingQuiz.duration + newDuplicate.duration;
+      existingQuiz.numQuestions++;
+
+      data.quizzes = quizArray;
+      data.quizzes[quizIndex].questions = questionArray;
+    } else {
+      quizIndex++;
+    }
+  }
+  setData(data);
+  return { newQuestionId };
+}
+
+// Helper function which determines whether the quiz name length is valid or not
+function nameLengthError(name: string): string | null {
+  if (name.length < 3) {
+    return 'Quiz name too short';
+  }
+  if (name.length > 30) {
+    return 'Quiz name too long';
+  }
+  return null;
 }
 
 // Helper function for common types of errors in the questionBody returns a string
@@ -709,142 +918,7 @@ function tokenExists(token: string) {
   }
   return FALSE;
 }
-/*
-This function restores a quiz for the logged-in user.
-@param {number} token - The user's session token.
-@param {string} userEmail - The new owner's email.
-@returns {} - Empty object.
-*/
-function adminQuizTransfer(token: string, userEmail: string, quizId: number): error | object {
-  const data = getData();
-  const quizArray = data.quizzes;
-  const tokenArray = data.tokens;
-  const userArray = data.users;
-  // check if the token provided valid
-  if (!tokenExists(token)) {
-    return { error: 'Invalid Token' };
-  }
-  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
-    return { error: 'Quiz Id is not owned by this user' };
-  }
-  // checks if the user email provided exists in the userArray
-  let realEmail = false;
-  for (const user of userArray) {
-    if (user.email === userEmail) {
-      realEmail = true;
-      break;
-    }
-  }
-  if (!realEmail) {
-    return { error: 'userEmail does not exist' };
-  }
-  let userId = -1;
-  for (const tokenValues of tokenArray) {
-    if (tokenValues.token === token) {
-      userId = tokenValues.userId;
-      break;
-    }
-  }
-  for (const user in userArray) {
-    if (userArray[user].email === userEmail && userArray[user].userId === userId) {
-      return { error: 'userEmail is the current logged in user' };
-    }
-  }
-  let userId2 = -1;
-  for (const user of userArray) {
-    if (user.email === userEmail) {
-      userId2 = user.userId;
-      break;
-    }
-  }
-  for (const quiz of quizArray) {
-    if (quiz.userId === userId2) {
-      if (quiz.name === quizArray[quizId].name) {
-        return { error: 'Quiz ID refers to a quiz that has a name that is already used by the target user' };
-      }
-    }
-  }
-  data.quizzes[quizId].userId = userId2;
-  data.quizzes[quizId].TimeLastEdited = Math.round(Date.now() / 1000);
-  setData(data);
-  return {};
-}
-
-function adminQuizQuestionMove(token: string, quizId: number, questionId: number, newPosition: number): error | object {
-  const data = getData();
-  let quizIndex = 0;
-  const quizArray = data.quizzes;
-  const currentPosition = positionFinder(questionId, quizId);
-  // return {currentPosition};
-  if (!tokenExists(token)) {
-    return { error: 'Invalid Token' };
-  }
-  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
-    return { error: 'Quiz Id is not owned by this user' };
-  }
-  if (!questionIdExists(questionId, quizId)) {
-    return { error: 'Invalid questionId' };
-  }
-  if (newPosition === currentPosition) {
-    return { error: 'New position cannot be the current position' };
-  }
-  if (newPosition < 0 || newPosition > questionArrayLength(quizId)) {
-    return { error: 'New position must be in the length of the question array' };
-  }
-  for (const existingQuiz of quizArray) {
-    if (existingQuiz.quizId === quizId) {
-      const questionArray = existingQuiz.questions;
-      const moverQuestion = questionArray[currentPosition];
-      questionArray.splice(currentPosition, 1);
-      questionArray.splice(newPosition, 0, moverQuestion);
-      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
-      data.quizzes = quizArray;
-      data.quizzes[quizIndex].questions = questionArray;
-    } else {
-      quizIndex++;
-    }
-  }
-  setData(data);
-  return {};
-}
-
-function adminQuizQuestionDuplicate(token: string, quizId: number, questionId: number): newQuestionId | error | object {
-  const data = getData();
-  const quizArray = data.quizzes;
-  let quizIndex = 0;
-  let newQuestionId = 0;
-  if (!tokenExists(token)) {
-    return { error: 'Invalid Token' };
-  }
-  if (!tokenOwnsQuiz(quizArray, quizId, token)) {
-    return { error: 'Quiz Id is not owned by this user' };
-  }
-  if (!questionIdExists(questionId, quizId)) {
-    return { error: 'Invalid questionId' };
-  }
-  const currentPosition = positionFinder(questionId, quizId);
-  for (const existingQuiz of quizArray) {
-    if (existingQuiz.quizId === quizId) {
-      const questionArray = existingQuiz.questions;
-      const newDuplicate = questionArray[currentPosition];
-      newQuestionId = questionArray.length + 1;
-
-      newDuplicate.questionId = newQuestionId;
-      questionArray.splice(currentPosition + 1, 0, newDuplicate);
-      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
-      existingQuiz.duration = existingQuiz.duration + newDuplicate.duration;
-      existingQuiz.numQuestions++;
-
-      data.quizzes = quizArray;
-      data.quizzes[quizIndex].questions = questionArray;
-    } else {
-      quizIndex++;
-    }
-  }
-  setData(data);
-  return { newQuestionId };
-}
-
+// Gets the number of questions in a question array
 function questionArrayLength(quizId: number): number {
   const data = getData();
   const quizArray = data.quizzes;
@@ -855,13 +929,13 @@ function questionArrayLength(quizId: number): number {
   }
   return 0;
 }
-
+// Helper for generating a random colour
 function getRandomColour(): string {
   const strings: string[] = ['red', 'blue', 'green', 'yellow', 'purple', 'brown', 'orange'];
   const randomIndex: number = Math.floor(Math.random() * strings.length);
   return strings[randomIndex];
 }
-
+// Helper for determining whether questionIdExists
 function questionIdExists(questionId: number, quizId: number): boolean {
   const data = getData();
   let quiz;
@@ -878,7 +952,7 @@ function questionIdExists(questionId: number, quizId: number): boolean {
   }
   return false;
 }
-
+// Finds the position with basic details about a question
 function positionFinder(questionId: number, quizId: number): number {
   const data = getData();
   const quizArray = data.quizzes;
