@@ -152,7 +152,7 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
 });
 
 app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
-  const token = req.query.token as string;
+  const { token } = req.body;
   const quizId = parseInt(req.params.quizid);
   const response = adminQuizRestore(token, quizId);
   if ('error' in response) {

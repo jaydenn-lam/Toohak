@@ -178,7 +178,7 @@ function requestadminQuizRestore(token: string, quizId: number) {
     'POST',
     SERVER_URL + `/v1/admin/quiz/${quizId}/restore`,
     {
-      qs: {
+      json: {
         token,
       },
       timeout: 100
@@ -578,9 +578,9 @@ describe('/v1/admin/quiz/{quizid}', () => {
 
   test('Empty view', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
-    const response = requestQuizViewTrash(token)
-    expect(response).toStrictEqual({quizzes: []})
-  })
+    const response = requestQuizViewTrash(token);
+    expect(response).toStrictEqual({ quizzes: [] });
+  });
 });
 
 describe('/v1/admin/quiz/{quizid}/name', () => {
@@ -787,12 +787,16 @@ describe('DELETE /v1/admin/quiz/trash/empty', () => {
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     const quizArray = [quizId];
     requestQuizRemove(token, quizId);
-    expect(requestQuizViewTrash(token)).toStrictEqual({quizzes: [
-      {quizId: quizId,
-      name: 'Animal Quiz'}
-    ]})
+    expect(requestQuizViewTrash(token)).toStrictEqual({
+      quizzes: [
+        {
+          quizId: quizId,
+          name: 'Animal Quiz'
+        }
+      ]
+    });
     expect(requestTrashEmpty(token, quizArray)).toStrictEqual({});
-    expect(requestQuizViewTrash(token)).toStrictEqual({quizzes: []})
+    expect(requestQuizViewTrash(token)).toStrictEqual({ quizzes: [] });
   });
 
   test('Invalid quizId', () => {
