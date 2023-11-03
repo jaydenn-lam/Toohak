@@ -1,15 +1,4 @@
-import fs from 'fs';
-
-interface user {
-  userId: number;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  numFailedPasswordsSinceLastLogin: number;
-  numSuccessfulLogins: number;
-  pastPasswords: string[];
-}
+// import fs from 'fs';
 
 interface Answer {
   answerId: number;
@@ -38,6 +27,18 @@ interface quiz {
   duration: number;
 }
 
+interface user {
+  userId: number;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  numFailedPasswordsSinceLastLogin: number;
+  numSuccessfulLogins: number;
+  pastPasswords: string[];
+  trash: quiz[];
+}
+
 interface token {
   token: string;
   userId: number;
@@ -56,15 +57,13 @@ interface dataStore {
   users: user[];
   quizzes: quiz[];
   tokens: token[];
-  trash: quiz[];
 }
 
 // YOU SHOULD MODIFY THIS OBJECT BELOW
 let data: dataStore = {
   users: [],
   quizzes: [],
-  tokens: [],
-  trash: []
+  tokens: []
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1
@@ -94,9 +93,9 @@ function getData(): dataStore {
 // Use set(newData) to pass in the entire data object, with modifications made
 function setData(newData: dataStore) {
   data = newData;
-  //const savedData = JSON.stringify(data);
-  //fs.writeFileSync('./data.json', savedData);
+  // const savedData = JSON.stringify(data);
+  // fs.writeFileSync('./data.json', savedData);
   return {};
 }
 
-export { getData, setData, token, trash, trashQuiz, Question, Answer };
+export { getData, setData, token, trash, trashQuiz, Question, Answer, quiz };

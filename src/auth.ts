@@ -1,4 +1,4 @@
-import { getData, setData } from './dataStore';
+import { getData, setData, quiz } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
 import { tokenExists } from './quiz';
@@ -52,6 +52,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   if (passwordChecker(password) === false) {
     return { error: 'Password must contain a number and a letter' };
   }
+  const emptyTrash: quiz[] = [];
   const authUserId = userArray.length;
   const userData = {
     userId: authUserId,
@@ -62,6 +63,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     numFailedPasswordsSinceLastLogin: 0,
     numSuccessfulLogins: 1,
     pastPasswords: [password],
+    trash: emptyTrash
   };
   const uuid = uuidv4();
   const userToken = {
@@ -212,8 +214,8 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   };
 }
 /*
-<adminAuthLogout function logs out a user by removing their token from the data store. 
-It checks if the provided token is valid, and if not, it returns an error. 
+<adminAuthLogout function logs out a user by removing their token from the data store.
+It checks if the provided token is valid, and if not, it returns an error.
 @param {string} token - The unique token of the user to log out.
 @returns {object | error} - An empty object if successful, or an error object if the token is invalid.
 */
@@ -242,9 +244,9 @@ function adminAuthLogout(token: string): object | error {
   return {};
 }
 /*
-<adminPasswordUpdate function allows a user to update their password. 
-It checks if the provided token is valid and ensures that the new password meets certain criteria. 
-It also checks if the old password matches the stored password and enforces that the new password is not the same as the old one or any past passwords. 
+<adminPasswordUpdate function allows a user to update their password.
+It checks if the provided token is valid and ensures that the new password meets certain criteria.
+It also checks if the old password matches the stored password and enforces that the new password is not the same as the old one or any past passwords.
 @param {string} token - The unique token of the user.
 @param {string} oldPassword - The old password of the user.
 @param {string} newPassword - The new password to set.
@@ -258,7 +260,7 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   // Check if the token is valid or empty
   if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
-  } 
+  }
   // Check if the new password meets criteria
   if (newPassword.length < 8) {
     return { error: 'New password is too short' };
@@ -292,7 +294,7 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   return {};
 }
 /*
-<adminDetailsUpdate function allows a user to update their email and name. 
+<adminDetailsUpdate function allows a user to update their email and name.
 It checks if the provided token is valid, if the email is not already in use, and if the email and names are valid.
 If any of the checks fail, it returns an error. Otherwise, it updates the user's information in the data store.
 @param {string} token - The unique token of the user.
@@ -325,7 +327,7 @@ function adminDetailsUpdate(token: string, email: string, nameFirst: string, nam
   // Find the user to edit based on the token
   const user = findUserId(token);
   // Update user's information in the data store
-  for (let userToEdit of data.users) {
+  for (const userToEdit of data.users) {
     if (userToEdit.userId === user) {
       userToEdit.email = email;
       userToEdit.firstName = nameFirst;

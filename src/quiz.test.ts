@@ -453,7 +453,7 @@ describe('GET /v1/admin/quiz/{quizid} (quizInfo)', () => {
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     const invalidQuizId = quizId + 1;
     const error = requestQuizInfo(token, invalidQuizId);
-    expect(error).toStrictEqual({ error: 'Invalid Quiz Id' });
+    expect(error).toStrictEqual({ error: 'Invalid quizId' });
   });
 
   test('Working Case', () => {
@@ -508,7 +508,7 @@ describe('PUT /v1/admin/quiz/{quizid}/description', () => {
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     const invalidQuizId = quizId + 1;
     const error = requestQuizDescriptionUpdate(token, 'Valid Description', invalidQuizId);
-    expect(error).toStrictEqual({ error: 'Invalid quiz Id' });
+    expect(error).toStrictEqual({ error: 'Invalid quizId' });
   });
 
   test('Working Case', () => {
@@ -568,7 +568,19 @@ describe('/v1/admin/quiz/{quizid}', () => {
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [{ quizId: quizId, name: 'quiz1' }] });
     requestQuizRemove(token, quizId);
     expect(requestQuizList(token)).toStrictEqual({ quizzes: [] });
+    expect(requestQuizViewTrash(token)).toStrictEqual({
+      quizzes: [{
+        quizId: quizId,
+        name: 'quiz1'
+      }]
+    });
   });
+
+  test('Empty view', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
+    const response = requestQuizViewTrash(token)
+    expect(response).toStrictEqual({quizzes: []})
+  })
 });
 
 describe('/v1/admin/quiz/{quizid}/name', () => {
@@ -704,7 +716,7 @@ describe('/v1/admin/quiz/{quizid}/restore', () => {
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
     requestQuizRemove(token, quizId);
     const error = requestadminQuizRestore(token, quizId + 1);
-    expect(error).toStrictEqual({ error: 'Invalid quiz Id' });
+    expect(error).toStrictEqual({ error: 'Invalid quizId' });
   });
 });
 
@@ -775,7 +787,12 @@ describe('DELETE /v1/admin/quiz/trash/empty', () => {
     const quizId = requestQuizCreate(token, 'Animal Quiz', 'Test your knowledge on animals!').quizId;
     const quizArray = [quizId];
     requestQuizRemove(token, quizId);
+    expect(requestQuizViewTrash(token)).toStrictEqual({quizzes: [
+      {quizId: quizId,
+      name: 'Animal Quiz'}
+    ]})
     expect(requestTrashEmpty(token, quizArray)).toStrictEqual({});
+    expect(requestQuizViewTrash(token)).toStrictEqual({quizzes: []})
   });
 
   test('Invalid quizId', () => {
@@ -804,6 +821,7 @@ describe('DELETE /v1/admin/quiz/trash/empty', () => {
     expect(requestTrashEmpty(tokenNotOwner, quizArray)).toStrictEqual({ error: 'User does not own quiz' });
   });
 });
+
 describe('/v1/admin/quiz/{quizid}/transfer', () => {
   beforeEach(() => {
     request(

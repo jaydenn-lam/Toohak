@@ -1,7 +1,5 @@
 import { getData, setData, trash, Question, Answer } from './dataStore';
 import { quizIdExists, findUserId } from './other';
-const TRUE = 1;
-const FALSE = 0;
 
 interface error {
   error: string;
@@ -146,20 +144,17 @@ function adminQuizRemove(token: string, quizId: number): error | object {
   // Error checking and early return
   const data = getData();
   const quizArray = data.quizzes;
-  const trashArray = data.trash;
   // Error check for valid token
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
-  let quizIdExists = FALSE;
-  for (const quiz of quizArray) {
-    if (quiz.quizId === quizId) {
-      quizIdExists = TRUE;
-    }
-  }
+  const userId = findUserId(token);
+  const desiredUser = findUser(userId);
+  const trashArray = desiredUser.trash;
+
   // Check for invalid quiz
-  if (quizIdExists === FALSE) {
-    return { error: 'Invalid quiz Id' };
+  if (!quizIdExists(quizId)) {
+    return ({ error: 'Invalid quizId' });
   }
   // Error check for incorrect quizid for the specified user
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
@@ -193,7 +188,6 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
   // Check Error cases and early return
   const data = getData();
   const quizArray = data.quizzes;
-  let quizIdExists = FALSE;
   let quizInfo: quiz = {
     quizId: 0,
     name: '',
@@ -206,7 +200,6 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
   // update quizInfo which contains details about questions for each quiz
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
-      quizIdExists = TRUE;
       quizInfo = {
         quizId: quiz.quizId,
         name: quiz.name,
@@ -220,8 +213,8 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
       };
     }
   }
-  if (quizIdExists === FALSE) {
-    return { error: 'Invalid Quiz Id' };
+  if (!quizIdExists(quizId)) {
+    return ({ error: 'Invalid quizId' });
   }
   // The quiz is not owned by this user
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
@@ -253,7 +246,7 @@ function adminQuizNameUpdate(token: string, quizId: number, name: string): error
   if (!(/^[a-zA-Z0-9]+$/.test(name))) {
     return ({ error: 'Invalid new name' });
   }
-  if (quizIdExists(quizId) === FALSE) {
+  if (!quizIdExists(quizId)) {
     return ({ error: 'Invalid quizId' });
   }
   for (const quiz of quizArray) {
@@ -289,14 +282,8 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
-  let quizIdExists = FALSE;
-  for (const quiz of quizArray) {
-    if (quiz.quizId === quizId) {
-      quizIdExists = TRUE;
-    }
-  }
-  if (quizIdExists === FALSE) {
-    return { error: 'Invalid quiz Id' };
+  if (!quizIdExists(quizId)) {
+    return ({ error: 'Invalid quizId' });
   }
   // Error check for incorrect quizid for the specified user
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
@@ -316,6 +303,15 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   setData(data);
   return {};
 }
+
+function findUser(userId: number) {
+  const data = getData();
+  for (const existingUser of data.users) {
+    if (existingUser.userId === userId) {
+      return existingUser;
+    }
+  }
+}
 /*
 This function restores a quiz for the logged-in user.
 @param {string} token - The user's session token.
@@ -326,31 +322,24 @@ function adminQuizRestore(token: string, quizId: number): error | object {
   // Error checking and early return
   const data = getData();
   // Initialize quizName as an empty string
-  let quizName = '';
+  const quizName = '';
   const quizArray = data.quizzes;
-  const trashArray = data.trash;
-
-  if (!tokenExists(token) || token === '') {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
-  let quizIdExists = false;
-  // Search through the trashArray to find a quiz with the provided quizId
-  for (const quiz of trashArray) {
-    if (quiz.quizId === quizId) {
-      // If there is a match, it stores the name of the quiz in quizName and sets quizIdExists to true
-      quizName = quiz.name;
-      quizIdExists = true;
-    }
-  }
-  // If quizIdExists is still false, it returns an error
-  if (!quizIdExists) {
-    return { error: 'Invalid quiz Id' };
-  }
+  const userId = findUserId(token);
+  const desiredUser = findUser(userId);
+  const trashArray = desiredUser.trash;
 
   // Error check for incorrect quizId for the specified user
   if (!tokenOwnsQuiz(trashArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
+  // If quizIdExists is still false, it returns an error
+  if (!quizExistsInTrash(quizId, token)) {
+    return { error: 'Invalid quizId' };
+  }
+
   for (const quiz of quizArray) {
     if (quiz.name === quizName) {
       return ({ error: 'Quiz name already in use' });
@@ -370,15 +359,17 @@ function adminQuizRestore(token: string, quizId: number): error | object {
     }
   }
   // Remove the quiz from the trash array
-  for (const quiz of data.trash) {
+  for (const quiz of trashArray) {
     if (quiz.quizId === quizId) {
-      const index = data.trash.indexOf(quiz);
+      const index = trashArray.indexOf(quiz);
       if (index !== -1) {
         // splice method to remove one item from data.trash collection at the index
-        data.trash.splice(index, 1);
+        trashArray.splice(index, 1);
       }
     }
   }
+  const position = data.users.indexOf(desiredUser);
+  data.users[position].trash = trashArray;
   setData(data);
   return {};
 }
@@ -388,15 +379,17 @@ The function allows to view the quizzes that are in trash
 @returns {Array} - An array that contains quizzes.
 */
 function adminQuizViewTrash(token: string): error | trash {
-  const data = getData();
-  // Test for invalid token passed into function
-  if (!tokenExists(token) || token === '') {
+  // Test for invalid token
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
+  const userId = findUserId(token);
+  const desiredUser = findUser(userId);
+  const trashArray = desiredUser.trash;
   const trash: trash = {
     quizzes: []
   };
-  for (const quiz of data.trash) {
+  for (const quiz of trashArray) {
     const returnQuiz = {
       quizId: quiz.quizId,
       name: quiz.name,
@@ -411,30 +404,36 @@ The function empties the trash when called
 @param {number} quizId - The quiz's assigned quizId.
 @returns {} - An empty object
 */
-function adminTrashEmpty(token: string, quizzes: number[]) {
+function adminTrashEmpty(token: string, quizIds: number[]) {
   const data = getData();
   // Test for invalid token
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
+  const userId = findUserId(token);
+  const desiredUser = findUser(userId);
+  const trashArray = desiredUser.trash;
   // check whether user owns the quiz provided
-  for (const quizId of quizzes) {
-    if (!tokenOwnsQuiz(data.trash, quizId, token)) {
+  for (const quizId of quizIds) {
+    if (!tokenOwnsQuiz(trashArray, quizId, token)) {
       return { error: 'User does not own quiz' };
     }
-    if (!quizExistsInTrash(quizId)) {
+    if (!quizExistsInTrash(quizId, token)) {
       return { error: 'Invalid quizId' };
     }
   }
   // Empty the trash implementation
-  for (const quiz of quizzes) {
-    for (const trashedQuiz of data.trash) {
+  for (const quiz of quizIds) {
+    for (const trashedQuiz of trashArray) {
       if (trashedQuiz.quizId === quiz) {
-        const index = data.trash.indexOf(trashedQuiz);
-        data.trash.splice(index);
+        const index = trashArray.indexOf(trashedQuiz);
+        trashArray.splice(index);
       }
     }
   }
+  const position = data.users.indexOf(desiredUser);
+  data.users[position].trash = trashArray;
+  setData(data);
   return {};
 }
 /*
@@ -530,14 +529,8 @@ function adminQuestionDelete(token: string, quizId: number, questionId: number):
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
-  let quizIdExists = FALSE;
-  for (const quiz of quizArray) {
-    if (quiz.quizId === quizId) {
-      quizIdExists = TRUE;
-    }
-  }
-  if (quizIdExists === FALSE) {
-    return { error: 'Invalid quiz Id' };
+  if (!quizIdExists(quizId)) {
+    return ({ error: 'Invalid quizId' });
   }
   // Error check for incorrect quizid for the specified user
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
@@ -766,7 +759,7 @@ function adminQuizQuestionDuplicate(token: string, quizId: number, questionId: n
   for (const existingQuiz of quizArray) {
     if (existingQuiz.quizId === quizId) {
       const questionArray = existingQuiz.questions;
-      const newDuplicate = questionArray[currentPosition];
+      const newDuplicate = { ...questionArray[currentPosition] };
       newQuestionId = questionArray.length + 1;
 
       newDuplicate.questionId = newQuestionId;
@@ -853,58 +846,56 @@ function answerTypeError(questionBody: questionBodyType): string | null {
 }
 
 // Helper function for determining if quizId is in the trash
-function quizExistsInTrash(quizId: number) {
-  const data = getData();
-  for (const quiz of data.trash) {
+function quizExistsInTrash(quizId: number, token: string) {
+  const userId = findUserId(token);
+  const user = findUser(userId);
+  const trashArray = user.trash;
+  for (const quiz of trashArray) {
     if (quiz.quizId === quizId) {
-      return TRUE;
+      return true;
     }
   }
-  return FALSE;
+  return false;
 }
 
 // Helper function for determining if the user of the token owns the quiz.
 function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string) {
-  const data = getData();
-  const tokenArray = data.tokens;
-  let userId;
-  for (const session of tokenArray) {
-    if (token === session.token) {
-      userId = session.userId;
-    }
+  const userId = findUserId(token);
+  if (quizArray.length === 0) {
+    return false;
   }
   for (const quiz of quizArray) {
     if (quiz.quizId === quizId) {
       if (quiz.userId !== userId) {
-        return FALSE;
+        return false;
       }
     }
   }
-  return TRUE;
+  return true;
 }
 
 // Helper function for determining if string is alphanumeric
 function validName(name: string) {
-  let invalidName = FALSE;
+  let invalidName = false;
   for (let char = 0; char < name.length; char++) {
     const charCode = name.charCodeAt(char);
     if (charCode <= 47 && charCode !== 32) {
-      invalidName = TRUE;
+      invalidName = true;
     }
     if (charCode >= 58 && charCode <= 64) {
-      invalidName = TRUE;
+      invalidName = true;
     }
     if (charCode >= 91 && charCode <= 96) {
-      invalidName = TRUE;
+      invalidName = true;
     }
     if (charCode >= 123) {
-      invalidName = TRUE;
+      invalidName = true;
     }
   }
   if (invalidName) {
-    return FALSE;
+    return false;
   } else {
-    return TRUE;
+    return true;
   }
 }
 // Helper function for determining if token exists
@@ -913,10 +904,10 @@ function tokenExists(token: string) {
   const tokenArray = data.tokens;
   for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
-      return TRUE;
+      return true;
     }
   }
-  return FALSE;
+  return false;
 }
 // Gets the number of questions in a question array
 function questionArrayLength(quizId: number): number {
