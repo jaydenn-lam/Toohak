@@ -1,4 +1,4 @@
-import { getData, setData } from './dataStore';
+import { getData, setData, quiz } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
 import { tokenExists } from './quiz';
@@ -52,19 +52,19 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   if (passwordChecker(password) === false) {
     return { error: 'Password must contain a number and a letter' };
   }
-
+  const emptyTrash: quiz[] = [];
   const authUserId = data.currentUserId;
   data.currentUserId = data.currentUserId + 1;
-
   const userData = {
     userId: authUserId,
     email: email,
     password: password,
-    First_name: nameFirst,
-    Last_name: nameLast,
+    firstName: nameFirst,
+    lastName: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
     numSuccessfulLogins: 1,
     pastPasswords: [password],
+    trash: emptyTrash
   };
   const uuid = uuidv4();
   const userToken = {
@@ -166,7 +166,7 @@ function adminUserDetails(token: string): user | error {
   return {
     user: {
       userId: user.userId,
-      name: `${user.First_name} ${user.Last_name}`,
+      name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       numSuccessfulLogins: user.numSuccessfulLogins,
       numFailedPasswordsSinceLastLogin: user.numFailedPasswordsSinceLastLogin,
@@ -203,7 +203,6 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   user.numSuccessfulLogins += 1;
   user.numFailedPasswordsSinceLastLogin = 0;
   // update the data store
-
   const uuid = uuidv4();
   const userToken = {
     token: uuid,
@@ -216,17 +215,15 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   };
 }
 /*
-<adminAuthLogin finds a user with a matching email address and returns their authUserId, If no user
-is found it returns an error. it checks if the provided password matches the stored password and if it
-doesn't, it increments numFailedPasswordsSinceLastLogin by 1 and returns an error. If the login is successful it increments
-successful login by 1 and resets failed passwords to 0.
-@param {string} email - Email address of the user.
-@param {string} password - Password of the user
-@returns {number} - The unique identifier of the user.
+<adminAuthLogout function logs out a user by removing their token from the data store.
+It checks if the provided token is valid, and if not, it returns an error.
+@param {string} token - The unique token of the user to log out.
+@returns {object | error} - An empty object if successful, or an error object if the token is invalid.
 */
 function adminAuthLogout(token: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
+  // Check if the token is valid or empty
   if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
@@ -247,22 +244,31 @@ function adminAuthLogout(token: string): object | error {
   }
   return {};
 }
-
+/*
+<adminPasswordUpdate function allows a user to update their password.
+It checks if the provided token is valid and ensures that the new password meets certain criteria.
+It also checks if the old password matches the stored password and enforces that the new password is not the same as the old one or any past passwords.
+@param {string} token - The unique token of the user.
+@param {string} oldPassword - The old password of the user.
+@param {string} newPassword - The new password to set.
+@returns {object | error} - An empty object if successful, or an error object if the update fails for any reason.
+*/
 function adminPasswordUpdate(token: string, oldPassword: string, newPassword: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
   const userArray = data.users;
   let userId;
+  // Check if the token is valid or empty
   if (!tokenExists(token) || token === '') {
     return { error: 'Invalid Token' };
   }
+  // Check if the new password meets criteria
   if (newPassword.length < 8) {
     return { error: 'New password is too short' };
   }
   if (!passwordChecker(newPassword)) {
     return { error: 'New password must contain at least 1 number and 1 letter' };
   }
-
   for (const existingToken of tokenArray) {
     if (existingToken.token === token) {
       userId = existingToken.userId;
@@ -288,39 +294,48 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
   setData(data);
   return {};
 }
-
-function adminDetailsUpdate (token: string, email: string, nameFirst: string, nameLast: string) {
+/*
+<adminDetailsUpdate function allows a user to update their email and name.
+It checks if the provided token is valid, if the email is not already in use, and if the email and names are valid.
+If any of the checks fail, it returns an error. Otherwise, it updates the user's information in the data store.
+@param {string} token - The unique token of the user.
+@param {string} email - The new email address to set.
+@param {string} nameFirst - The new first name to set.
+@param {string} nameLast - The new last name to set.
+@returns {object | error} - An empty object if successful, or an error object if the update fails for any reason.
+*/
+function adminDetailsUpdate(token: string, email: string, nameFirst: string, nameLast: string) {
   const data = getData();
+  // Check if the new email is not already in use
   for (const user in data.users) {
     if (data.users[user].email === email) {
       return { error: 'Email has already been used' };
     }
   }
+  // Check if the new email is valid
   if (validator.isEmail(email) === false) {
     return { error: 'Email is invalid' };
   }
+  // Check if the new names are valid
   const InvalidErrorMessage = NameIsInvalid(nameFirst, nameLast);
   if (InvalidErrorMessage) {
     return InvalidErrorMessage;
   }
+  // Check if the token is valid
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
+  // Find the user to edit based on the token
   const user = findUserId(token);
-  for (let userToEdit of data.users) {
+  // Update user's information in the data store
+  for (const userToEdit of data.users) {
     if (userToEdit.userId === user) {
-      const newDetails = {
-        userId: userToEdit.userId,
-        email: email,
-        password: userToEdit.password,
-        firstName: nameFirst,
-        lastName: nameLast,
-        numFailedPasswordsSinceLastLogin: userToEdit.numFailedPasswordsSinceLastLogin,
-        numSuccessfulLogins: userToEdit.numSuccessfulLogins
-      };
-      userToEdit = Object.assign(newDetails);
+      userToEdit.email = email;
+      userToEdit.firstName = nameFirst;
+      userToEdit.lastName = nameLast;
     }
   }
+  setData(data);
   return {};
 }
 

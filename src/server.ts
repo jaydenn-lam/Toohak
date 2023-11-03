@@ -3,6 +3,7 @@ import { echo } from './newecho';
 import morgan from 'morgan';
 import config from './config.json';
 import cors from 'cors';
+import errorHandler from 'middleware-http-errors';
 import YAML from 'yaml';
 import sui from 'swagger-ui-express';
 import fs from 'fs';
@@ -38,11 +39,7 @@ const HOST: string = process.env.IP || 'localhost';
 // Example get request
 app.get('/echo', (req: Request, res: Response) => {
   const data = req.query.echo as string;
-  const ret = echo(data);
-  if ('error' in ret) {
-    res.status(400);
-  }
-  return res.json(ret);
+  return res.json(echo(data));
 });
 
 app.post('/v1/admin/auth/register', (req: Request, res: Response) => {
@@ -51,11 +48,11 @@ app.post('/v1/admin/auth/register', (req: Request, res: Response) => {
   if ('error' in response) {
     return res.status(400).json(response);
   }
-  res.json(response);
+  res.status(200).json(response);
 });
 
 app.delete('/v1/clear', (req: Request, res: Response) => {
-  res.json(clear());
+  res.status(200).json(clear());
 });
 
 app.post('/v1/admin/quiz', (req: Request, res: Response) => {
@@ -66,7 +63,7 @@ app.post('/v1/admin/quiz', (req: Request, res: Response) => {
   } else if ('error' in response) {
     return res.status(400).json(response);
   }
-  res.json(response);
+  res.status(200).json(response);
 });
 app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -74,26 +71,26 @@ app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
   if ('error' in result) {
     return res.status(400).json(result);
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 app.post('/v1/admin/auth/logout', (req: Request, res: Response) => {
   const { token } = req.body;
-  const authLogout = adminAuthLogout(token);
-  if ('error' in authLogout) {
-    return res.status(401).json(authLogout);
+  const response = adminAuthLogout(token);
+  if ('error' in response) {
+    return res.status(401).json(response);
   }
-  res.json(authLogout);
+  res.status(200).json(response);
 });
 
 app.get('/v1/admin/user/details', (req: Request, res: Response) => {
   const token = req.query.token as string;
-  const userDetails = adminUserDetails(token);
+  const response = adminUserDetails(token);
 
-  if ('error' in userDetails) {
-    res.status(401).json(userDetails);
+  if ('error' in response) {
+    res.status(401).json(response);
   } else {
-    res.json(userDetails);
+    res.status(200).json(response);
   }
 });
 
@@ -103,7 +100,7 @@ app.get('/v1/admin/quiz/list', (req: Request, res: Response) => {
   if ('error' in response) {
     return res.status(401).json(response);
   }
-  res.json(response);
+  res.status(200).json(response);
 });
 
 app.put('/v1/admin/quiz/:quizid/description', (req: Request, res: Response) => {
@@ -155,7 +152,7 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
 });
 
 app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
-  const token = req.query.token as string;
+  const { token } = req.body;
   const quizId = parseInt(req.params.quizid);
   const response = adminQuizRestore(token, quizId);
   if ('error' in response) {
@@ -215,7 +212,7 @@ app.post('/v1/admin/quiz/:quizid/question', (req: Request, res: Response) => {
 app.put('/v1/admin/user/password', (req: Request, res: Response) => {
   const { token, oldPassword, newPassword } = req.body;
   const response = adminPasswordUpdate(token, oldPassword, newPassword);
-  if ('error' in response && 'Invalid Token' in response) {
+  if ('error' in response && response.error === 'Invalid Token') {
     return res.status(401).json(response);
   } else if ('error' in response) {
     return res.status(400).json(response);
@@ -336,6 +333,9 @@ app.use((req: Request, res: Response) => {
   `;
   res.status(404).json({ error });
 });
+
+// For handling errors
+app.use(errorHandler());
 
 // start server
 const server = app.listen(PORT, HOST, () => {
