@@ -55,6 +55,10 @@ interface dataStore {
   quizzes: quiz[];
   tokens: token[];
   trash: quiz[];
+  currentUserId: number,
+  currentQuizId: number,
+  currentQuestionId: number,
+  currentAnswerId: number,
 }
 
 // YOU SHOULD MODIFY THIS OBJECT BELOW
@@ -62,7 +66,11 @@ let data: dataStore = {
   users: [],
   quizzes: [],
   tokens: [],
-  trash: []
+  trash: [],
+  currentUserId: 0,
+  currentQuizId: 0,
+  currentQuestionId: 0,
+  currentAnswerId: 0,
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1

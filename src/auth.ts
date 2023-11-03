@@ -52,7 +52,10 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   if (passwordChecker(password) === false) {
     return { error: 'Password must contain a number and a letter' };
   }
-  const authUserId = userArray.length;
+
+  const authUserId = data.currentUserId;
+  data.currentUserId = data.currentUserId + 1;
+
   const userData = {
     userId: authUserId,
     email: email,
