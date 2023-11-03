@@ -1,6 +1,5 @@
 import { getData, setData } from './dataStore';
-const TRUE = 1;
-const FALSE = 0;
+
 /*
 Function completely sets the data in dataStore.js to an empty version of the original dataStore we had saved there
 @param {void} - Nothing is passed in
@@ -12,30 +11,29 @@ function clear() {
       users: [],
       quizzes: [],
       tokens: [],
-      trash: []
     }
   );
   return {};
 }
 
-function userIdExists(userId: number): number {
+function userIdExists(userId: number): boolean {
   const data = getData();
   for (const user of data.users) {
     if (user.userId === userId) {
-      return TRUE;
+      return true;
     }
   }
-  return FALSE;
+  return false;
 }
 
-function quizIdExists(quizId: number): number {
+function quizIdExists(quizId: number): boolean {
   const data = getData();
   for (const quiz of data.quizzes) {
     if (quiz.quizId === quizId) {
-      return TRUE;
+      return true;
     }
   }
-  return FALSE;
+  return false;
 }
 
 function findUserId(token: string): number {
@@ -45,7 +43,6 @@ function findUserId(token: string): number {
       return existingToken.userId;
     }
   }
-  return FALSE;
 }
 
 export { clear, userIdExists, quizIdExists, findUserId };
