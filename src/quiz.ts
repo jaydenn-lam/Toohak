@@ -117,7 +117,8 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   }
   // Creating quiz including properties of questions
   const emptyQuestions: Question[] = [];
-  const quizId = quizArray.length;
+  const quizId = data.currentQuizId;
+  data.currentQuizId = data.currentQuizId + 1;
   const quizData = {
     quizId: quizId,
     name: name,
@@ -472,23 +473,15 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
       }
     }
   }
-  // Determines the the total number of answers in all questions and quizzes
-  // to assign an answerId to each created answer
-  let answerTotal = 0;
-  for (const quiz of quizArray) {
-    if (quiz.questions.length > 0) {
-      for (const question of quiz.questions) {
-        answerTotal = answerTotal + question.answers.length;
-      }
-    }
-  }
   // Create an array of all answers for that question that need to be created
   const answerArray: Answer[] = [];
+  let answerId = 0;
   for (const index in questionBody.answers) {
-    answerTotal++;
+    answerId = data.currentAnswerId;
+    data.currentAnswerId = data.currentAnswerId + 1;
     const selectedString: string = getRandomColour();
     const answerObject: Answer = {
-      answerId: answerTotal,
+      answerId: answerId,
       answer: questionBody.answers[index].answer,
       correct: questionBody.answers[index].correct,
       colour: selectedString,
@@ -500,7 +493,8 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
   let questionId = 0;
   for (const quiz of data.quizzes) {
     if (quiz.quizId === quizId) {
-      questionId = quiz.questions.length;
+      questionId = data.currentQuestionId;
+      data.currentQuestionId = data.currentQuestionId + 1;
       quiz.questions.push({
         questionId: questionId,
         question: questionBody.question,
@@ -513,6 +507,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
       quiz.TimeLastEdited = quiz.TimeCreated;
     }
   }
+  setData(data);
   return { questionId: questionId };
 }
 /*
@@ -619,7 +614,7 @@ function adminQuestionUpdate(token: string, quizId: number, questionBody: questi
       quiz.TimeLastEdited = Math.round(Date.now() / 1000);
     }
   }
-
+  setData(data);
   return {};
 }
 

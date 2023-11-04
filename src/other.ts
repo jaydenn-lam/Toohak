@@ -11,6 +11,10 @@ function clear() {
       users: [],
       quizzes: [],
       tokens: [],
+      currentUserId: 0,
+      currentQuizId: 0,
+      currentQuestionId: 0,
+      currentAnswerId: 0,
     }
   );
   return {};
