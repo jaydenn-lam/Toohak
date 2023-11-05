@@ -1,4 +1,4 @@
-// import fs from 'fs';
+import fs from 'fs';
 
 interface Answer {
   answerId: number;
@@ -92,18 +92,17 @@ Example usage
 
 // Use get() to access the data
 function getData(): dataStore {
-  // const json = fs.readFileSync('./data.json');
-  // const newData = JSON.parse(String(json));
-
-  return data;
+  const json = fs.readFileSync('./data.json');
+  const newData = JSON.parse(String(json));
+  return newData;
 }
 
 // Use set(newData) to pass in the entire data object, with modifications made
 function setData(newData: dataStore) {
   data = newData;
-  // const savedData = JSON.stringify(data);
-  // fs.writeFileSync('./data.json', savedData);
+  const savedData = JSON.stringify(data);
+  fs.writeFileSync('./data.json', savedData);
   return {};
 }
 
-export { getData, setData, token, trash, trashQuiz, Question, Answer, quiz };
+export { getData, setData, token, trash, trashQuiz, Question, Answer, quiz, user };

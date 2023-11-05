@@ -659,3 +659,8 @@ describe('PUT /v1/admin/user/details', () => {
     expect(statusCode).toStrictEqual(400);
   });
 });
+
+request(
+  'DELETE',
+  SERVER_URL + '/v1/clear'
+);

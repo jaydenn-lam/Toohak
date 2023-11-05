@@ -183,7 +183,7 @@ app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {
 
 app.delete('/v1/admin/quiz/trash/empty', (req: Request, res: Response) => {
   const token = req.query.token as string;
-  const quizzes = JSON.parse(req.query.quizzes as string);
+  const quizzes = JSON.parse(req.query.quizIds as string);
   const response = adminTrashEmpty(token, quizzes);
   if ('error' in response && response.error === 'Invalid quizId') {
     return res.status(400).json(response);

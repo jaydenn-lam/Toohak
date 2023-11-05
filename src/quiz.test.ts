@@ -219,14 +219,14 @@ function requestQuizViewTrash(token: string) {
 }
 
 function requestTrashEmpty(token: string, quizzesArray: number[]) {
-  const quizzes = JSON.stringify(quizzesArray);
+  const quizIds = JSON.stringify(quizzesArray);
   const res = request(
     'DELETE',
     SERVER_URL + '/v1/admin/quiz/trash/empty',
     {
       qs: {
         token,
-        quizzes
+        quizIds
       },
       timeout: 100
     }
@@ -538,11 +538,13 @@ describe('/v1/admin/quiz/{quizid}', () => {
       SERVER_URL + '/v1/clear'
     );
   });
+
   test('Invalid token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
     expect(requestQuizRemove(token + 'Invalid', quizId)).toStrictEqual({ error: 'Invalid Token' });
   });
+
   test('Empty token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').token;
     const quizId = requestQuizCreate(token, 'quiz1', '').quizId;
@@ -2468,3 +2470,8 @@ describe('PUT /v1/admin/quiz/{quizId}/question/{questionId}', () => {
     expect(errorType).toStrictEqual({ error: 'Quiz Id is not owned by this user' });
   });
 });
+
+request(
+  'DELETE',
+  SERVER_URL + '/v1/clear'
+);
