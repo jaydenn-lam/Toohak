@@ -1,8 +1,7 @@
 import { getData, setData, quiz } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
-import { tokenExists } from './quiz';
-import { findUserId } from './other';
+import { findUserId, tokenExists } from './other';
 
 interface returnToken {
   token: string;
@@ -195,7 +194,12 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   // check if the provided password matches the stored password
   if (user.password !== password) {
     // increment numFailedPasswordsSinceLastLogin by 1 and return an error
-    user.numFailedPasswordsSinceLastLogin += 1;
+    for (const existingUser of data.users) {
+      if (existingUser.userId === user.userId) {
+        existingUser.numFailedPasswordsSinceLastLogin += 1;
+      }
+    }
+    setData(data);
     return { error: 'Incorrect password' };
   }
   // If password is correct, reset numFailedPasswordsSinceLastLogin to 0
@@ -224,7 +228,7 @@ function adminAuthLogout(token: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
   // Check if the token is valid or empty
-  if (!tokenExists(token) || token === '') {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   // Initialize the tokenIndex to -1 (indicating not found)
@@ -256,10 +260,9 @@ It also checks if the old password matches the stored password and enforces that
 function adminPasswordUpdate(token: string, oldPassword: string, newPassword: string): object | error {
   const data = getData();
   const tokenArray = data.tokens;
-  const userArray = data.users;
   let userId;
   // Check if the token is valid or empty
-  if (!tokenExists(token) || token === '') {
+  if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   // Check if the new password meets criteria
@@ -274,7 +277,7 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
       userId = existingToken.userId;
     }
   }
-  for (const existingUser of userArray) {
+  for (const existingUser of data.users) {
     if (existingUser.userId === userId) {
       if (oldPassword !== existingUser.password) {
         return { error: 'Password is incorrect' };

@@ -1,4 +1,4 @@
-import { getData, setData } from './dataStore';
+import { getData, setData, user } from './dataStore';
 
 /*
 Function completely sets the data in dataStore.js to an empty version of the original dataStore we had saved there
@@ -40,13 +40,52 @@ function quizIdExists(quizId: number): boolean {
   return false;
 }
 
-function findUserId(token: string): number {
+function findUserId(token: string) {
   const data = getData();
   for (const existingToken of data.tokens) {
     if (token === existingToken.token) {
       return existingToken.userId;
     }
   }
+  return 10000;
 }
 
-export { clear, userIdExists, quizIdExists, findUserId };
+function findUser(userId: number) {
+  const data = getData();
+  for (const existingUser of data.users) {
+    if (existingUser.userId === userId) {
+      return existingUser;
+    }
+  }
+  // This below line should NEVER run
+  console.log('ERROR HAS OCCURED FINDING USER');
+  const substituteUser: user = {
+    userId: 10000,
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    numFailedPasswordsSinceLastLogin: 0,
+    numSuccessfulLogins: 0,
+    pastPasswords: [],
+    trash: [],
+  };
+  return substituteUser;
+}
+
+// Helper function for determining if token exists
+function tokenExists(token: string) {
+  const data = getData();
+  const tokenArray = data.tokens;
+  if (token === '') {
+    return false;
+  }
+  for (const existingToken of tokenArray) {
+    if (token === existingToken.token) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export { clear, userIdExists, quizIdExists, findUserId, findUser, tokenExists };

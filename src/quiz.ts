@@ -1,5 +1,5 @@
 import { getData, setData, trash, Question, Answer } from './dataStore';
-import { quizIdExists, findUserId } from './other';
+import { quizIdExists, findUserId, findUser, tokenExists } from './other';
 
 interface error {
   error: string;
@@ -94,7 +94,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
     return { error: 'Invalid character(s) in name' };
   }
   // Error checking for valid name length
-  if (nameLengthError(name) !== null) {
+  if (nameLengthError(name) !== 'No error') {
     return { error: nameLengthError(name) };
   }
 
@@ -166,6 +166,11 @@ function adminQuizRemove(token: string, quizId: number): error | object {
     if (quizArray[quiz].quizId === quizId) {
       quizArray[quiz].TimeLastEdited = Math.round(Date.now() / 1000);
       trashArray.push(quizArray[quiz]);
+    }
+  }
+  for (const user of data.users) {
+    if (user.userId === userId) {
+      user.trash = trashArray;
     }
   }
   // Remove quiz from quizzes array (permanently)
@@ -261,11 +266,12 @@ function adminQuizNameUpdate(token: string, quizId: number, name: string): error
     return { error: 'Quiz Id is not owned by this user' };
   }
   // Finds the name and updates the name of the quiz
-  for (const quiz of quizArray) {
+  for (const quiz of data.quizzes) {
     if (quiz.quizId === quizId) {
       quiz.name = name;
     }
   }
+  setData(data);
   return {};
 }
 
@@ -305,14 +311,6 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   return {};
 }
 
-function findUser(userId: number) {
-  const data = getData();
-  for (const existingUser of data.users) {
-    if (existingUser.userId === userId) {
-      return existingUser;
-    }
-  }
-}
 /*
 This function restores a quiz for the logged-in user.
 @param {string} token - The user's session token.
@@ -352,13 +350,15 @@ function adminQuizRestore(token: string, quizId: number): error | object {
       return { error: 'Quiz Name already exists' };
     }
   }
-  // Add the quiz to trash and update the TimeLastEdited
+  // Add the quiz to quizArray and update the TimeLastEdited
   for (const quiz of trashArray) {
     if (quiz.quizId === quizId) {
       quiz.TimeLastEdited = Math.round(Date.now() / 1000);
       quizArray.push(quiz);
     }
   }
+  data.quizzes = quizArray;
+
   // Remove the quiz from the trash array
   for (const quiz of trashArray) {
     if (quiz.quizId === quizId) {
@@ -369,8 +369,11 @@ function adminQuizRestore(token: string, quizId: number): error | object {
       }
     }
   }
-  const position = data.users.indexOf(desiredUser);
-  data.users[position].trash = trashArray;
+  for (const user of data.users) {
+    if (user.userId === userId) {
+      user.trash = trashArray;
+    }
+  }
   setData(data);
   return {};
 }
@@ -414,6 +417,7 @@ function adminTrashEmpty(token: string, quizIds: number[]) {
   const userId = findUserId(token);
   const desiredUser = findUser(userId);
   const trashArray = desiredUser.trash;
+  console.log(trashArray);
   // check whether user owns the quiz provided
   for (const quizId of quizIds) {
     if (!tokenOwnsQuiz(trashArray, quizId, token)) {
@@ -432,8 +436,11 @@ function adminTrashEmpty(token: string, quizIds: number[]) {
       }
     }
   }
-  const position = data.users.indexOf(desiredUser);
-  data.users[position].trash = trashArray;
+  for (const user of data.users) {
+    if (user.userId === userId) {
+      user.trash = trashArray;
+    }
+  }
   setData(data);
   return {};
 }
@@ -774,14 +781,14 @@ function adminQuizQuestionDuplicate(token: string, quizId: number, questionId: n
 }
 
 // Helper function which determines whether the quiz name length is valid or not
-function nameLengthError(name: string): string | null {
+function nameLengthError(name: string): string {
   if (name.length < 3) {
     return 'Quiz name too short';
   }
   if (name.length > 30) {
     return 'Quiz name too long';
   }
-  return null;
+  return 'No error';
 }
 
 // Helper function for common types of errors in the questionBody returns a string
@@ -893,17 +900,7 @@ function validName(name: string) {
     return true;
   }
 }
-// Helper function for determining if token exists
-function tokenExists(token: string) {
-  const data = getData();
-  const tokenArray = data.tokens;
-  for (const existingToken of tokenArray) {
-    if (token === existingToken.token) {
-      return true;
-    }
-  }
-  return false;
-}
+
 // Gets the number of questions in a question array
 function questionArrayLength(quizId: number): number {
   const data = getData();
