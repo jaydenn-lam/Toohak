@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-{"users":[{"userId":0,"email":"william@unsw.edu.au","password":"1234abcd","firstName":"William","lastName":"Lu","numFailedPasswordsSinceLastLogin":0,"numSuccessfulLogins":1,"pastPasswords":["1234abcd"],"trash":[]}],"quizzes":[],"tokens":[{"token":"2f3fd3f6-dfce-4686-864b-7a4149b9d7f1","userId":0}],"currentUserId":1,"currentQuizId":0,"currentQuestionId":0,"currentAnswerId":0}
-=======
 {"users":[{"userId":0,"email":"william@unsw.edu.au","password":"1234abcd","firstName":"William","lastName":"Lu","numFailedPasswordsSinceLastLogin":0,"numSuccessfulLogins":1,"pastPasswords":["1234abcd"],"trash":[]}],"quizzes":[],"tokens":[{"token":"86b30a47-4749-4036-a8c6-4986467d20c4","userId":0}],"quizSessions":[],"currentUserId":1,"currentQuizId":0,"currentQuestionId":0,"currentAnswerId":0}
->>>>>>> a59aaa566af87417808b07f8406e60af0c19c44a
