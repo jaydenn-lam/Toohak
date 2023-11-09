@@ -1,4 +1,4 @@
-import HTTPError from 'http-errors';
+/* import HTTPError from 'http-errors';
 import express, { json, Request, Response } from 'express';
 import morgan from 'morgan';
 import config from './config.json';
@@ -44,3 +44,4 @@ app.post('/v1/admin/quiz/:quizid/session/start', (req: Request, res: Response) =
   }
   res.status(200).json(response);
 });
+*/
