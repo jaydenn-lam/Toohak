@@ -1,114 +1,23 @@
 import request from 'sync-request-curl';
 import { port, url } from './config.json';
-
+import { requestAuthRegister, requestAuthLogin, requestAdminLogout, requestAuthDetail, requestDetailsUpdate, requestPasswordUpdate } from './wrapper';
 const SERVER_URL = `${url}:${port}`;
 
-function requestAuthRegister(email: string, password: string, nameFirst: string, nameLast: string) {
-  const res = request(
-    'POST',
-    SERVER_URL + '/v1/admin/auth/register',
-    {
-      json: {
-        email,
-        password,
-        nameFirst,
-        nameLast
-      },
-      timeout: 100
-    }
+beforeEach(() => {
+  request(
+    'DELETE',
+    SERVER_URL + '/v1/clear'
   );
+});
 
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestAuthLogin(email: string, password: string) {
-  const res = request(
-    'POST',
-    SERVER_URL + '/v1/admin/auth/login',
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    }
+afterEach(() => {
+  request(
+    'DELETE',
+    SERVER_URL + '/v1/clear'
   );
-
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestAuthDetail(token: string) {
-  const res = request(
-    'GET',
-    SERVER_URL + '/v1/admin/user/details',
-    {
-      qs: {
-        token
-      },
-      timeout: 100
-    }
-  );
-
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestAdminLogout(token: string) {
-  const res = request(
-    'POST',
-    SERVER_URL + '/v1/admin/auth/logout',
-    {
-      json: {
-        token
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestPasswordUpdate(token: string, oldPassword: string, newPassword: string) {
-  const res = request(
-    'PUT',
-    SERVER_URL + '/v1/admin/user/password',
-    {
-      json: {
-        token,
-        oldPassword,
-        newPassword
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestDetailsUpdate(token: string, email: string, nameFirst: string, nameLast: string) {
-  const res = request(
-    'PUT',
-    SERVER_URL + '/v1/admin/user/details',
-    {
-      json: {
-        token,
-        email,
-        nameFirst,
-        nameLast
-      },
-      timeout: 100
-    });
-
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
+});
 
 describe('adminAuthRegister', () => {
-  beforeEach(() => {
-    request(
-      'DELETE',
-      SERVER_URL + '/v1/clear'
-    );
-  });
-
   test('Working Case', () => {
     const response = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu');
     const authUserId = response.body.token;
@@ -247,13 +156,6 @@ describe('adminAuthRegister', () => {
 });
 
 describe('adminAuthLogin', () => {
-  beforeEach(() => {
-    request(
-      'DELETE',
-      SERVER_URL + '/v1/clear'
-    );
-  });
-
   test('Returns a new token on successful login', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const response = requestAuthLogin('william@unsw.edu.au', '1234abcd');
@@ -398,13 +300,6 @@ describe('adminUserDetail', () => {
 });
 
 describe('adminAuthLogout', () => {
-  beforeEach(() => {
-    request(
-      'DELETE',
-      SERVER_URL + '/v1/clear'
-    );
-  });
-
   test('Working Case', () => {
     const registerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').body.token;
@@ -455,13 +350,6 @@ describe('adminAuthLogout', () => {
 });
 
 describe('adminPasswordUpdate', () => {
-  beforeEach(() => {
-    request(
-      'DELETE',
-      SERVER_URL + '/v1/clear'
-    );
-  });
-
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const invalidToken = token + 'Invalid';
@@ -539,13 +427,6 @@ describe('adminPasswordUpdate', () => {
 });
 
 describe('PUT /v1/admin/user/details', () => {
-  beforeEach(() => {
-    request(
-      'DELETE',
-      SERVER_URL + '/v1/clear'
-    );
-  });
-
   test('Success', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const response = requestDetailsUpdate(token, 'jayden@unsw.edu.au', 'Jayden', 'Lam');

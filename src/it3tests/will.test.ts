@@ -1,7 +1,6 @@
 import request from 'sync-request-curl';
 import config from '../config.json';
-import { state } from '../dataStore';
-import { stat } from 'fs';
+import { requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus, requestSessionsView } from '../wrapper';
 
 const port = config.port;
 const url = config.url;
@@ -17,118 +16,6 @@ interface questionBodyType {
   duration: number;
   points: number;
   answers: Answer[];
-}
-
-function requestAuthRegister(email: string, password: string, nameFirst: string, nameLast: string) {
-  const res = request(
-    'POST',
-    SERVER_URL + '/v1/admin/auth/register',
-    {
-      json: {
-        email,
-        password,
-        nameFirst,
-        nameLast
-      },
-      timeout: 100
-    }
-  );
-
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestQuizCreate(token: string, name: string, description: string) {
-  const res = request(
-    'POST',
-    SERVER_URL + '/v1/admin/quiz',
-    {
-      json: {
-        token,
-        name,
-        description
-      },
-      timeout: 100
-    }
-  );
-
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestQuestionCreate(token: string, quizId: number, questionBody: questionBodyType) {
-  const res = request(
-    'POST',
-    SERVER_URL + '/v1/admin/quiz/' + quizId + '/question',
-    {
-      json: {
-        token,
-        questionBody,
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestSessionStart(token: string, quizId:number, autoStartNum: number) {
-  const res = request(
-    'POST',
-    SERVER_URL + `/v1/admin/quiz/${quizId}/session/start`,
-    {
-      headers: {
-        token: token
-      },
-      json: {
-        autoStartNum,
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestSessionsView(token: string, quizId: number) {
-  const res = request(
-    'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/sessions`,
-    {
-      headers: {
-        token,
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: state) {
-  const res = request(
-    'PUT',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
-    {
-      headers: {
-        token,
-      },
-      json: {
-        action,
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-
-function requestSessionStatus(token: string, quizId: number, sessionId: number) {
-  const res = request(
-    'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
-    {
-      headers: {
-        token,
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 beforeEach(() => {
@@ -313,9 +200,8 @@ describe('GET Sessions View', () => {
 
   test('Invalid quizId ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const token2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
     const invalidQuizId = 1;
-    const response = requestSessionsView(token2, invalidQuizId);
+    const response = requestSessionsView(token, invalidQuizId);
 
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Invalid quizId' });
@@ -327,7 +213,7 @@ describe('GET Sessions View', () => {
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const sessionId2 = requestSessionStart(token, quizId, 2).body.sessionId;
-    requestSessionUpdate(token, quizId, sessionId, state.END);
+    requestSessionUpdate(token, quizId, sessionId, 'END');
     const response = requestSessionsView(token, quizId);
 
     const body = response.body;
@@ -341,4 +227,400 @@ describe('GET Sessions View', () => {
   });
 });
 
-// Is the admin who starts a quiz session a player? NO
+describe('PUT Session State Update', () => {
+  const questionbody: questionBodyType = {
+    question: 'Who is the Monarch of England?',
+    duration: 4,
+    points: 5,
+    answers: [
+      {
+        answer: 'Prince Charles',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+  test('Invalid Token ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const invalidToken = token + 'Invalid';
+    const response = requestSessionUpdate(invalidToken, quizId, sessionId, 'NEXT_QUESTION');
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid Token' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(401);
+  });
+
+  test('User is unauthorised ERROR', () => {
+    const ownerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(ownerToken, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(ownerToken, quizId, questionbody);
+    const sessionId = requestSessionStart(ownerToken, quizId, 2).body.sessionId;
+    requestAdminLogout(ownerToken);
+    const playerToken = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
+    const response = requestSessionUpdate(playerToken, quizId, sessionId, 'NEXT_QUESTION');
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'User is unauthorised to modify sessions' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(403);
+  });
+
+  test('Invalid sessionId ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const invalidSessionId = sessionId + 1;
+    const response = requestSessionUpdate(token, quizId, invalidSessionId, 'NEXT_QUESTION');
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid sessionId' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Invalid action ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const response = requestSessionUpdate(token, quizId, sessionId, 'invalid');
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid action' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  describe('Action cannot currently be applied ERROR', () => {
+    test('Lobby SKIP_CD', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      const state = requestSessionStatus(token, quizId, sessionId).body.state;
+      expect(state).toStrictEqual('LOBBY');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+    test('Lobby GO_TO_ANSWER', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+    test('Lobby GO_TO_FINAL_RESULTS', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+  });
+
+  describe('Question Countdown', () => {
+    test('qCountDown NEXT_QUESTION', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      const state = requestSessionStatus(token, quizId, sessionId).body.state;
+      expect(state).toStrictEqual('QUESTION_COUNTDOWN');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('qCountDown GO_TO_ANSWER', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('qCountDown GO_TO_FINAL_RESULTS', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+  });
+
+  describe('Question Open', () => {
+    test('qOpen GO_TO_FINAL_RESULTS', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      const state = requestSessionStatus(token, quizId, sessionId).body.state;
+      expect(state).toStrictEqual('QUESTION_OPEN');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('qOpen NEXT_QUESTION', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('qOpen SKIP_COUNTDOWN', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+  });
+
+  describe('Question Close', () => {
+    test('qClose SKIP_COUNTDOWN', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      let response = {
+        body: 'EMPTY',
+        status: 0
+      };
+      setTimeout(() => {
+        const state = requestSessionStatus(token, quizId, sessionId).body.state;
+        expect(state).toStrictEqual('QUESTION_CLOSE');
+        response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+        console.log('Ran Session update delayed');
+      }, 4000);
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+  });
+
+  describe('Answer Show', () => {
+    test('aShow SKIP_COUNTDOWN', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      const state = requestSessionStatus(token, quizId, sessionId).body.state;
+      expect(state).toStrictEqual('ANSWER_SHOW');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('aShow GO_TO_ANSWER', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+  });
+
+  describe('Final Results', () => {
+    test('fResults NEXT_QUESTION', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const state = requestSessionStatus(token, quizId, sessionId).body.state;
+      expect(state).toStrictEqual('FINAL_RESULTS');
+
+      const response = requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('fResults SKIP_COUNTDOWN', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('fResults GO_TO_ANSWER', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+
+    test('fResults GO_TO_FINAL_RESULTS', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+
+      const error = response.body;
+      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(400);
+    });
+  });
+
+  test('end', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    requestSessionUpdate(token, quizId, sessionId, 'END');
+    const state = requestSessionStatus(token, quizId, sessionId).body.state;
+    expect(state).toStrictEqual('END');
+    test.each([
+      [token, quizId, sessionId, 'NEXT_QUESTION'],
+      [token, quizId, sessionId, 'SKIP_COUNTDOWN'],
+      [token, quizId, sessionId, 'GO_TO_ANSWER'],
+      [token, quizId, sessionId, 'GO_TO_FINAL_RESULTS'],
+      [token, quizId, sessionId, 'END'],
+    ])('end', (testToken, testQuizId, testSessionId, action) => {
+      expect(requestSessionUpdate(testToken, testQuizId, testSessionId, action).body).toStrictEqual({ error: 'Action cannot currently be performed' });
+      expect(requestSessionUpdate(testToken, testQuizId, testSessionId, action).status).toStrictEqual(400);
+    });
+  });
+});
