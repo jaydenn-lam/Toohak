@@ -463,7 +463,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
     return { error: errorExists };
   }
   if (!quizIdExists(quizId)) {
-    return { error: 'quizId does not exist' }
+    return { error: 'quizId does not exist' };
   }
   // Error check for incorrect quizid for the specified user
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {

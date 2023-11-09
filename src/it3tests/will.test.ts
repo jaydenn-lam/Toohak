@@ -1,6 +1,6 @@
 import request from 'sync-request-curl';
 import config from '../config.json';
-import { state } from '../dataStore'
+import { state } from '../dataStore';
 import { stat } from 'fs';
 
 const port = config.port;
@@ -122,7 +122,7 @@ function requestSessionStatus(token: string, quizId: number, sessionId: number) 
     'GET',
     SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
     {
-      headers: { 
+      headers: {
         token,
       },
       timeout: 100
@@ -286,14 +286,14 @@ describe('GET Sessions View', () => {
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     requestSessionStart(token, quizId, 2);
-    const invalidToken = token + 'Invalid'
+    const invalidToken = token + 'Invalid';
     const response = requestSessionsView(invalidToken, quizId);
 
-    const error = response.body
+    const error = response.body;
     expect(error).toStrictEqual({ error: 'Invalid Token' });
 
-    const statusCode = response.status
-    expect(statusCode).toStrictEqual(401)
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(401);
   });
 
   test('User is not owner of quiz ERROR', () => {
@@ -304,10 +304,10 @@ describe('GET Sessions View', () => {
     requestSessionStart(token, quizId, 2);
     const response = requestSessionsView(token2, quizId);
 
-    const error = response.body
-    expect(error).toStrictEqual({ error: 'quizId is not owned by user' })
-    
-    const statusCode = response.status
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'quizId is not owned by user' });
+
+    const statusCode = response.status;
     expect(statusCode).toStrictEqual(403);
   });
 
@@ -317,8 +317,8 @@ describe('GET Sessions View', () => {
     const invalidQuizId = 1;
     const response = requestSessionsView(token2, invalidQuizId);
 
-    const error = response.body
-    expect(error).toStrictEqual({ error: 'Invalid quizId' })
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid quizId' });
   });
 
   test('Working Sessions View Case', () => {
@@ -327,19 +327,18 @@ describe('GET Sessions View', () => {
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const sessionId2 = requestSessionStart(token, quizId, 2).body.sessionId;
-    requestSessionUpdate(token, quizId, sessionId, state.END)
+    requestSessionUpdate(token, quizId, sessionId, state.END);
     const response = requestSessionsView(token, quizId);
-    
-    const body = response.body
+
+    const body = response.body;
     expect(body).toStrictEqual({
-      activeSessions: [sessionId2] ,
+      activeSessions: [sessionId2],
       inactiveSessions: [sessionId]
-    })
+    });
 
-    const statusCode = response.status
+    const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
-  })
-})
-
+  });
+});
 
 // Is the admin who starts a quiz session a player? NO

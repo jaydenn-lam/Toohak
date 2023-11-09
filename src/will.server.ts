@@ -10,8 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import { clear } from './other';
-import { adminSessionStart } from './will'
-
+import { adminSessionStart } from './will';
 
 // Set up web app
 const app = express();
@@ -34,14 +33,14 @@ app.post('/v1/admin/quiz/:quizid/session/start', (req: Request, res: Response) =
   const quizId = parseInt(req.params.quizid as string);
   const { autoStartNum } = req.body;
   const response = adminSessionStart(token, quizId, autoStartNum);
-  if ('error' in response && response.error === 'Invalid token') { 
-    throw HTTPError(401, response.error)
+  if ('error' in response && response.error === 'Invalid token') {
+    throw HTTPError(401, response.error);
   }
   if ('error' in response && response.error === 'quizId is not owned by user') {
-    throw HTTPError(403, response.error)
+    throw HTTPError(403, response.error);
   }
   if ('error' in response) {
-    throw HTTPError(400, response.error)
+    throw HTTPError(400, response.error);
   }
   res.status(200).json(response);
-})
+});
