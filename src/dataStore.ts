@@ -1,5 +1,15 @@
 import fs from 'fs';
 
+export enum state {
+  LOBBY = 'lobby',
+  QUESTION_COUNTDOWN = 'question_countdown',
+  QUESTION_OPEN = 'question_open',
+  QUESTION_CLOSE = 'question_close',
+  ANSWER_SHOW = 'answer_show',
+  FINAL_RESULTS = 'final_results',
+  END = 'end'
+}
+
 interface Answer {
   answerId: number;
   answer: string;
@@ -25,6 +35,13 @@ interface quiz {
   numQuestions: number;
   questions: Question[];
   duration: number;
+}
+
+interface quizSession {
+  sessionId: number;
+  state: state;
+  players: string[];
+  metadata: quiz;
 }
 
 interface user {
@@ -57,6 +74,7 @@ interface dataStore {
   users: user[];
   quizzes: quiz[];
   tokens: token[];
+  quizSessions: quizSession[];
   currentUserId: number;
   currentQuizId: number;
   currentQuestionId: number;
@@ -68,6 +86,7 @@ let data: dataStore = {
   users: [],
   quizzes: [],
   tokens: [],
+  quizSessions: [],
   currentUserId: 0,
   currentQuizId: 0,
   currentQuestionId: 0,
