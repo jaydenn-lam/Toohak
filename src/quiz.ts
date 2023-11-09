@@ -462,6 +462,9 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
   if (errorExists != null) {
     return { error: errorExists };
   }
+  if (!quizIdExists(quizId)) {
+    return { error: 'quizId does not exist' }
+  }
   // Error check for incorrect quizid for the specified user
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
@@ -806,8 +809,8 @@ function questionPropertyErrorCheck(questionBody: questionBodyType): string | nu
   if (questionBody.answers.length > 6) {
     return 'Number of answers greater than 6';
   }
-  if (questionBody.duration < 0) {
-    return 'Question duration is negative';
+  if (questionBody.duration <= 0) {
+    return 'Question duration is not positive';
   }
   if (questionBody.points < 1) {
     return 'Question points is zero or negative';

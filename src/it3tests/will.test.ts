@@ -1,5 +1,7 @@
 import request from 'sync-request-curl';
 import config from '../config.json';
+import { state } from '../dataStore'
+import { stat } from 'fs';
 
 const port = config.port;
 const url = config.url;
@@ -98,6 +100,37 @@ function requestSessionsView(token: string, quizId: number) {
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
+function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: state) {
+  const res = request(
+    'PUT',
+    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
+    {
+      headers: {
+        token,
+      },
+      json: {
+        action,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+function requestSessionStatus(token: string, quizId: number, sessionId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
+    {
+      headers: { 
+        token,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
 beforeEach(() => {
   request(
     'DELETE',
@@ -130,7 +163,7 @@ describe('POST Session Start', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
-    const invalidToken = token + 1;
+    const invalidToken = token + 'Invalid';
     const response = requestSessionStart(invalidToken, quizId, 2);
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Invalid Token' });
@@ -227,4 +260,86 @@ describe('POST Session Start', () => {
   });
 });
 
-// Is the admin who starts a quiz session a player?
+describe('GET Sessions View', () => {
+  const questionbody: questionBodyType = {
+    question: 'Who is the Monarch of England?',
+    duration: 4,
+    points: 5,
+    answers: [
+      {
+        answer: 'Prince Charles',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+
+  test('Invalid Token ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    requestSessionStart(token, quizId, 2);
+    const invalidToken = token + 'Invalid'
+    const response = requestSessionsView(invalidToken, quizId);
+
+    const error = response.body
+    expect(error).toStrictEqual({ error: 'Invalid Token' });
+
+    const statusCode = response.status
+    expect(statusCode).toStrictEqual(401)
+  });
+
+  test('User is not owner of quiz ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const token2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    requestSessionStart(token, quizId, 2);
+    const response = requestSessionsView(token2, quizId);
+
+    const error = response.body
+    expect(error).toStrictEqual({ error: 'quizId is not owned by user' })
+    
+    const statusCode = response.status
+    expect(statusCode).toStrictEqual(403);
+  });
+
+  test('Invalid quizId ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const token2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
+    const invalidQuizId = 1;
+    const response = requestSessionsView(token2, invalidQuizId);
+
+    const error = response.body
+    expect(error).toStrictEqual({ error: 'Invalid quizId' })
+  });
+
+  test('Working Sessions View Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const sessionId2 = requestSessionStart(token, quizId, 2).body.sessionId;
+    requestSessionUpdate(token, quizId, sessionId, state.END)
+    const response = requestSessionsView(token, quizId);
+    
+    const body = response.body
+    expect(body).toStrictEqual({
+      activeSessions: [sessionId2] ,
+      inactiveSessions: [sessionId]
+    })
+
+    const statusCode = response.status
+    expect(statusCode).toStrictEqual(200);
+  })
+})
+
+
+// Is the admin who starts a quiz session a player? NO

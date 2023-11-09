@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-enum state {
+export enum state {
   LOBBY = 'lobby',
   QUESTION_COUNTDOWN = 'question_countdown',
   QUESTION_OPEN = 'question_open',
