@@ -1090,7 +1090,7 @@ describe('POST /v1/admin/quiz/{quizId}/question', () => {
         }
       ]
     };
-    expect(requestQuestionCreate(token, quizId, questionbody)).toStrictEqual({ error: 'Question duration is negative' });
+    expect(requestQuestionCreate(token, quizId, questionbody)).toStrictEqual({ error: 'Question duration is not positive' });
   });
 
   test('Question Duration is a negative number ERROR', () => {
