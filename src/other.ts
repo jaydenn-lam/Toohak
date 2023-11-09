@@ -11,6 +11,7 @@ function clear() {
       users: [],
       quizzes: [],
       tokens: [],
+      quizSessions: [],
       currentUserId: 0,
       currentQuizId: 0,
       currentQuestionId: 0,
