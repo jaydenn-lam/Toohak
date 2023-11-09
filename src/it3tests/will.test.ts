@@ -1,6 +1,7 @@
 import request from 'sync-request-curl';
 import config from '../config.json';
-import { requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus, requestSessionsView } from '../wrapper';
+import { requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
+  , requestSessionsView, requestQuizInfo } from '../wrapper';
 
 const port = config.port;
 const url = config.url;
@@ -247,6 +248,7 @@ describe('PUT Session State Update', () => {
       }
     ]
   };
+
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
@@ -624,3 +626,89 @@ describe('PUT Session State Update', () => {
     });
   });
 });
+
+describe('GET Session Status', () => {
+  const questionbody: questionBodyType = {
+    question: 'Who is the Monarch of England?',
+    duration: 4,
+    points: 5,
+    answers: [
+      {
+        answer: 'Prince Charles',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const invalidToken = token + 'Invalid';
+    const response = requestSessionStatus(invalidToken, quizId, sessionId);
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid Token' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(401);
+  })
+
+  test('User is unauthorised ERROR', () => {
+    const ownerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(ownerToken, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(ownerToken, quizId, questionbody);
+    const sessionId = requestSessionStart(ownerToken, quizId, 2).body.sessionId;
+    requestAdminLogout(ownerToken);
+    const playerToken = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
+    const response = requestSessionStatus(playerToken, quizId, sessionId);
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'User is unauthorised to view sessions' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(403);
+  });
+  
+  test('Invalid sessionId ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const invalidSessionId = sessionId + 1;
+    const response = requestSessionStatus(token, quizId, invalidSessionId);
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid sessionId' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Working Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const quizInfo = requestQuizInfo(token, quizId);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    
+    const response = requestSessionStatus(token, quizId, sessionId);
+    
+    const body = response.body;
+    expect(body).toStrictEqual({
+      state: "LOBBY",
+      atQuestion: 1,
+      players: [],
+      metadata: quizInfo,
+    })
+  })
+})
