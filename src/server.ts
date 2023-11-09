@@ -83,6 +83,14 @@ app.post('/v1/admin/auth/logout', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+app.post('/v2/admin/auth/logout', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const response = adminAuthLogout(token);
+  if ('error' in response) {
+    throw HTTPError(401, response.error);
+  }
+  res.status(200).json(response);
+});
 
 app.get('/v1/admin/user/details', (req: Request, res: Response) => {
   const token = req.query.token as string;
@@ -93,8 +101,26 @@ app.get('/v1/admin/user/details', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
+app.get('/v2/admin/user/details', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const response = adminUserDetails(token);
+  if ('error' in response) {
+    throw HTTPError(401, response.error);
+  }
+  res.status(200).json(response);
+});
+
 app.get('/v1/admin/quiz/list', (req: Request, res: Response) => {
   const token = req.query.token as string;
+  const response = adminQuizList(token);
+  if ('error' in response) {
+    throw HTTPError(401, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v2/admin/quiz/list', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
   const response = adminQuizList(token);
   if ('error' in response) {
     throw HTTPError(401, response.error);
@@ -116,8 +142,31 @@ app.put('/v1/admin/quiz/:quizid/description', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
+app.put('/v2/admin/quiz/:quizid/description', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const token = req.header('token') as string;
+  const { description } = req.body;
+  const response = adminQuizDescriptionUpdate(token, description, quizId);
+  if ('error' in response && 'not owned' in response) {
+    throw HTTPError(403, response.error);
+  } else if ('error' in response && 'Invalid Token' in response) {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+
 app.get('/v1/admin/quiz/trash', (req: Request, res: Response) => {
   const token = req.query.token as string;
+  const response = adminQuizViewTrash(token);
+  if ('error' in response) {
+    throw HTTPError(401, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v2/admin/quiz/trash', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
   const response = adminQuizViewTrash(token);
   if ('error' in response) {
     throw HTTPError(401, response.error);
@@ -128,6 +177,19 @@ app.get('/v1/admin/quiz/trash', (req: Request, res: Response) => {
 app.get('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   const quizId = parseInt(req.params.quizid);
   const token = req.query.token as string;
+  const response = adminQuizInfo(token, quizId);
+  if ('error' in response && 'not owned' in response) {
+    throw HTTPError(403, response.error);
+  } else if ('error' in response && 'Invalid Token' in response) {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v2/admin/quiz/:quizid', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const token = req.header('token') as string;
   const response = adminQuizInfo(token, quizId);
   if ('error' in response && 'not owned' in response) {
     throw HTTPError(403, response.error);
@@ -149,9 +211,34 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+app.delete('/v2/admin/quiz/:quizid', (req: Request, res: Response) => {
+  const token = req.query.token as string;
+  const response = adminQuizRemove(token, parseInt(req.params.quizid));
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
 
 app.post('/v1/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
   const { token } = req.body;
+  const quizId = parseInt(req.params.quizid);
+  const response = adminQuizRestore(token, quizId);
+  if ('error' in response) {
+    if (response.error === 'Invalid Token') {
+      throw HTTPError(401, response.error);
+    } else if (response.error === 'Quiz name already in use') {
+      throw HTTPError(400, response.error);
+    } else {
+      throw HTTPError(403, response.error);
+    }
+  }
+  res.status(200).json(response);
+});
+app.post('/v2/admin/quiz/:quizid/restore', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
   const quizId = parseInt(req.params.quizid);
   const response = adminQuizRestore(token, quizId);
   if ('error' in response) {
@@ -179,9 +266,36 @@ app.put('/v1/admin/quiz/:quizid/name', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+app.put('/v2/admin/quiz/:quizid/name', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const token = req.header('token') as string;
+  const { name } = req.body;
+  const response = adminQuizNameUpdate(token, quizId, name);
+  if ('error' in response && 'not owned' in response) {
+    throw HTTPError(403, response.error);
+  } else if ('error' in response && 'Invalid Token' in response) {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
 
 app.delete('/v1/admin/quiz/trash/empty', (req: Request, res: Response) => {
   const token = req.query.token as string;
+  const quizzes = JSON.parse(req.query.quizIds as string);
+  const response = adminTrashEmpty(token, quizzes);
+  if ('error' in response && response.error === 'Invalid quizId') {
+    throw HTTPError(400, response.error);
+  } else if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response && response.error === 'User does not own quiz') {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+app.delete('/v2/admin/quiz/trash/empty', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
   const quizzes = JSON.parse(req.query.quizIds as string);
   const response = adminTrashEmpty(token, quizzes);
   if ('error' in response && response.error === 'Invalid quizId') {
@@ -207,9 +321,34 @@ app.post('/v1/admin/quiz/:quizid/question', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+app.post('/v2/admin/quiz/:quizid/question', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const token = req.header('token') as string;
+  const { questionBody } = req.body;
+  const response = adminQuizQuestionCreate(token, quizId, questionBody);
+  if ('error' in response && 'not owned' in response) {
+    throw HTTPError(403, response.error);
+  } else if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
 
 app.put('/v1/admin/user/password', (req: Request, res: Response) => {
   const { token, oldPassword, newPassword } = req.body;
+  const response = adminPasswordUpdate(token, oldPassword, newPassword);
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.put('/v2/admin/user/password', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const { oldPassword, newPassword } = req.body;
   const response = adminPasswordUpdate(token, oldPassword, newPassword);
   if ('error' in response && response.error === 'Invalid Token') {
     throw HTTPError(401, response.error);
@@ -231,9 +370,33 @@ app.post('/v1/admin/quiz/:quizid/transfer', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+app.post('/v2/admin/quiz/:quizid/transfer', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const { userEmail } = req.body;
+  const response = adminQuizTransfer(token, userEmail, parseInt(req.params.quizid));
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response && response.error === 'Quiz Id is not owned by this user') {
+    throw HTTPError(403, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
 
 app.put('/v1/admin/user/password', (req: Request, res: Response) => {
   const { token, oldPassword, newPassword } = req.body;
+  const response = adminPasswordUpdate(token, oldPassword, newPassword);
+  if ('error' in response && 'Invalid Token' in response) {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.put('/v2/admin/user/password', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const { oldPassword, newPassword } = req.body;
   const response = adminPasswordUpdate(token, oldPassword, newPassword);
   if ('error' in response && 'Invalid Token' in response) {
     throw HTTPError(401, response.error);
@@ -257,9 +420,36 @@ app.put('/v1/admin/quiz/:quizid/question/:questionid/move', (req: Request, res: 
   }
   res.status(200).json(response);
 });
+app.put('/v2/admin/quiz/:quizid/question/:questionid/move', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const questionId = parseInt(req.params.questionid);
+  const token = req.header('token') as string;
+  const { newPosition } = req.body;
+  const response = adminQuizQuestionMove(token, quizId, questionId, newPosition);
+  if ('error' in response && 'not an owner' in response) {
+    throw HTTPError(403, response.error);
+  } else if ('error' in response && 'Token Invalid' in response) {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
 
 app.put('/v1/admin/user/details', (req: Request, res: Response) => {
   const { token, email, nameFirst, nameLast } = req.body;
+  const response = adminDetailsUpdate(token, email, nameFirst, nameLast);
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.put('/v2/admin/user/details', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const { email, nameFirst, nameLast } = req.body;
   const response = adminDetailsUpdate(token, email, nameFirst, nameLast);
   if ('error' in response && response.error === 'Invalid Token') {
     throw HTTPError(401, response.error);
@@ -273,6 +463,20 @@ app.delete('/v1/admin/quiz/:quizid/question/:questionid', (req: Request, res: Re
   const quizId = parseInt(req.params.quizid);
   const questionId = parseInt(req.params.questionid);
   const token = req.query.token as string;
+  const response = adminQuestionDelete(token, quizId, questionId);
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response && response.error === 'Quiz Id is not owned by this user') {
+    return res.status(403).json(response);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.delete('/v2/admin/quiz/:quizid/question/:questionid', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const questionId = parseInt(req.params.questionid);
+  const token = req.header('token') as string;
   const response = adminQuestionDelete(token, quizId, questionId);
   if ('error' in response && response.error === 'Invalid Token') {
     throw HTTPError(401, response.error);
@@ -298,11 +502,40 @@ app.post('/v1/admin/quiz/:quizid/question/:questionid/duplicate', (req: Request,
   }
   res.status(200).json(response);
 });
+app.post('/v2/admin/quiz/:quizid/question/:questionid/duplicate', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const questionId = parseInt(req.params.questionid);
+  const token = req.header('token') as string;
+  const response = adminQuizQuestionDuplicate(token, quizId, questionId);
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response && 'owner' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
 
 app.put('/v1/admin/quiz/:quizid/question/:questionid', (req: Request, res: Response) => {
   const quizId = parseInt(req.params.quizid);
   const questionId = parseInt(req.params.questionid);
   const { token, questionBody } = req.body;
+  const response = adminQuestionUpdate(token, quizId, questionBody, questionId);
+  if ('error' in response && 'not owned' in response) {
+    return res.status(403).json(response);
+  } else if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.put('/v2/admin/quiz/:quizid/question/:questionid', (req: Request, res: Response) => {
+  const quizId = parseInt(req.params.quizid);
+  const token = req.header('token') as string;
+  const questionId = parseInt(req.params.questionid);
+  const { questionBody } = req.body;
   const response = adminQuestionUpdate(token, quizId, questionBody, questionId);
   if ('error' in response && 'not owned' in response) {
     return res.status(403).json(response);
