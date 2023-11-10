@@ -596,7 +596,7 @@ app.get('v1/admin/quiz/:quizid/session/:sessionid', (req: Request, res: Response
   res.status(200).json(response);
 });
 
-app.put('/v1/admin/1uiz/:quizid/session/:sessionid', (req: Request, res: Response) => {
+app.put('/v1/admin/quiz/:quizid/session/:sessionid', (req: Request, res: Response) => {
   const token = req.header('token') as string;
   const quizId = parseInt(req.params.quizid);
   const sessionId = parseInt(req.params.sessionid);

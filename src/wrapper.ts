@@ -366,7 +366,7 @@ export function requestSessionStart(token: string, quizId:number, autoStartNum: 
 export function requestSessionsView(token: string, quizId: number) {
   const res = request(
     'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/sessions`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/sessions`,
     {
       headers: {
         token,
@@ -380,7 +380,7 @@ export function requestSessionsView(token: string, quizId: number) {
 export function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: string) {
   const res = request(
     'PUT',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}`,
     {
       headers: {
         token,
@@ -397,7 +397,7 @@ export function requestSessionUpdate(token: string, quizId: number, sessionId: n
 export function requestSessionStatus(token: string, quizId: number, sessionId: number) {
   const res = request(
     'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}`,
     {
       headers: {
         token,

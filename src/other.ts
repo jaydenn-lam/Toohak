@@ -90,4 +90,23 @@ function tokenExists(token: string) {
   return false;
 }
 
+export function findSession(sessionId: number) {
+  const data = getData();
+  for (const session of data.quizSessions) {
+    if (session.sessionId === sessionId) {
+      return session
+    }
+  }
+}
+
+export function sessionIdExists(sessionId: number) {
+  const data = getData();
+  for (const session of data.quizSessions) {
+    if (session.sessionId === sessionId) {
+      return true;
+    }
+  }
+  return false
+}
+
 export { clear, userIdExists, quizIdExists, findUserId, findUser, tokenExists };
