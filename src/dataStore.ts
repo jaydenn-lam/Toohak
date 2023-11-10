@@ -37,7 +37,7 @@ interface quiz {
   duration: number;
 }
 
-interface quizSession {
+export interface quizSession {
   sessionId: number;
   state: state;
   players: string[];
@@ -79,6 +79,7 @@ interface dataStore {
   currentQuizId: number;
   currentQuestionId: number;
   currentAnswerId: number;
+  currentSessionId: number;
 }
 
 // YOU SHOULD MODIFY THIS OBJECT BELOW
@@ -91,6 +92,7 @@ let data: dataStore = {
   currentQuizId: 0,
   currentQuestionId: 0,
   currentAnswerId: 0,
+  currentSessionId: 0,
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1

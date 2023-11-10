@@ -14,6 +14,7 @@ import {
   adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove,
   adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove, adminQuizTransfer, adminQuizQuestionDuplicate, adminQuestionDelete, adminQuestionUpdate
 } from './quiz';
+import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSessionsView } from './will';
 import { clear } from './other';
 import HTTPError from 'http-errors';
 
@@ -453,7 +454,7 @@ app.put('/v2/admin/user/details', (req: Request, res: Response) => {
   const response = adminDetailsUpdate(token, email, nameFirst, nameLast);
   if ('error' in response && response.error === 'Invalid Token') {
     throw HTTPError(401, response.error);
-  }  
+  }
   if ('error' in response) {
     throw HTTPError(400, response.error);
   }
@@ -545,6 +546,72 @@ app.put('/v2/admin/quiz/:quizid/question/:questionid', (req: Request, res: Respo
   } else if ('error' in response) {
     throw HTTPError(400, response.error);
   }
+  res.status(200).json(response);
+});
+
+app.post('/v1/admin/quiz/:quizid/session/start', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizid);
+  const { autoStartNum } = req.body;
+  const response = adminSessionStart(token, quizId, autoStartNum);
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response && response.error === 'quizId is not owned by user') {
+    throw HTTPError(403, response.error);
+  }
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v1/admin/quiz/:quizid/sessions', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizid);
+  const response = adminSessionsView(token, quizId);
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response) {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('v1/admin/quiz/:quizid/session/:sessionid', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizid);
+  const sessionId = parseInt(req.params.sessionid);
+  const response = adminSessionStatus(token, quizId, sessionId);
+  if ('error' in response && response.error === 'Invalid sessionId') {
+    throw HTTPError(400, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response) {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.put('/v1/admin/1uiz/:quizid/session/:sessionid', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizid);
+  const sessionId = parseInt(req.params.sessionid);
+  const { action } = req.body;
+  const response = adminSessionUpdate(token, quizId, sessionId, action);
+  if ('error' in response && response.error === 'User is unauthorised to modify sessions') {
+    throw HTTPError(403, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+
   res.status(200).json(response);
 });
 

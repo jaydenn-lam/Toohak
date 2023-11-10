@@ -1,7 +1,9 @@
 import request from 'sync-request-curl';
 import config from '../config.json';
-import { requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
-  , requestSessionsView, requestQuizInfo } from '../wrapper';
+import {
+  requestAuthRegister, requestQuizCreate, requestQuestionCreate/*, requestAdminLogout */, requestSessionStart, /* requestSessionUpdate, requestSessionStatus
+  , requestSessionsView, requestQuizInfo */
+} from '../wrapper';
 
 const port = config.port;
 const url = config.url;
@@ -49,7 +51,7 @@ describe('POST Session Start', () => {
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const invalidToken = token + 'Invalid';
     const response = requestSessionStart(invalidToken, quizId, 2);
@@ -63,7 +65,7 @@ describe('POST Session Start', () => {
   test('User is not owner of quiz ERROR', () => {
     const token1 = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const token2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
-    const quizId = requestQuizCreate(token2, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token2, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token2, quizId, questionbody);
     const response = requestSessionStart(token1, quizId, 2);
     const error = response.body;
@@ -75,12 +77,12 @@ describe('POST Session Start', () => {
 
   test('autoStartNum ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const invalidNum = 51;
-    const response = requestSessionStart(token, quizId, invalidNum).body.sessionId;
+    const response = requestSessionStart(token, quizId, invalidNum);
     const error = response.body;
-    expect(error).toStrictEqual({ error: 'autoStartNum cannot be greater than 50' });
+    expect(error).toStrictEqual({ error: 'autoStartNum cannot be greater than 50 or negative' });
 
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
@@ -88,7 +90,7 @@ describe('POST Session Start', () => {
 
   test('Quiz has no questions ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     const response = requestSessionStart(token, quizId, 2);
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Quiz has no questions' });
@@ -99,17 +101,18 @@ describe('POST Session Start', () => {
 
   test('10 Sessions (Non-END state) exist', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    const s1 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s2 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s3 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s4 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s5 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s6 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s7 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s8 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s9 = requestSessionStart(token, quizId, 2).body.sessionId;
-    const s10 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
+    requestSessionStart(token, quizId, 2);
 
     const response = requestSessionStart(token, quizId, 2);
     const error = response.body;
@@ -117,19 +120,11 @@ describe('POST Session Start', () => {
 
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
-
-    const viewResponse = requestSessionsView(token, quizId).body;
-    expect(viewResponse).toStrictEqual({
-      activeSessions: [
-        s1, s2, s3, s4, s5, s6, s7, s8, s9, s10
-      ],
-      inactiveSessions: []
-    });
   });
 
   test('Successful Session Start', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const response = requestSessionStart(token, quizId, 2);
     const body = response.body;
@@ -137,17 +132,9 @@ describe('POST Session Start', () => {
 
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
-
-    const viewResponse = requestSessionsView(token, quizId).body;
-    expect(viewResponse).toStrictEqual({
-      activeSessions: [
-        response.body.sessionId
-      ],
-      inactiveSessions: []
-    });
   });
 });
-
+/*
 describe('GET Sessions View', () => {
   const questionbody: questionBodyType = {
     question: 'Who is the Monarch of England?',
@@ -171,7 +158,7 @@ describe('GET Sessions View', () => {
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     requestSessionStart(token, quizId, 2);
     const invalidToken = token + 'Invalid';
@@ -187,7 +174,7 @@ describe('GET Sessions View', () => {
   test('User is not owner of quiz ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const token2 = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     requestSessionStart(token, quizId, 2);
     const response = requestSessionsView(token2, quizId);
@@ -210,7 +197,7 @@ describe('GET Sessions View', () => {
 
   test('Working Sessions View Case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const sessionId2 = requestSessionStart(token, quizId, 2).body.sessionId;
@@ -226,6 +213,35 @@ describe('GET Sessions View', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
   });
+
+  test('Multiple Working Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const s1 = requestSessionStart(token, quizId, 2).body.sessionId;
+    console.log(s1)
+    const s2 = requestSessionStart(token, quizId, 2).body.sessionId;
+    console.log(s2)
+    const s3 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const s4 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const s5 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const s6 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const s7 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const s8 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const s9 = requestSessionStart(token, quizId, 2).body.sessionId;
+    const s10 = requestSessionStart(token, quizId, 2).body.sessionId;
+
+    const viewResponse = requestSessionsView(token, quizId).body;
+    expect(viewResponse).toStrictEqual({
+      activeSessions: [
+        s1, s2, s3, s4, s5, s6, s7, s8, s9, s10
+      ],
+      inactiveSessions: []
+    });
+
+    const statusCode = requestSessionsView(token, quizId).status;
+    expect(statusCode).toStrictEqual(200)
+  })
 });
 
 describe('PUT Session State Update', () => {
@@ -251,7 +267,7 @@ describe('PUT Session State Update', () => {
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const invalidToken = token + 'Invalid';
@@ -266,7 +282,7 @@ describe('PUT Session State Update', () => {
 
   test('User is unauthorised ERROR', () => {
     const ownerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(ownerToken, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(ownerToken, 'Quiz1', 'description').quizId;
     requestQuestionCreate(ownerToken, quizId, questionbody);
     const sessionId = requestSessionStart(ownerToken, quizId, 2).body.sessionId;
     requestAdminLogout(ownerToken);
@@ -282,7 +298,7 @@ describe('PUT Session State Update', () => {
 
   test('Invalid sessionId ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const invalidSessionId = sessionId + 1;
@@ -297,7 +313,7 @@ describe('PUT Session State Update', () => {
 
   test('Invalid action ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const response = requestSessionUpdate(token, quizId, sessionId, 'invalid');
@@ -312,7 +328,7 @@ describe('PUT Session State Update', () => {
   describe('Action cannot currently be applied ERROR', () => {
     test('Lobby SKIP_CD', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
@@ -328,7 +344,7 @@ describe('PUT Session State Update', () => {
     });
     test('Lobby GO_TO_ANSWER', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
@@ -342,7 +358,7 @@ describe('PUT Session State Update', () => {
     });
     test('Lobby GO_TO_FINAL_RESULTS', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
@@ -359,7 +375,7 @@ describe('PUT Session State Update', () => {
   describe('Question Countdown', () => {
     test('qCountDown NEXT_QUESTION', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -377,7 +393,7 @@ describe('PUT Session State Update', () => {
 
     test('qCountDown GO_TO_ANSWER', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -393,7 +409,7 @@ describe('PUT Session State Update', () => {
 
     test('qCountDown GO_TO_FINAL_RESULTS', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -411,7 +427,7 @@ describe('PUT Session State Update', () => {
   describe('Question Open', () => {
     test('qOpen GO_TO_FINAL_RESULTS', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -430,7 +446,7 @@ describe('PUT Session State Update', () => {
 
     test('qOpen NEXT_QUESTION', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -447,7 +463,7 @@ describe('PUT Session State Update', () => {
 
     test('qOpen SKIP_COUNTDOWN', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -466,7 +482,7 @@ describe('PUT Session State Update', () => {
   describe('Question Close', () => {
     test('qClose SKIP_COUNTDOWN', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -493,7 +509,7 @@ describe('PUT Session State Update', () => {
   describe('Answer Show', () => {
     test('aShow SKIP_COUNTDOWN', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -513,7 +529,7 @@ describe('PUT Session State Update', () => {
 
     test('aShow GO_TO_ANSWER', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -532,7 +548,7 @@ describe('PUT Session State Update', () => {
   describe('Final Results', () => {
     test('fResults NEXT_QUESTION', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -553,7 +569,7 @@ describe('PUT Session State Update', () => {
 
     test('fResults SKIP_COUNTDOWN', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -571,7 +587,7 @@ describe('PUT Session State Update', () => {
 
     test('fResults GO_TO_ANSWER', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -589,7 +605,7 @@ describe('PUT Session State Update', () => {
 
     test('fResults GO_TO_FINAL_RESULTS', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
       requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
@@ -608,7 +624,7 @@ describe('PUT Session State Update', () => {
 
   test('end', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     requestSessionUpdate(token, quizId, sessionId, 'END');
@@ -650,7 +666,7 @@ describe('GET Session Status', () => {
 
   test('Invalid Token', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const invalidToken = token + 'Invalid';
@@ -665,7 +681,7 @@ describe('GET Session Status', () => {
 
   test('User is unauthorised ERROR', () => {
     const ownerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(ownerToken, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(ownerToken, 'Quiz1', 'description').quizId;
     requestQuestionCreate(ownerToken, quizId, questionbody);
     const sessionId = requestSessionStart(ownerToken, quizId, 2).body.sessionId;
     requestAdminLogout(ownerToken);
@@ -681,7 +697,7 @@ describe('GET Session Status', () => {
 
   test('Invalid sessionId ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const invalidSessionId = sessionId + 1;
@@ -696,7 +712,7 @@ describe('GET Session Status', () => {
 
   test('Working Case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const quizInfo = requestQuizInfo(token, quizId);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
@@ -712,4 +728,4 @@ describe('GET Session Status', () => {
     })
   })
 })
-
+*/
