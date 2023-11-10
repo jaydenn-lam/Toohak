@@ -453,7 +453,8 @@ app.put('/v2/admin/user/details', (req: Request, res: Response) => {
   const response = adminDetailsUpdate(token, email, nameFirst, nameLast);
   if ('error' in response && response.error === 'Invalid Token') {
     throw HTTPError(401, response.error);
-  } else if ('error' in response) {
+  }  
+  if ('error' in response) {
     throw HTTPError(400, response.error);
   }
   res.status(200).json(response);

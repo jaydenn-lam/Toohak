@@ -1,8 +1,3 @@
-test('Filler', () => {
-  expect(1).toBe(1);
-});
-
-/*
 import request from 'sync-request-curl';
 import config from '../config.json';
 import { requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
@@ -717,4 +712,4 @@ describe('GET Session Status', () => {
     })
   })
 })
-*/
+

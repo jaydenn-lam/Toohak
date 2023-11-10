@@ -7,7 +7,7 @@ interface returnToken {
   token: string;
 }
 
-interface error {
+export interface error {
   error: string;
 }
 
@@ -307,7 +307,7 @@ If any of the checks fail, it returns an error. Otherwise, it updates the user's
 @param {string} nameLast - The new last name to set.
 @returns {object | error} - An empty object if successful, or an error object if the update fails for any reason.
 */
-function adminDetailsUpdate(token: string, email: string, nameFirst: string, nameLast: string) {
+function adminDetailsUpdate(token: string, email: string, nameFirst: string, nameLast: string): object | error {
   const data = getData();
   // Check if the new email is not already in use
   for (const user in data.users) {
