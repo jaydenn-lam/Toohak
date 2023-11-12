@@ -1,13 +1,21 @@
 import fs from 'fs';
 
 export enum state {
-  LOBBY = 'lobby',
-  QUESTION_COUNTDOWN = 'question_countdown',
-  QUESTION_OPEN = 'question_open',
-  QUESTION_CLOSE = 'question_close',
-  ANSWER_SHOW = 'answer_show',
-  FINAL_RESULTS = 'final_results',
-  END = 'end'
+  'LOBBY',
+  'QUESTION_COUNTDOWN',
+  'QUESTION_OPEN',
+  'QUESTION_CLOSE',
+  'ANSWER_SHOW',
+  'FINAL_RESULTS',
+  'END'
+}
+
+export enum action {
+  'NEXT_QUESTION',
+  'SKIP_COUNTDOWN',
+  'GO_TO_ANSWER',
+  'GO_TO_FINAL_RESULTS',
+  'END'
 }
 
 interface Answer {
@@ -37,10 +45,11 @@ interface quiz {
   duration: number;
 }
 
-interface quizSession {
+export interface quizSession {
   sessionId: number;
-  state: state;
+  state: string;
   players: string[];
+  ownerId: number,
   metadata: quiz;
 }
 
@@ -79,6 +88,7 @@ interface dataStore {
   currentQuizId: number;
   currentQuestionId: number;
   currentAnswerId: number;
+  currentSessionId: number;
 }
 
 // YOU SHOULD MODIFY THIS OBJECT BELOW
@@ -91,6 +101,7 @@ let data: dataStore = {
   currentQuizId: 0,
   currentQuestionId: 0,
   currentAnswerId: 0,
+  currentSessionId: 0,
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1

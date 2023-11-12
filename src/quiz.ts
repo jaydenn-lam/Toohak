@@ -864,7 +864,7 @@ function quizExistsInTrash(quizId: number, token: string) {
 }
 
 // Helper function for determining if the user of the token owns the quiz.
-function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string) {
+export function tokenOwnsQuiz(quizArray: quiz[], quizId: number, token: string) {
   const userId = findUserId(token);
   if (quizArray.length === 0) {
     return false;
