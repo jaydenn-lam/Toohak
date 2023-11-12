@@ -12,10 +12,10 @@ export enum state {
 
 export enum action {
   'NEXT_QUESTION',
-  "SKIP_COUNTDOWN",
-  "GO_TO_ANSWER",
-  "GO_TO_FINAL_RESULTS",
-  "E"
+  'SKIP_COUNTDOWN',
+  'GO_TO_ANSWER',
+  'GO_TO_FINAL_RESULTS',
+  'END'
 }
 
 interface Answer {
@@ -49,7 +49,7 @@ export interface quizSession {
   sessionId: number;
   state: string;
   players: string[];
-  ownerId: number, 
+  ownerId: number,
   metadata: quiz;
 }
 

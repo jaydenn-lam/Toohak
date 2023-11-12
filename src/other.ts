@@ -94,7 +94,7 @@ export function findSession(sessionId: number) {
   const data = getData();
   for (const session of data.quizSessions) {
     if (session.sessionId === sessionId) {
-      return session
+      return session;
     }
   }
 }
@@ -106,7 +106,7 @@ export function sessionIdExists(sessionId: number) {
       return true;
     }
   }
-  return false
+  return false;
 }
 
 export { clear, userIdExists, quizIdExists, findUserId, findUser, tokenExists };

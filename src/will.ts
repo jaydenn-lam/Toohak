@@ -1,5 +1,5 @@
 
-import { getData, setData, state, quizSession, action } from './dataStore';
+import { getData, setData, quizSession, action } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { error } from './auth';
 import { tokenOwnsQuiz } from './quiz';
@@ -20,7 +20,7 @@ function sessionValidator(startNum: number, quizId: number) {
     return { error: 'Quiz has no questions' };
   }
   for (const session of data.quizSessions) {
-    if (session.metadata.quizId === quizId && session.state !== "END") {
+    if (session.metadata.quizId === quizId && session.state !== 'END') {
       totalSessions++;
     }
   }
@@ -67,7 +67,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
   const ownerId = findUserId(token);
   const newSession: quizSession = {
     sessionId,
-    state: "LOBBY",
+    state: 'LOBBY',
     players: [],
     ownerId: ownerId,
     metadata: duplicateQuiz
@@ -88,80 +88,211 @@ export function adminSessionsView(token: string, quizId: number): object | error
   const viewSession: viewSession = {
     activeSessions: [],
     inactiveSessions: []
-  }
+  };
   for (const session of data.quizSessions) {
-    if (session.state === "END") {
-      viewSession.inactiveSessions.push(session.sessionId)
+    if (session.state === 'END') {
+      viewSession.inactiveSessions.push(session.sessionId);
     } else {
-      viewSession.activeSessions.push(session.sessionId)
+      viewSession.activeSessions.push(session.sessionId);
     }
   }
   return viewSession;
 }
 
 export function adminSessionUpdate(token: string, quizId: number, sessionId: number, desiredAction: string): object | error {
-  const data = getData();
+  let data = getData();
   const userId = findUserId(token);
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
   }
   if (!sessionIdExists(sessionId)) {
-    return { error: 'Invalid sessionId' }
+    return { error: 'Invalid sessionId' };
   }
   const session = findSession(sessionId);
-  let state = session?.state
+  const state = session?.state;
   if (userId !== session?.ownerId) {
-    return { error: 'User is unauthorised to modify sessions' }
+    return { error: 'User is unauthorised to modify sessions' };
   }
   if ('error' in actionVerifier(session, desiredAction)) {
-    return actionVerifier(session, desiredAction)
+    return actionVerifier(session, desiredAction);
   }
-
-
+  if (state === 'LOBBY') {
+    data = lobbyUpdater(session, desiredAction);
+  }
+  if (state === 'QUESTION_COUNTDOWN') {
+    data = qCountdownUpdater(session, desiredAction);
+  }
+  if (state === 'QUESTION_OPEN') {
+    data = qOpenUpdater(session, desiredAction);
+  }
+  if (state === 'QUESTION_CLOSE') {
+    data = qCloseUpdater(session, desiredAction);
+  }
+  if (state === 'ANSWER_SHOW') {
+    data = answerShowUpdater(session, desiredAction);
+  }
+  if (state === 'FINAL_RESULTS') {
+    data = finalResultsUpdater(session, desiredAction);
+  }
+  setData(data);
   return {};
+}
+
+function lobbyUpdater(session: quizSession, action: string) {
+  const data = getData();
+  const sessionId = session.sessionId;
+  let state;
+  if (action === 'END') {
+    state = 'END';
+  }
+  if (action === 'NEXT_QUESTION') {
+    state = 'QUESTION_COUNTDOWN';
+  }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      existingSession.state = state;
+    }
+  }
+  return data;
+}
+
+function qCountdownUpdater(session: quizSession, action: string) {
+  const data = getData();
+  const sessionId = session.sessionId;
+  let state;
+  if (action === 'END') {
+    state = 'END';
+  }
+  if (action === 'SKIP_COUNTDOWN') {
+    state = 'QUESTION_OPEN';
+  }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      existingSession.state = state;
+    }
+  }
+  return data;
+}
+
+function qCloseUpdater(session: quizSession, action: string) {
+  const data = getData();
+  const sessionId = session.sessionId;
+  let state;
+  if (action === 'END') {
+    state = 'END';
+  }
+  if (action === 'GO_TO_ANSWER') {
+    state = 'ANSWER_SHOW';
+  }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      existingSession.state = state;
+    }
+  }
+  return data;
+}
+
+function qOpenUpdater(session: quizSession, action: string) {
+  const data = getData();
+  const sessionId = session.sessionId;
+  let state;
+  if (action === 'END') {
+    state = 'END';
+  }
+  if (action === 'GO_TO_ANSWER') {
+    state = 'ANSWER_SHOW';
+  }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      existingSession.state = state;
+    }
+  }
+  return data;
+}
+
+function answerShowUpdater(session: quizSession, action: string) {
+  const data = getData();
+  const sessionId = session.sessionId;
+  let state;
+  if (action === 'END') {
+    state = 'END';
+  }
+  if (action === 'NEXT_QUESTION') {
+    state = 'ANSWER_COUNTDOWN';
+  }
+  if (action === 'GO_TO_FINAL_RESULTS') {
+    state = 'FINAL_RESULTS';
+  }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      existingSession.state = state;
+    }
+  }
+  return data;
+}
+
+function finalResultsUpdater(session: quizSession, action: string) {
+  const data = getData();
+  const sessionId = session.sessionId;
+  let state;
+  if (action === 'END') {
+    state = 'END';
+  }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      existingSession.state = state;
+    }
+  }
+  return data;
 }
 
 function actionVerifier(session: quizSession, desiredAction: string) {
   const state = session.state;
   if (!Object.keys(action).includes(desiredAction)) {
-    return { error: 'Invalid action' }
+    return { error: 'Invalid action' };
   }
-  if (state === "LOBBY") {
-    if (desiredAction === "SKIP_COUNTDOWN" || desiredAction === "GOT_TO_ANSWER" || desiredAction === "GO_TO_FINAL_RESULTS") {
-      return { error: 'Action cannot currently be performed' }
+  if (state === 'LOBBY') {
+    if (desiredAction === 'SKIP_COUNTDOWN' || desiredAction === 'GO_TO_ANSWER' || desiredAction === 'GO_TO_FINAL_RESULTS') {
+      return { error: 'Action cannot currently be performed' };
     }
   }
-  if (state === "QUESTION_COUNTDOWN") {
-    if (desiredAction === "NEXT_QUESTION" || desiredAction === "GO_TO_ANSWER" || desiredAction === "GO_TO_FINAL_RESULTS") {
-      return { error: 'Action cannot currently be performed' }
+  if (state === 'QUESTION_COUNTDOWN') {
+    if (desiredAction === 'NEXT_QUESTION' || desiredAction === 'GO_TO_ANSWER' || desiredAction === 'GO_TO_FINAL_RESULTS') {
+      return { error: 'Action cannot currently be performed' };
     }
   }
-  if (state === "QUESTION_OPEN") {
-    if (desiredAction === "NEXT_QUESTION" || desiredAction === "SKIP_COUNTDOWN" || desiredAction === "GO_TO_FINAL_RESULTS") {
-      return { error: 'Action cannot currently be performed' }
+  if (state === 'QUESTION_OPEN') {
+    if (desiredAction === 'NEXT_QUESTION' || desiredAction === 'SKIP_COUNTDOWN' || desiredAction === 'GO_TO_FINAL_RESULTS') {
+      return { error: 'Action cannot currently be performed' };
     }
   }
-  if (state === "QUESTION_CLOSE") {
-    if (desiredAction === "NEXT_QUESTION" || desiredAction === "SKIP_COUNTDOWN") {
-      return { error: 'Action cannot currently be performed' }
+  if (state === 'QUESTION_CLOSE') {
+    if (desiredAction === 'NEXT_QUESTION' || desiredAction === 'SKIP_COUNTDOWN') {
+      return { error: 'Action cannot currently be performed' };
     }
   }
-  if (state === "ANSWER_SHOW") {
-    if (desiredAction === "GO_TO_ANSWER" || desiredAction === "SKIP_COUNTDOWN") {
-      return { error: 'Action cannot currently be performed' }
+  if (state === 'ANSWER_SHOW') {
+    if (desiredAction === 'GO_TO_ANSWER' || desiredAction === 'SKIP_COUNTDOWN') {
+      return { error: 'Action cannot currently be performed' };
     }
   }
-  if (state === "FINAL_RESULTS") {
-    if (desiredAction === "NEXT_QUESTION" || desiredAction === "SKIP_COUNTDOWN" || desiredAction === "GO_TO_FINAL_RESULTS" || desiredAction === "GO_TO_ANSWER") {
-      return { error: 'Action cannot currently be performed' }
+  if (state === 'FINAL_RESULTS') {
+    if (desiredAction === 'NEXT_QUESTION' || desiredAction === 'SKIP_COUNTDOWN' || desiredAction === 'GO_TO_FINAL_RESULTS' || desiredAction === 'GO_TO_ANSWER') {
+      return { error: 'Action cannot currently be performed' };
     }
   }
-  if (state === "END") {
-    return { error: 'Action cannot currently be performed' }
+  if (state === 'END') {
+    return { error: 'Action cannot currently be performed' };
   }
-  return {}
+  return {};
 }
 
 export function adminSessionStatus(token: string, quizId: number, sessionId: number): object | error {
+  const data = getData();
+  for (const session of data.quizSessions) {
+    if (session.sessionId === sessionId) {
+      return { state: session.state };
+    }
+  }
   return {};
 }
