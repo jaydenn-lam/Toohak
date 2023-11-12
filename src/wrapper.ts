@@ -129,7 +129,7 @@ export function requestQuizCreate(token: string, name: string, description: stri
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuizList(token: string) {
@@ -144,7 +144,7 @@ export function requestQuizList(token: string) {
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuizDescriptionUpdate(token: string, description: string, quizId: number) {
@@ -160,7 +160,7 @@ export function requestQuizDescriptionUpdate(token: string, description: string,
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuizInfo(token: string, quizId: number) {
@@ -175,7 +175,7 @@ export function requestQuizInfo(token: string, quizId: number) {
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuizRemove(token: string, quizId: number) {
@@ -190,7 +190,7 @@ export function requestQuizRemove(token: string, quizId: number) {
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestadminQuizRestore(token: string, quizId: number) {
@@ -205,7 +205,7 @@ export function requestadminQuizRestore(token: string, quizId: number) {
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuiznameUpdate(token: string, quizId: number, name: string) {
@@ -221,7 +221,7 @@ export function requestQuiznameUpdate(token: string, quizId: number, name: strin
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuizViewTrash(token: string) {
@@ -235,7 +235,7 @@ export function requestQuizViewTrash(token: string) {
       timeout: 100
     }
   );
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestTrashEmpty(token: string, quizzesArray: number[]) {
@@ -251,7 +251,7 @@ export function requestTrashEmpty(token: string, quizzesArray: number[]) {
       timeout: 100
     }
   );
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuestionCreate(token: string, quizId: number, questionBody: questionBodyType) {
@@ -266,7 +266,7 @@ export function requestQuestionCreate(token: string, quizId: number, questionBod
       timeout: 100
     }
   );
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuestionMove(token: string, quizId: number, questionId: number, newPosition: number) {
@@ -281,7 +281,7 @@ export function requestQuestionMove(token: string, quizId: number, questionId: n
       timeout: 100
     }
   );
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestadminQuizTransfer(token: string, quizId: number, userEmail: string) {
@@ -299,7 +299,7 @@ export function requestadminQuizTransfer(token: string, quizId: number, userEmai
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuestionDelete(token: string, quizId: number, questionId: number) {
@@ -314,7 +314,7 @@ export function requestQuestionDelete(token: string, quizId: number, questionId:
     }
   );
 
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuestionDuplicate(token: string, quizId: number, questionId: number) {
@@ -328,7 +328,7 @@ export function requestQuestionDuplicate(token: string, quizId: number, question
       timeout: 100
     }
   );
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestQuestionUpdate(token: string, quizId: number, questionBody: questionBodyType, questionId: number) {
@@ -343,7 +343,7 @@ export function requestQuestionUpdate(token: string, quizId: number, questionBod
       timeout: 100
     }
   );
-  return JSON.parse(res.body.toString());
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
 export function requestSessionStart(token: string, quizId:number, autoStartNum: number) {
