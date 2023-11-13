@@ -2,9 +2,9 @@
 // anita's tests
 
 test('Filler', () => {
-    expect(1).toBe(1);
-  });
-  /*
+  expect(1).toBe(1);
+});
+/*
    import request from 'sync-request-curl';
   import config from '../config.json';
   import { requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
@@ -189,7 +189,6 @@ describe('Get Player question information tests', () => {
     };
     expect(response.body).toStrictEqual(expectedBody);
 });
-
 
 test('Player ID does not exist case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
