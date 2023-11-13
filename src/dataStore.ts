@@ -53,7 +53,6 @@ export interface quizSession {
   ownerId: number,
   metadata: quiz;
   }
-  
 
 interface user {
   userId: number;
