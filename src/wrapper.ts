@@ -407,7 +407,7 @@ export function requestSessionStatus(token: string, quizId: number, sessionId: n
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
-// anita's wrappers 
+// anita's wrappers
 /*
 export function requestPlayerJoin(sessionId: number, nameFirst: string, nameLast: string ) {
   const res = request(
@@ -447,15 +447,3 @@ export function requestPlayerQuestionInfo(playerId: number, questionPosition: nu
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 */
-
-
-
-
-
-
-
-
-
-
-
-
