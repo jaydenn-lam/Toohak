@@ -49,9 +49,11 @@ export interface quizSession {
   sessionId: number;
   state: string;
   players: string[];
+  playerIds?: number[];
   ownerId: number,
   metadata: quiz;
-}
+  }
+  
 
 interface user {
   userId: number;
