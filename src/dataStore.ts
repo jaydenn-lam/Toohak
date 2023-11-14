@@ -52,6 +52,13 @@ interface quiz {
   duration: number;
 }
 
+interface message {
+  messageBody: string,
+  playerId: number,
+  playerName: string,
+  timeSent: number
+}
+
 export interface quizSession {
   sessionId: number;
   state: string;
@@ -60,7 +67,8 @@ export interface quizSession {
   playerIds?: number[];
   ownerId: number,
   metadata: quiz;
-  }
+  messages: message[]
+}
 
 interface user {
   userId: number;

@@ -17,6 +17,10 @@ interface questionBodyType {
   answers: Answer[];
 }
 
+interface messageType {
+  messageBody: string;
+}
+
 export function requestAuthRegister(email: string, password: string, nameFirst: string, nameLast: string) {
   const res = request(
     'POST',
@@ -440,6 +444,30 @@ export function requestPlayerQuestionInfo(playerId: number, questionPosition: nu
     SERVER_URL + `/v1/player/${playerId}/question/${questionPosition}`,
     {
       json: {},
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+export function requestSessionChatView(playerId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/player/${playerId}/chat`,
+    {
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestSendChatMessage(playerId: number, message: messageType) {
+  const res = request(
+    'POST',
+    SERVER_URL + `/v1/player/${playerId}/chat`,
+    {
+      json: {
+        message,
+      },
       timeout: 100
     }
   );

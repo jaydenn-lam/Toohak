@@ -76,6 +76,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     players: [],
     ownerId: ownerId,
     metadata: duplicateQuiz,
+    messages: [],
   };
   data.quizSessions.push(newSession);
   setData(data);

@@ -18,6 +18,7 @@ import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSession
 import { clear } from './other';
 import HTTPError from 'http-errors';
 import { playerJoin, playerStatus } from './anita';
+import { sessionChatView, sendChatMessage } from './Avi';
 
 // Set up web app
 const app = express();
@@ -625,6 +626,23 @@ app.post('/v1/player/join', (req: Request, res: Response) => {
 });
 app.get('/v1/player/:playerId', (req: Request, res: Response) => {
   const response = playerStatus(parseInt(req.params.playerId));
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v1/player/:playerId/chat', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const response = sessionChatView(playerId);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.post('/v1/player/:playerId/chat', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const { message } = req.body;
+  const response = sendChatMessage(playerId, message);
   if ('error' in response) {
     throw HTTPError(400, response.error);
   }
