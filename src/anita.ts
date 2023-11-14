@@ -74,14 +74,13 @@ export function playerJoin(sessionId: number, name: string): object | error {
 
 export function playerStatus(playerId: number): object | error {
   const quizSession = getSessionWithPlayer(playerId);
-  if(quizSession){
-      return {
-        state: quizSession.state,
-        numQuestions: quizSession.metadata.numQuestions,
-        atQuestion: quizSession.atQuestion
-      }
-  }
-  else {
-    return { error: 'Player ID does not exist.'}
+  if (quizSession) {
+    return {
+      state: quizSession.state,
+      numQuestions: quizSession.metadata.numQuestions,
+      atQuestion: quizSession.atQuestion
+    };
+  } else {
+    return { error: 'Player ID does not exist.' };
   }
 }
