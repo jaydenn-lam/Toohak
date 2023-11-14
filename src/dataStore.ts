@@ -43,9 +43,9 @@ interface Question {
 interface quiz {
   quizId: number;
   name: string;
-  TimeCreated: number;
-  TimeLastEdited: number;
-  Description: string;
+  timeCreated: number;
+  timeLastEdited: number;
+  description: string;
   userId: number;
   numQuestions: number;
   questions: Question[];
@@ -55,6 +55,7 @@ interface quiz {
 export interface quizSession {
   sessionId: number;
   state: string;
+  atQuestion: number;
   players: string[];
   playerIds?: number[];
   ownerId: number,

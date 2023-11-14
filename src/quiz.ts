@@ -122,9 +122,9 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
   const quizData = {
     quizId: quizId,
     name: name,
-    TimeCreated: Math.round(Date.now() / 1000),
-    TimeLastEdited: Math.round(Date.now() / 1000),
-    Description: description,
+    timeCreated: Math.round(Date.now() / 1000),
+    timeLastEdited: Math.round(Date.now() / 1000),
+    description: description,
     userId: findUserId(token),
     numQuestions: 0,
     questions: emptyQuestions,
@@ -161,10 +161,10 @@ function adminQuizRemove(token: string, quizId: number): error | object {
   if (!tokenOwnsQuiz(quizArray, quizId, token)) {
     return { error: 'Quiz Id is not owned by this user' };
   }
-  // Add quiz to trash and update the TimeLastEdited
+  // Add quiz to trash and update the timeLastEdited
   for (const quiz in quizArray) {
     if (quizArray[quiz].quizId === quizId) {
-      quizArray[quiz].TimeLastEdited = Math.round(Date.now() / 1000);
+      quizArray[quiz].timeLastEdited = Math.round(Date.now() / 1000);
       trashArray.push(quizArray[quiz]);
     }
   }
@@ -209,9 +209,9 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
       quizInfo = {
         quizId: quiz.quizId,
         name: quiz.name,
-        timeCreated: quiz.TimeCreated,
-        timeLastEdited: quiz.TimeLastEdited,
-        description: quiz.Description,
+        timeCreated: quiz.timeCreated,
+        timeLastEdited: quiz.timeLastEdited,
+        description: quiz.description,
         userId: quiz.userId,
         numQuestions: quiz.numQuestions,
         questions: quiz.questions,
@@ -304,7 +304,7 @@ function adminQuizDescriptionUpdate(token: string, description: string, quizId: 
   // Updating the description property of the quizzes object
   for (const quiz of data.quizzes) {
     if (quiz.quizId === quizId) {
-      quiz.Description = description;
+      quiz.description = description;
     }
   }
   setData(data);
@@ -350,10 +350,10 @@ function adminQuizRestore(token: string, quizId: number): error | object {
       return { error: 'Quiz Name already exists' };
     }
   }
-  // Add the quiz to quizArray and update the TimeLastEdited
+  // Add the quiz to quizArray and update the timeLastEdited
   for (const quiz of trashArray) {
     if (quiz.quizId === quizId) {
-      quiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      quiz.timeLastEdited = Math.round(Date.now() / 1000);
       quizArray.push(quiz);
     }
   }
@@ -514,7 +514,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
       });
       quiz.numQuestions++;
       quiz.duration = quiz.duration + questionBody.duration;
-      quiz.TimeLastEdited = quiz.TimeCreated;
+      quiz.timeLastEdited = quiz.timeCreated;
     }
   }
   setData(data);
@@ -544,10 +544,10 @@ function adminQuestionDelete(token: string, quizId: number, questionId: number):
   if (!questionIdExists(questionId, quizId)) {
     return { error: 'Invalid questionId' };
   }
-  // Update the TimeLastEdited and delete question
+  // Update the timeLastEdited and delete question
   for (const quiz in quizArray) {
     if (quizArray[quiz].quizId === quizId) {
-      quizArray[quiz].TimeLastEdited = Math.round(Date.now() / 1000);
+      quizArray[quiz].timeLastEdited = Math.round(Date.now() / 1000);
       for (const question of quizArray[quiz].questions) {
         if (question.questionId === questionId) {
           const index = data.quizzes[quiz].questions.indexOf(question);
@@ -621,7 +621,7 @@ function adminQuestionUpdate(token: string, quizId: number, questionBody: questi
         }
       }
       // Update time last edited
-      quiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      quiz.timeLastEdited = Math.round(Date.now() / 1000);
     }
   }
   setData(data);
@@ -685,7 +685,7 @@ function adminQuizTransfer(token: string, userEmail: string, quizId: number): er
     }
   }
   data.quizzes[quizId].userId = userId2;
-  data.quizzes[quizId].TimeLastEdited = Math.round(Date.now() / 1000);
+  data.quizzes[quizId].timeLastEdited = Math.round(Date.now() / 1000);
   setData(data);
   return {};
 }
@@ -726,7 +726,7 @@ function adminQuizQuestionMove(token: string, quizId: number, questionId: number
       const moverQuestion = questionArray[currentPosition];
       questionArray.splice(currentPosition, 1);
       questionArray.splice(newPosition, 0, moverQuestion);
-      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      existingQuiz.timeLastEdited = Math.round(Date.now() / 1000);
       data.quizzes = quizArray;
       data.quizzes[quizIndex].questions = questionArray;
     } else {
@@ -769,7 +769,7 @@ function adminQuizQuestionDuplicate(token: string, quizId: number, questionId: n
 
       newDuplicate.questionId = newQuestionId;
       questionArray.splice(currentPosition + 1, 0, newDuplicate);
-      existingQuiz.TimeLastEdited = Math.round(Date.now() / 1000);
+      existingQuiz.timeLastEdited = Math.round(Date.now() / 1000);
       existingQuiz.duration = existingQuiz.duration + newDuplicate.duration;
       existingQuiz.numQuestions++;
 
