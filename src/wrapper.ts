@@ -1,6 +1,6 @@
 import request from 'sync-request-curl';
 import config from './config.json';
-
+import { parameterAction } from './will';
 const port = config.port;
 const url = config.url;
 const SERVER_URL = `${url}:${port}`;
@@ -381,7 +381,7 @@ export function requestSessionsView(token: string, quizId: number) {
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
-export function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: string) {
+export function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction) {
   const res = request(
     'PUT',
     SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}`,
