@@ -28,6 +28,13 @@ beforeEach(() => {
   );
 });
 
+afterEach(() => {
+  request(
+    'DELETE',
+    SERVER_URL + '/v1/clear'
+  );
+});
+
 describe('Post player join', () => {
   const questionbody: questionBodyType = {
     question: 'Who is the Monarch of England?',
