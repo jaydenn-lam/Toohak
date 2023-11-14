@@ -36,6 +36,14 @@ function isNameInQuizSessions(name: string): boolean {
     session.players.includes(name)
   );
 }
+
+function getSessionWithPlayer(playerId: number) {
+  const data = getData();
+  return data.quizSessions.find(session =>
+    session.playerIds.includes(playerId)
+  );
+}
+
 export function playerJoin(sessionId: number, name: string): object | error {
   const data = getData();
   let playerId;
@@ -62,4 +70,17 @@ export function playerJoin(sessionId: number, name: string): object | error {
   }
   setData(data);
   return { playerId: playerId };
+}
+
+export function playerStatus(playerId: number): object | error {
+  const quizSession = getSessionWithPlayer(playerId);
+  if (quizSession) {
+    return {
+      state: quizSession.state,
+      numQuestions: quizSession.metadata.numQuestions,
+      atQuestion: quizSession.atQuestion
+    };
+  } else {
+    return { error: 'Player ID does not exist.' };
+  }
 }
