@@ -25,12 +25,19 @@ interface Answer {
   colour: string;
 }
 
+export interface playerSubmission {
+  playerId: number;
+  submissionTime: number;
+}
+
 interface Question {
   questionId: number;
   question: string;
   duration: number;
   points: number;
   answers: Answer[];
+  correctPlayers?: playerSubmission[]
+  incorrectPlayers?: playerSubmission[]
 }
 
 interface quiz {
