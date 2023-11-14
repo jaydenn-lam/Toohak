@@ -75,7 +75,7 @@ describe('Post player join', () => {
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
-    requestSessionUpdate(token, quizId, sessionId, 'END');
+    requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
     const response = requestPlayerJoin(sessionId, 'Hayden Smith');
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);

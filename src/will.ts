@@ -9,6 +9,10 @@ interface viewSession {
   inactiveSessions: number[]
 }
 
+export interface parameterAction {
+  action: string;
+}
+
 function sessionValidator(startNum: number, quizId: number) {
   const data = getData();
   let totalSessions = 0;
@@ -71,7 +75,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     atQuestion: 0,
     players: [],
     ownerId: ownerId,
-    metadata: duplicateQuiz
+    metadata: duplicateQuiz,
   };
   data.quizSessions.push(newSession);
   setData(data);
@@ -100,8 +104,9 @@ export function adminSessionsView(token: string, quizId: number): object | error
   return viewSession;
 }
 
-export function adminSessionUpdate(token: string, quizId: number, sessionId: number, desiredAction: string): object | error {
+export function adminSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction): object | error {
   let data = getData();
+  const desiredAction = action.action;
   const userId = findUserId(token);
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
@@ -111,6 +116,7 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
   }
   const session = findSession(sessionId);
   const state = session?.state;
+  console.log(state);
   if (userId !== session?.ownerId) {
     return { error: 'User is unauthorised to modify sessions' };
   }
@@ -118,54 +124,71 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
     return actionVerifier(session, desiredAction);
   }
   if (state === 'LOBBY') {
-    data = lobbyUpdater(session, desiredAction);
-  }
-  if (state === 'QUESTION_COUNTDOWN') {
-    data = qCountdownUpdater(session, desiredAction);
+    data = lobbyUpdater(token, quizId, session, desiredAction);
+  } else if (state === 'QUESTION_COUNTDOWN') {
+    data = qCountdownUpdater(token, quizId, session, desiredAction);
   }
   if (state === 'QUESTION_OPEN') {
     data = qOpenUpdater(session, desiredAction);
   }
   if (state === 'QUESTION_CLOSE') {
-    data = qCloseUpdater(session, desiredAction);
+    data = qCloseUpdater(token, quizId, session, desiredAction);
   }
   if (state === 'ANSWER_SHOW') {
-    data = answerShowUpdater(session, desiredAction);
+    data = answerShowUpdater(token, quizId, session, desiredAction);
   }
   if (state === 'FINAL_RESULTS') {
     data = finalResultsUpdater(session, desiredAction);
   }
+  console.log(`Successful input of ${desiredAction}`);
   setData(data);
   return {};
 }
 
-function lobbyUpdater(session: quizSession, action: string) {
+function lobbyUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
   let state;
+  let qNum = session.atQuestion;
   if (action === 'END') {
     state = 'END';
   }
   if (action === 'NEXT_QUESTION') {
     state = 'QUESTION_COUNTDOWN';
+    qNum++;
+    setTimeout(() => {
+      const currentState = findSession(sessionId)?.state;
+      if (currentState === 'QUESTION_COUNTDOWN') {
+        adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      }
+    }, 3000);
   }
   for (const existingSession of data.quizSessions) {
     if (existingSession.sessionId === sessionId) {
       existingSession.state = state;
+      existingSession.atQuestion = qNum;
     }
   }
   return data;
 }
 
-function qCountdownUpdater(session: quizSession, action: string) {
+function qCountdownUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
+  const qNum = session.atQuestion;
+  const duration = questionDurationFinder(qNum, quizId);
   let state;
   if (action === 'END') {
     state = 'END';
   }
   if (action === 'SKIP_COUNTDOWN') {
     state = 'QUESTION_OPEN';
+    setTimeout(() => {
+      const currentState = findSession(sessionId)?.state;
+      if (currentState === 'QUESTION_OPEN') {
+        adminSessionUpdate(token, quizId, sessionId, { action: 'OPEN_TO_CLOSE' });
+      }
+    }, duration * 1000);
   }
   for (const existingSession of data.quizSessions) {
     if (existingSession.sessionId === sessionId) {
@@ -175,19 +198,31 @@ function qCountdownUpdater(session: quizSession, action: string) {
   return data;
 }
 
-function qCloseUpdater(session: quizSession, action: string) {
+function qCloseUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
   let state;
+  let qNum = session.atQuestion;
   if (action === 'END') {
     state = 'END';
   }
   if (action === 'GO_TO_ANSWER') {
     state = 'ANSWER_SHOW';
   }
+  if (action === 'NEXT_QUESTION') {
+    state = 'QUESTION_COUNTDOWN';
+    qNum++;
+    setTimeout(() => {
+      const currentState = findSession(sessionId)?.state;
+      if (currentState === 'QUESTION_COUNTDOWN') {
+        adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      }
+    }, 3000);
+  }
   for (const existingSession of data.quizSessions) {
     if (existingSession.sessionId === sessionId) {
       existingSession.state = state;
+      existingSession.atQuestion = qNum;
     }
   }
   return data;
@@ -203,6 +238,9 @@ function qOpenUpdater(session: quizSession, action: string) {
   if (action === 'GO_TO_ANSWER') {
     state = 'ANSWER_SHOW';
   }
+  if (action === 'OPEN_TO_CLOSE') {
+    state = 'QUESTION_CLOSE';
+  }
   for (const existingSession of data.quizSessions) {
     if (existingSession.sessionId === sessionId) {
       existingSession.state = state;
@@ -211,15 +249,31 @@ function qOpenUpdater(session: quizSession, action: string) {
   return data;
 }
 
-function answerShowUpdater(session: quizSession, action: string) {
+function questionDurationFinder(number: number, quizId: number) {
+  const quiz = findQuiz(quizId);
+  const question = quiz.questions[number - 1];
+  console.log(number);
+  const duration = question.duration;
+  return duration;
+}
+
+function answerShowUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
   let state;
+  let qNum = session.atQuestion;
   if (action === 'END') {
     state = 'END';
   }
   if (action === 'NEXT_QUESTION') {
-    state = 'ANSWER_COUNTDOWN';
+    state = 'QUESTION_COUNTDOWN';
+    qNum++;
+    setTimeout(() => {
+      const currentState = findSession(sessionId)?.state;
+      if (currentState === 'QUESTION_COUNTDOWN') {
+        adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      }
+    }, 3000);
   }
   if (action === 'GO_TO_FINAL_RESULTS') {
     state = 'FINAL_RESULTS';
@@ -227,6 +281,7 @@ function answerShowUpdater(session: quizSession, action: string) {
   for (const existingSession of data.quizSessions) {
     if (existingSession.sessionId === sessionId) {
       existingSession.state = state;
+      existingSession.atQuestion = qNum;
     }
   }
   return data;
@@ -249,7 +304,7 @@ function finalResultsUpdater(session: quizSession, action: string) {
 
 function actionVerifier(session: quizSession, desiredAction: string) {
   const state = session.state;
-  if (!Object.keys(action).includes(desiredAction)) {
+  if (!Object.keys(action).includes(desiredAction) && desiredAction !== 'OPEN_TO_CLOSE') {
     return { error: 'Invalid action' };
   }
   if (state === 'LOBBY') {
@@ -268,7 +323,7 @@ function actionVerifier(session: quizSession, desiredAction: string) {
     }
   }
   if (state === 'QUESTION_CLOSE') {
-    if (desiredAction === 'NEXT_QUESTION' || desiredAction === 'SKIP_COUNTDOWN') {
+    if (desiredAction === 'SKIP_COUNTDOWN') {
       return { error: 'Action cannot currently be performed' };
     }
   }
