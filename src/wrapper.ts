@@ -17,6 +17,10 @@ interface questionBodyType {
   answers: Answer[];
 }
 
+interface urlBody {
+  imgUrl: string;
+}
+
 export function requestAuthRegister(email: string, password: string, nameFirst: string, nameLast: string) {
   const res = request(
     'POST',
@@ -401,6 +405,51 @@ export function requestSessionStatus(token: string, quizId: number, sessionId: n
     {
       headers: {
         token,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestThumbnailUpdate(token: string, quizId: number, body: urlBody) {
+  const res = request(
+    'PUT',
+    SERVER_URL + `v1/admin/quiz/${quizId}/thumbnail`,
+    {
+      headers: {
+        token
+      },
+      json: {
+        body
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestFinalResults(token: string, quizId: number, sessionId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}/results`,
+    {
+      headers: {
+        token
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestFinalResultsCSV(token: string, quizId: number, sessionId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}/results/csv`,
+    {
+      headers: {
+        token
       },
       timeout: 100
     }
