@@ -40,9 +40,9 @@ function findQuiz(quizId: number) {
   return {
     quizId: -1,
     name: 'NO_QUIZ_FOUND',
-    TimeCreated: 0,
-    TimeLastEdited: 0,
-    Description: '',
+    timeCreated: 0,
+    timeLastEdited: 0,
+    description: '',
     userId: -1,
     numQuestions: -1,
     questions: [],
@@ -68,6 +68,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
   const newSession: quizSession = {
     sessionId,
     state: 'LOBBY',
+    atQuestion: 0,
     players: [],
     ownerId: ownerId,
     metadata: duplicateQuiz
@@ -289,9 +290,27 @@ function actionVerifier(session: quizSession, desiredAction: string) {
 
 export function adminSessionStatus(token: string, quizId: number, sessionId: number): object | error {
   const data = getData();
+  if (!tokenExists(token)) {
+    return { error: 'Invalid Token' };
+  }
+  if (!sessionIdExists(sessionId)) {
+    return { error: 'Invalid sessionId' };
+  }
+  const userId = findUserId(token);
+  const ownerId = findSession(sessionId)?.ownerId;
+  if (userId !== ownerId) {
+    return { error: 'User is unauthorised to view sessions' };
+  }
   for (const session of data.quizSessions) {
     if (session.sessionId === sessionId) {
-      return { state: session.state };
+      const { userId, ...returnedData } = session.metadata;
+      const sessionStatus = {
+        state: session.state,
+        atQuestion: session.atQuestion,
+        players: session.players,
+        metadata: returnedData
+      };
+      return sessionStatus;
     }
   }
   return {};

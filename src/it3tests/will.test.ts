@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
-  , requestSessionsView/*, requestQuizInfo */
+  , requestSessionsView, requestQuizInfo
 } from '../wrapper';
 
 const port = config.port;
@@ -711,7 +711,7 @@ describe('PUT Session State Update', () => {
     });
   });
 });
-/*
+
 describe('GET Session Status', () => {
   const questionbody: questionBodyType = {
     question: 'Who is the Monarch of England?',
@@ -746,7 +746,7 @@ describe('GET Session Status', () => {
 
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(401);
-  })
+  });
 
   test('User is unauthorised ERROR', () => {
     const ownerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -783,18 +783,27 @@ describe('GET Session Status', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
-    const quizInfo = requestQuizInfo(token, quizId);
+    const quizInfo = requestQuizInfo(token, quizId).body;
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
     const response = requestSessionStatus(token, quizId, sessionId);
 
     const body = response.body;
+    const expectedOutput = {
+      quizId: quizInfo.quizId,
+      name: quizInfo.name,
+      timeCreated: expect.any(Number),
+      timeLastEdited: expect.any(Number),
+      description: quizInfo.description,
+      numQuestions: quizInfo.numQuestions,
+      questions: quizInfo.questions,
+      duration: quizInfo.duration,
+    };
     expect(body).toStrictEqual({
-      state: "LOBBY",
-      atQuestion: 1,
+      state: 'LOBBY',
+      atQuestion: 0,
       players: [],
-      metadata: quizInfo,
-    })
-  })
-})
-*/
+      metadata: expectedOutput,
+    });
+  });
+});
