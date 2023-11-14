@@ -19,7 +19,6 @@ import { clear } from './other';
 import HTTPError from 'http-errors';
 import { playerJoin } from './anita';
 
-
 // Set up web app
 const app = express();
 // Use middleware that allows us to access the JSON body of requests
@@ -624,7 +623,6 @@ app.post('/v1/player/join', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
-
 
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================

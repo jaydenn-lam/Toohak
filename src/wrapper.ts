@@ -408,10 +408,10 @@ export function requestSessionStatus(token: string, quizId: number, sessionId: n
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
-export function requestPlayerJoin(sessionId: number, name: string){
+export function requestPlayerJoin(sessionId: number, name: string) {
   const res = request(
     'POST',
-    SERVER_URL + `/v1/player/join`,
+    SERVER_URL + '/v1/player/join',
     {
       json: {
         sessionId,
@@ -445,4 +445,3 @@ export function requestPlayerQuestionInfo(playerId: number, questionPosition: nu
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
-
