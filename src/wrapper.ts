@@ -370,7 +370,7 @@ export function requestSessionStart(token: string, quizId:number, autoStartNum: 
 export function requestSessionsView(token: string, quizId: number) {
   const res = request(
     'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/sessions`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/sessions`,
     {
       headers: {
         token,
@@ -384,7 +384,7 @@ export function requestSessionsView(token: string, quizId: number) {
 export function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: string) {
   const res = request(
     'PUT',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}`,
     {
       headers: {
         token,
@@ -401,7 +401,7 @@ export function requestSessionUpdate(token: string, quizId: number, sessionId: n
 export function requestSessionStatus(token: string, quizId: number, sessionId: number) {
   const res = request(
     'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}`,
     {
       headers: {
         token,
@@ -429,6 +429,21 @@ export function requestThumbnailUpdate(token: string, quizId: number, body: urlB
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
+export function requestPlayerJoin(sessionId: number, name: string) {
+  const res = request(
+    'POST',
+    SERVER_URL + '/v1/player/join',
+    {
+      json: {
+        sessionId,
+        name
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
 export function requestFinalResults(token: string, quizId: number, sessionId: number) {
   const res = request(
     'GET',
@@ -437,6 +452,18 @@ export function requestFinalResults(token: string, quizId: number, sessionId: nu
       headers: {
         token
       },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestPlayerStatus(playerId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/player/${playerId}`,
+    {
+      json: {},
       timeout: 100
     }
   );
@@ -455,4 +482,16 @@ export function requestFinalResultsCSV(token: string, quizId: number, sessionId:
     }
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
+};
+
+export function requestPlayerQuestionInfo(playerId: number, questionPosition: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/player/${playerId}/question/${questionPosition}`,
+    {
+      json: {},
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+};

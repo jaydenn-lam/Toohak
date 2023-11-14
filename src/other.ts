@@ -16,6 +16,7 @@ function clear() {
       currentQuizId: 0,
       currentQuestionId: 0,
       currentAnswerId: 0,
+      currentSessionId: 0,
     }
   );
   return {};
@@ -83,6 +84,25 @@ function tokenExists(token: string) {
   }
   for (const existingToken of tokenArray) {
     if (token === existingToken.token) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function findSession(sessionId: number) {
+  const data = getData();
+  for (const session of data.quizSessions) {
+    if (session.sessionId === sessionId) {
+      return session;
+    }
+  }
+}
+
+export function sessionIdExists(sessionId: number) {
+  const data = getData();
+  for (const session of data.quizSessions) {
+    if (session.sessionId === sessionId) {
       return true;
     }
   }
