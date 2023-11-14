@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart, requestSessionUpdate, // requestSessionStatus
-  requestPlayerJoin, // requestPlayerStatus, requestPlayerQuestionInfo, requestQuizInfo
+  requestPlayerJoin, requestPlayerStatus, // requestPlayerQuestionInfo, requestQuizInfo
 } from '../wrapper';
 
 const port = config.port;
@@ -91,8 +91,8 @@ describe('Post player join', () => {
   });
 });
 
-/* describe('Get Player status tests', () => {
-    const questionbody: questionBodyType = {
+describe('Get Player status tests', () => {
+  const questionbody: questionBodyType = {
     question: 'Who is the Monarch of England?',
     duration: 4,
     points: 5,
@@ -115,23 +115,23 @@ describe('Post player join', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
-    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     const response = requestPlayerStatus(playerId);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
     expect(response.body).toStrictEqual({
-        state: "LOBBY",
-        numQuestions: expect.any(Number),
-        atQuestion: expect.any(Number)
+      state: expect.any(String),
+      numQuestions: expect.any(Number),
+      atQuestion: expect.any(Number)
     });
-});
+  });
 
-test('Player ID does not exist case', () => {
+  test('Player ID does not exist case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
-    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     const nonExistingPlayerId = playerId + 1;
     const response = requestPlayerStatus(nonExistingPlayerId);
@@ -139,11 +139,12 @@ test('Player ID does not exist case', () => {
     expect(statusCode).toStrictEqual(400);
     const body = response.body;
     expect(body).toStrictEqual({
-        error: "Player ID does not exist"
+      error: 'Player ID does not exist.'
     });
+  });
 });
 
-describe('Get Player question information tests', () => {
+/* describe('Get Player question information tests', () => {
   const questionbody: questionBodyType = {
     question: 'Who is the Monarch of England?',
     duration: 4,
@@ -245,7 +246,6 @@ test('Session is in LOBBY or END state', () => {
     expect(statusCode).toStrictEqual(400);
     const expectedBody = {error: "Session is in LOBBY or END state"};
     expect(response.body).toStrictEqual(expectedBody);
-});
 });
 });
 */
