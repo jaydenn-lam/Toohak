@@ -17,7 +17,7 @@ import {
 import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSessionsView } from './will';
 import { clear } from './other';
 import HTTPError from 'http-errors';
-import { playerJoin } from './anita';
+import { playerJoin, playerStatus } from './anita';
 
 // Set up web app
 const app = express();
@@ -618,6 +618,13 @@ app.put('/v1/admin/quiz/:quizid/session/:sessionid', (req: Request, res: Respons
 app.post('/v1/player/join', (req: Request, res: Response) => {
   const { sessionId, name } = req.body;
   const response = playerJoin(sessionId, name);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v1/player/:playerId', (req: Request, res: Response) => {
+  const response = playerStatus(parseInt(req.params.playerId));
   if ('error' in response) {
     throw HTTPError(400, response.error);
   }
