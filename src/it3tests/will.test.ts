@@ -28,6 +28,13 @@ beforeEach(() => {
   );
 });
 
+afterEach(() => {
+  request(
+    'DELETE',
+    SERVER_URL + '/v1/clear'
+  );
+});
+
 describe('POST Session Start', () => {
   const questionbody: questionBodyType = {
     question: 'Who is the Monarch of England?',
@@ -204,7 +211,7 @@ describe('GET Sessions View', () => {
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const sessionId2 = requestSessionStart(token, quizId, 2).body.sessionId;
-    // requestSessionUpdate(token, quizId, sessionId, 'END');
+    // requestSessionUpdate(token, quizId, sessionId, {action: 'END'});
     const response = requestSessionsView(token, quizId);
 
     const body = response.body;
@@ -265,6 +272,27 @@ describe('PUT Session State Update', () => {
       }
     ]
   };
+  /*
+  const questionbody2: questionBodyType = {
+    question: 'Who is the Prime Minister?',
+    duration: 3,
+    points: 5,
+    answers: [
+      {
+        answer: 'William Lu',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+  */
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -272,7 +300,7 @@ describe('PUT Session State Update', () => {
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const invalidToken = token + 'Invalid';
-    const response = requestSessionUpdate(invalidToken, quizId, sessionId, 'NEXT_QUESTION');
+    const response = requestSessionUpdate(invalidToken, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Invalid Token' });
@@ -288,7 +316,7 @@ describe('PUT Session State Update', () => {
     const sessionId = requestSessionStart(ownerToken, quizId, 2).body.sessionId;
     requestAdminLogout(ownerToken);
     const playerToken = requestAuthRegister('jayden@unsw.edu.au', '1234abcd', 'Jayden', 'Lam').body.token;
-    const response = requestSessionUpdate(playerToken, quizId, sessionId, 'NEXT_QUESTION');
+    const response = requestSessionUpdate(playerToken, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
     const error = response.body;
     expect(error).toStrictEqual({ error: 'User is unauthorised to modify sessions' });
@@ -303,7 +331,7 @@ describe('PUT Session State Update', () => {
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const invalidSessionId = sessionId + 1;
-    const response = requestSessionUpdate(token, quizId, invalidSessionId, 'NEXT_QUESTION');
+    const response = requestSessionUpdate(token, quizId, invalidSessionId, { action: 'NEXT_QUESTION' });
 
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Invalid sessionId' });
@@ -317,7 +345,7 @@ describe('PUT Session State Update', () => {
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-    const response = requestSessionUpdate(token, quizId, sessionId, 'invalid');
+    const response = requestSessionUpdate(token, quizId, sessionId, { action: 'invalid' });
 
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Invalid action' });
@@ -335,7 +363,7 @@ describe('PUT Session State Update', () => {
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('LOBBY');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -349,7 +377,7 @@ describe('PUT Session State Update', () => {
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -363,7 +391,7 @@ describe('PUT Session State Update', () => {
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -379,11 +407,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('QUESTION_COUNTDOWN');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -397,9 +425,9 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -413,9 +441,9 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -423,6 +451,61 @@ describe('PUT Session State Update', () => {
       const statusCode = response.status;
       expect(statusCode).toStrictEqual(400);
     });
+    /*
+    test('qCountdown Wait v1', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+      setTimeout(() => {
+        const response = requestSessionStatus(token, quizId, sessionId).body;
+        const state = response.state;
+        expect(state).toStrictEqual('QUESTION_OPEN');
+      }, 3000);
+    });
+
+    test('qCountdown Wait v2', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      requestQuestionCreate(token, quizId, questionbody2);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+      requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
+      requestSessionUpdate(token, quizId, sessionId, {action: 'GO_TO_ANSWER'});
+      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+      setTimeout(() => {
+        const response = requestSessionStatus(token, quizId, sessionId).body;
+        const state = response.state;
+        expect(state).toStrictEqual('QUESTION_OPEN');
+      }, 3000);
+    });
+
+    test('qCountdown Wait v3', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      requestQuestionCreate(token, quizId, questionbody2);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+      requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
+      setTimeout(() => {
+        const response = requestSessionStatus(token, quizId, sessionId).body;
+        const state = response.state;
+        expect(state).toStrictEqual('QUESTION_CLOSE');
+        requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+        const response2 = requestSessionStatus(token, quizId, sessionId).body;
+        const state2 = response2.state;
+        expect(state2).toStrictEqual('QUESTION_COUNTDOWN');
+        setTimeout(() => {
+          const response1 = requestSessionStatus(token, quizId, sessionId).body;
+          const state1 = response1.state;
+          expect(state1).toStrictEqual('QUESTION_OPEN');
+        }, 3000);
+      }, 4000);
+    })
+    */
   });
 
   describe('Question Open', () => {
@@ -431,12 +514,12 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('QUESTION_OPEN');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -450,10 +533,10 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -467,10 +550,10 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -479,47 +562,46 @@ describe('PUT Session State Update', () => {
       expect(statusCode).toStrictEqual(400);
     });
   });
+
   /*
   describe('Question Close', () => {
+
     test('qClose SKIP_COUNTDOWN', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
-      let response = {
-        body: 'EMPTY',
-        status: 0
-      };
+      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+      requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
+
       setTimeout(() => {
         const state = requestSessionStatus(token, quizId, sessionId).body.state;
         expect(state).toStrictEqual('QUESTION_CLOSE');
-        response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+        const response = requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
+        const error = response.body;
+        expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
+
+        const statusCode = response.status;
+        expect(statusCode).toStrictEqual(400);
         console.log('Ran Session update delayed');
       }, 4000);
-
-      const error = response.body;
-      expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
-
-      const statusCode = response.status;
-      expect(statusCode).toStrictEqual(400);
     });
   });
   */
+
   describe('Answer Show', () => {
     test('aShow SKIP_COUNTDOWN', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('ANSWER_SHOW');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -533,10 +615,10 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -552,14 +634,14 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('FINAL_RESULTS');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -573,11 +655,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
-      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -591,11 +673,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -609,11 +691,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
-      requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
-      requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -629,11 +711,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'END');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('END');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -646,11 +728,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'END');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('END');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'SKIP_COUNTDOWN');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -663,11 +745,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'END');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('END');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_ANSWER');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -680,11 +762,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'END');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('END');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'GO_TO_FINAL_RESULTS');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
@@ -697,11 +779,11 @@ describe('PUT Session State Update', () => {
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, 'END');
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
       const state = requestSessionStatus(token, quizId, sessionId).body.state;
       expect(state).toStrictEqual('END');
 
-      const response = requestSessionUpdate(token, quizId, sessionId, 'END');
+      const response = requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
 
       const error = response.body;
       expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
