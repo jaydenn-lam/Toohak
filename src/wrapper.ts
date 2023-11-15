@@ -491,3 +491,14 @@ export function requestAnswerSubmit(playerId: number, questionPosition: number, 
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
+
+export function requestPlayerQuestionResults(playerId: number, questionPosition: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/player/${playerId}/question/${questionPosition}/results`,
+    {
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}

@@ -184,6 +184,12 @@ function qCountdownUpdater(token: string, quizId: number, session: quizSession, 
   }
   if (action === 'SKIP_COUNTDOWN') {
     state = 'QUESTION_OPEN';
+    for (const currentSession of data.quizSessions) {
+      if (currentSession.sessionId === session.sessionId) {
+        const atQuestion = currentSession.atQuestion;
+        currentSession.metadata.questions[atQuestion - 1].timeQuestionOpened = Math.round(Date.now() / 1000);
+      }
+    }
     setTimeout(() => {
       const currentState = findSession(sessionId)?.state;
       if (currentState === 'QUESTION_OPEN') {
@@ -418,6 +424,12 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
     if (existingSession.sessionId === sessionId) {
       existingSession.metadata.questions[questionIndex] = question;
       existingSession.playerProfiles = session.playerProfiles;
+    }
+  }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      console.log('QUETSION');
+      console.log(existingSession.metadata.questions[questionIndex]);
     }
   }
   setData(data);

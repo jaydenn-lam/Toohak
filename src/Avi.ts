@@ -1,7 +1,5 @@
 import { getData, setData, quizSession, playerSubmission } from './dataStore';
 import { error } from './auth';
-import { playerStatus } from './anita';
-import { link } from 'fs';
 
 interface playerQuestionResultsType {
   questionId: number,
@@ -67,24 +65,34 @@ export function playerQuestionResults(playerId: number, questionPosition: number
     return { error: 'Session not in ANSWER_SHOW state' };
   }
   // Error check to make sure session is up to this question
-  const atQuestion = playerStatus(playerId).atQuestion;
+  const atQuestion = currentSession.atQuestion;
   if (questionPosition !== atQuestion) {
     return { error: 'Session is not yet up to this question' };
   }
   // Create player results object to return
-    // function that returns the playerNames given their playerIds
+  // function that returns the playerNames given their playerIds
   const playerArray = linkPlayerIdArrayWithName(currentSession.metadata.questions[questionPosition - 1].correctPlayers, currentSession);
   // Convert these player Names into an array with accending order by first name
   const sortedPlayerArray = sortNames(playerArray);
   // Find the average answer time for all players who submitted an answer
-  const averageTime = computeAverageAnswerTime(currentSession.metadata.questions[questionPosition - 1].correctPlayers, currentSession.metadata.questions[questionPosition - 1].incorrectPlayers);
+  const averageTime = computeAverageAnswerTime(currentSession.metadata.questions[questionPosition - 1].correctPlayers, currentSession.metadata.questions[questionPosition - 1].incorrectPlayers, currentSession, questionPosition);
+  // Find the percent correct
+  let correctAnswerArray = 0;
+  let incorrectAnswerArray = 0;
+  if (currentSession.metadata.questions[questionPosition - 1].correctPlayers) {
+    correctAnswerArray = currentSession.metadata.questions[questionPosition - 1].correctPlayers.length;
+  }
+  if (currentSession.metadata.questions[questionPosition - 1].incorrectPlayers) {
+    incorrectAnswerArray = currentSession.metadata.questions[questionPosition - 1].incorrectPlayers.length;
+  }
+  const percentage = (((correctAnswerArray) / (correctAnswerArray + incorrectAnswerArray)) * 100);
   // Create the return type
   const returnResults: playerQuestionResultsType = {
     questionId: currentSession.metadata.questions[questionPosition - 1].questionId,
     playersCorrectList: sortedPlayerArray,
-    averageAnswerTime: 5,
-    percentCorrect: 4
-  }
+    averageAnswerTime: averageTime,
+    percentCorrect: percentage,
+  };
   setData(data);
   return returnResults;
 }
@@ -217,11 +225,11 @@ function getPlayerName(playerId: number, currentSession: quizSession) {
 // Helper function that given an array of playerIds returns the an array of corresponding players that got it correct
 function linkPlayerIdArrayWithName(playerCorrectArray: playerSubmission[], currentSession: quizSession): string[] {
   // Find the index that the playerId is at -> find the corresponding name for that index in playerName array in quizSession
-  const playerNames = [];
+  const playerNames: string[] = [];
   for (const player of playerCorrectArray) {
-    for (const playerId in currentSession.playerIds) {
-      if (player.playerId === currentSession.playerIds[playerId]) {
-        playerNames.push(currentSession.players[playerId]);
+    for (const playerProfile in currentSession.playerProfiles) {
+      if (player.playerId === currentSession.playerProfiles[playerProfile].playerId) {
+        playerNames.push(currentSession.players[playerProfile]);
       }
     }
   }
@@ -240,6 +248,31 @@ function sortNames(arr: string[]): string[] {
   });
 }
 
-function computeAverageAnswerTime(playerCorrectArray: playerSubmission[], playerIncorrectArray: playerSubmission[]): number {
-  
+function computeAverageAnswerTime(playerCorrectArray: playerSubmission[], playerIncorrectArray: playerSubmission[], currentSession: quizSession, questionPosition: number): number {
+  let answerTime = 0;
+  let timeDifference = 0;
+  let incorrectLength;
+  let correctLength;
+  const questionOpenTime = currentSession.metadata.questions[questionPosition - 1].timeQuestionOpened;
+  // players correct list answer time computation
+  if (playerCorrectArray) {
+    for (const player of playerCorrectArray) {
+      timeDifference = player.submissionTime - questionOpenTime;
+      answerTime = answerTime + timeDifference;
+    }
+    correctLength = playerCorrectArray.length;
+  } else {
+    correctLength = 0;
+  }
+  if (playerIncorrectArray) {
+    for (const player of playerIncorrectArray) {
+      timeDifference = player.submissionTime - questionOpenTime;
+      answerTime = answerTime + timeDifference;
+    }
+    incorrectLength = playerIncorrectArray.length;
+  } else {
+    incorrectLength = 0;
+  }
+  const numPlayers = correctLength + incorrectLength;
+  return (answerTime / numPlayers);
 }
