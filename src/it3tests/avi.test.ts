@@ -2,13 +2,13 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart,
-  requestPlayerJoin, requestSessionChatView, requestSendChatMessage
+  requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo
 } from '../wrapper';
 
 const port = config.port;
 const url = config.url;
 const SERVER_URL = `${url}:${port}`;
-/*
+
 interface answerSubmissionType {
   answerIds: number[];
 }
@@ -16,7 +16,7 @@ interface answerSubmissionType {
 interface actionType {
   action: string;
 }
-*/
+
 interface chatMessageType {
   messageBody: string;
 }
@@ -34,6 +34,13 @@ interface questionBodyType {
 }
 
 beforeEach(() => {
+  request(
+    'DELETE',
+    SERVER_URL + '/v1/clear'
+  );
+});
+
+afterEach(() => {
   request(
     'DELETE',
     SERVER_URL + '/v1/clear'
@@ -59,7 +66,7 @@ const questionbody: questionBodyType = {
     }
   ]
 };
-/*
+
 const questionbody2: questionBodyType = {
   question: 'Who is the day today',
   duration: 4,
@@ -81,18 +88,17 @@ const questionbody2: questionBodyType = {
 };
 
 describe('GET Question results', () => {
-
   const playerAction: actionType = {
     action: 'NEXT_QUESTION',
-  }
+  };
 
   const playerAction2: actionType = {
-    action: 'SKIP_QUESTION',
-  }
+    action: 'SKIP_COUNTDOWN',
+  };
 
   const playerAction3: actionType = {
     action: 'GO_TO_ANSWER',
-  }
+  };
 
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -153,7 +159,13 @@ describe('GET Question results', () => {
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-
+    requestSessionUpdate(token, quizId, sessionId, playerAction);
+    requestSessionUpdate(token, quizId, sessionId, playerAction2);
+    const answerSubmissions: answerSubmissionType = {
+      answerIds: [1],
+    };
+    requestAnswerSubmit(playerId, 1, answerSubmissions);
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
     const response = requestPlayerQuestionResults(playerId, 2);
 
     const error = response.body;
@@ -168,28 +180,21 @@ describe('GET Question results', () => {
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-
-    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-
-    requestSessionUpdate(quizId, sessionId, token, playerAction);
-    requestSessionUpdate(quizId, sessionId, token, playerAction2);
+    const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
     const timeBefore = Date.now();
-    const answerSubmissions: answerSubmissionType = {
-      answerIds: [1],
-    };
-    requestPlayerAnswerSubmission(answerSubmissions, playerId, 1);
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
     const answerSubmissionTime = Date.now();
     const timeDifference = answerSubmissionTime - timeBefore;
-    // Add a timer for duration time
-    setTimeout(() => {}, 4000);
-    requestSessionUpdate(quizId, sessionId, token, playerAction3);
-
-    const response = requestPlayerQuestionResults(playerId, 2);
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    const response = requestPlayerQuestionResults(playerId, 1);
     const body = response.body;
     expect(body).toStrictEqual({
-      questionId: 1,
+      questionId: 0,
       playersCorrectList: [
-        'Hayden Smith',
+        'Hayden',
       ],
       averageAnswerTime: Math.round(timeDifference / 1000),
       percentCorrect: 100,
@@ -199,7 +204,7 @@ describe('GET Question results', () => {
     expect(statusCode).toStrictEqual(200);
   });
 });
-
+/*
 describe('GET Final results', () => {
 
   const playerAction: actionType = {

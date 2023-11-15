@@ -36,8 +36,9 @@ interface Question {
   duration: number;
   points: number;
   answers: Answer[];
-  correctPlayers?: playerSubmission[]
-  incorrectPlayers?: playerSubmission[]
+  correctPlayers?: playerSubmission[];
+  incorrectPlayers?: playerSubmission[];
+  timeQuestionOpened?: number;
 }
 
 interface quiz {
