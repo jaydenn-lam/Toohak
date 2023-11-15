@@ -1,4 +1,4 @@
-import { getData, setData, playerProfile, quizSession } from './dataStore';
+import { getData, setData, playerProfile } from './dataStore';
 import { error } from './auth';
 import { playerSessionFinder } from './will';
 import { findSession } from './other';
@@ -42,8 +42,8 @@ function getSessionWithPlayer(playerId: number) {
     }
     if (foundSession) {
       break;
+    }
   }
-}
   return foundSession;
 }
 
@@ -93,23 +93,19 @@ export function playerStatus(playerId: number): object | error {
     return { error: 'Player ID does not exist.' };
   }
 }
-export function playerQuestionInfo(playerId: number, questionPosition: number){
-  const data = getData();
+export function playerQuestionInfo(playerId: number, questionPosition: number) {
   const quizSession = getSessionWithPlayer(playerId);
-  if(quizSession)
-  {
-    if(quizSession.metadata.numQuestions < questionPosition){
-        return {error: "Question position is not valid for the session this player is in"};
+  if (quizSession) {
+    if (quizSession.metadata.numQuestions < questionPosition) {
+      return { error: 'Question position is not valid for the session this player is in' };
+    } else if (quizSession.atQuestion !== questionPosition) {
+      return { error: 'Session is not currently on this question' };
     }
-    else if(quizSession.atQuestion !== questionPosition) {
-      return {error: "Session is not currently on this question"};
+    if (quizSession.state === 'LOBBY' || quizSession.state === 'END') {
+      return { error: 'Session is in LOBBY or END state' };
     }
-    if(quizSession.state==="LOBBY" || quizSession.state==="END"){
-      return { error : "Session is in LOBBY or END state"};
-    }
-  }
-  else {
-    return { error: 'Player ID does not exist'};
+  } else {
+    return { error: 'Player ID does not exist' };
   }
   return quizSession.metadata.questions[questionPosition - 1];
-} 
+}

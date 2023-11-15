@@ -662,7 +662,7 @@ app.put('/v1/player/:playerid/question/:questionposition/answer', (req: Request,
 app.get('/v1/player/:playerId/question/:questionposition', (req: Request, res: Response) => {
   const playerId = parseInt(req.params.playerId);
   const questionPosition = parseInt(req.params.questionposition);
-  const response = playerQuestionInfo(playerId,questionPosition);
+  const response = playerQuestionInfo(playerId, questionPosition);
   if ('error' in response) {
     throw HTTPError(400, response.error);
   }

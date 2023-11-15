@@ -99,7 +99,7 @@ export function findSession(sessionId: number) {
     }
   }
   // This below line should NEVER run
-  console.log('ERROR HAS OCCURED FINDING SESSION');
+  console.log('ERROR HAS OCCURED FINDING SESSION ' + sessionId);
   const substituteSession: quizSession = {
     sessionId: -1,
     state: '',
