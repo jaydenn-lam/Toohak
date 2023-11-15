@@ -1,8 +1,9 @@
 
-import { getData, setData, quizSession, action } from './dataStore';
+import { getData, setData, quizSession, action, playerSubmission } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { error } from './auth';
 import { tokenOwnsQuiz } from './quiz';
+import { answerIds } from './wrapper';
 
 interface viewSession {
   activeSessions: number[],
@@ -74,6 +75,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     state: 'LOBBY',
     atQuestion: 0,
     players: [],
+    playerProfiles: [],
     ownerId: ownerId,
     metadata: duplicateQuiz,
     messages: [],
@@ -117,7 +119,6 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
   }
   const session = findSession(sessionId);
   const state = session?.state;
-  console.log(state);
   if (userId !== session?.ownerId) {
     return { error: 'User is unauthorised to modify sessions' };
   }
@@ -141,7 +142,6 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
   if (state === 'FINAL_RESULTS') {
     data = finalResultsUpdater(session, desiredAction);
   }
-  console.log(`Successful input of ${desiredAction}`);
   setData(data);
   return {};
 }
@@ -253,7 +253,6 @@ function qOpenUpdater(session: quizSession, action: string) {
 function questionDurationFinder(number: number, quizId: number) {
   const quiz = findQuiz(quizId);
   const question = quiz.questions[number - 1];
-  console.log(number);
   const duration = question.duration;
   return duration;
 }
@@ -370,4 +369,117 @@ export function adminSessionStatus(token: string, quizId: number, sessionId: num
     }
   }
   return {};
+}
+
+export function playerAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds) {
+  const data = getData();
+  const questionIndex = questionPosition - 1;
+  let sessionId = 0;
+  if (playerSessionFinder(playerId) === 100000) {
+    return { error: 'Invalid playerId' };
+  } else {
+    sessionId = playerSessionFinder(playerId);
+  }
+  const session = findSession(sessionId);
+  const error = answerErrorThrower(questionPosition, answerIds, session);
+  if (error) {
+    return error;
+  }
+  const question = session.metadata.questions[questionIndex];
+  const correctAnswerArray: number[] = [];
+  for (const answer of question.answers) {
+    if (answer.correct === true) {
+      correctAnswerArray.push(answer.answerId);
+    }
+  }
+  const correct = answerIdChecker(answerIds.answerIds, correctAnswerArray);
+  const playerEntry: playerSubmission = {
+    playerId: playerId,
+    submissionTime: Math.round(Date.now() / 1000),
+  };
+  if (correct) {
+    if (!question.correctPlayers) {
+      question.correctPlayers = [];
+    }
+    question.correctPlayers.push(playerEntry);
+    for (const player of session.playerProfiles) {
+      if (player.playerId === playerId) {
+        player.score = player.score + question?.points;
+      }
+    }
+  } else if (!correct) {
+    if (!question.incorrectPlayers) {
+      question.incorrectPlayers = [];
+    }
+    question.incorrectPlayers.push(playerEntry);
+  }
+
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      existingSession.metadata.questions[questionIndex] = question;
+      existingSession.playerProfiles = session.playerProfiles;
+    }
+  }
+  setData(data);
+  return {};
+}
+
+function answerIdChecker(answerIds: number[], correctAnswers: number[]) {
+  if (answerIds.length !== correctAnswers.length) {
+    return false;
+  }
+  const sortSubmit = answerIds.slice().sort();
+  const sortCorrect = correctAnswers.slice().sort();
+
+  for (let index = 0; index < sortSubmit.length; index++) {
+    if (sortSubmit[index] !== sortCorrect[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function playerSessionFinder(playerId: number) {
+  const data = getData();
+  for (const session of data.quizSessions) {
+    for (const existingPlayer of session.playerProfiles) {
+      if (existingPlayer.playerId === playerId) {
+        return session.sessionId;
+      }
+    }
+  }
+  return 100000;
+}
+
+function answerErrorThrower(questionPosition: number, answerIds: answerIds, session: quizSession) {
+  const answerArray = answerIds.answerIds;
+  if (session.state !== 'QUESTION_OPEN') {
+    return { error: 'Session must be in QUESTION_OPEN state' };
+  }
+  if (session) {
+    if (questionPosition > session.metadata.numQuestions) {
+      return { error: 'Invalid questionPosition' };
+    }
+  }
+  if (session?.atQuestion !== questionPosition) {
+    return { error: 'Session is not up at that question position' };
+  }
+  if (new Set(answerArray).size !== answerArray.length) {
+    return { error: 'Duplicate answerIds' };
+  }
+  const questionArray = session.metadata.questions;
+  for (const submittedAnswerId of answerArray) {
+    let answerExists = false;
+    for (const answer of questionArray[questionPosition - 1].answers) {
+      if (answer.answerId === submittedAnswerId) {
+        answerExists = true;
+      }
+    }
+    if (answerExists === false) {
+      return { error: 'At least one invalid answerId' };
+    }
+  }
+  if (answerArray.length <= 0) {
+    return { error: 'No answerIds have been submitted' };
+  }
 }

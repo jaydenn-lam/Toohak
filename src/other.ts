@@ -1,4 +1,4 @@
-import { getData, setData, user } from './dataStore';
+import { getData, quizSession, setData, user } from './dataStore';
 
 /*
 Function completely sets the data in dataStore.js to an empty version of the original dataStore we had saved there
@@ -17,6 +17,7 @@ function clear() {
       currentQuestionId: 0,
       currentAnswerId: 0,
       currentSessionId: 0,
+      currentPlayerId: 0,
     }
   );
   return {};
@@ -97,6 +98,29 @@ export function findSession(sessionId: number) {
       return session;
     }
   }
+  // This below line should NEVER run
+  console.log('ERROR HAS OCCURED FINDING SESSION');
+  const substituteSession: quizSession = {
+    sessionId: -1,
+    state: '',
+    atQuestion: -1,
+    players: [],
+    playerProfiles: [],
+    ownerId: -1,
+    metadata: {
+      quizId: -1,
+      name: 'NO_QUIZ_FOUND',
+      timeCreated: 0,
+      timeLastEdited: 0,
+      description: '',
+      userId: -1,
+      numQuestions: -1,
+      questions: [],
+      duration: -1
+    },
+    messages: []
+  };
+  return substituteSession;
 }
 
 export function sessionIdExists(sessionId: number) {

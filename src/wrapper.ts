@@ -10,6 +10,10 @@ interface Answer {
   correct: boolean;
 }
 
+export interface answerIds {
+  answerIds: number[]
+}
+
 interface questionBodyType {
   question: string;
   duration: number;
@@ -467,6 +471,20 @@ export function requestSendChatMessage(playerId: number, message: messageType) {
     {
       json: {
         message,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds) {
+  const res = request(
+    'PUT',
+    SERVER_URL + `/v1/player/${playerId}/question/${questionPosition}/answer`,
+    {
+      json: {
+        answerIds,
       },
       timeout: 100
     }
