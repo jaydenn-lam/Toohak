@@ -17,7 +17,7 @@ import {
 import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSessionsView, playerAnswerSubmit } from './will';
 import { clear } from './other';
 import HTTPError from 'http-errors';
-import { playerJoin, playerStatus } from './anita';
+import { playerJoin, playerStatus, playerQuestionInfo } from './anita';
 import { sessionChatView, sendChatMessage } from './Avi';
 
 // Set up web app
@@ -654,6 +654,15 @@ app.put('/v1/player/:playerid/question/:questionposition/answer', (req: Request,
   const questionPosition = parseInt(req.params.questionposition);
   const { answerIds } = req.body;
   const response = playerAnswerSubmit(playerId, questionPosition, answerIds);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v1/player/:playerId/question/:questionposition', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const questionPosition = parseInt(req.params.questionposition);
+  const response = playerQuestionInfo(playerId, questionPosition);
   if ('error' in response) {
     throw HTTPError(400, response.error);
   }

@@ -420,6 +420,12 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
       existingSession.playerProfiles = session.playerProfiles;
     }
   }
+  for (const existingSession of data.quizSessions) {
+    if (existingSession.sessionId === sessionId) {
+      console.log('QUETSION');
+      console.log(existingSession.metadata.questions[questionIndex]);
+    }
+  }
   setData(data);
   return {};
 }
