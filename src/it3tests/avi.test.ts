@@ -59,7 +59,7 @@ const questionbody: questionBodyType = {
     }
   ]
 };
-/*
+
 const questionbody2: questionBodyType = {
   question: 'Who is the day today',
   duration: 4,
@@ -199,7 +199,7 @@ describe('GET Question results', () => {
     expect(statusCode).toStrictEqual(200);
   });
 });
-
+/*
 describe('GET Final results', () => {
 
   const playerAction: actionType = {
