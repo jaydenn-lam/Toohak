@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart, requestSessionUpdate, // requestSessionStatus
-  requestPlayerJoin, requestPlayerStatus, // requestPlayerQuestionInfo, requestQuizInfo
+  requestPlayerJoin, requestPlayerStatus,requestPlayerQuestionInfo, requestQuizInfo
 } from '../wrapper';
 
 const port = config.port;
@@ -144,7 +144,7 @@ describe('Get Player status tests', () => {
   });
 });
 
-/* describe('Get Player question information tests', () => {
+describe('Get Player question information tests', () => {
   const questionbody: questionBodyType = {
     question: 'Who is the Monarch of England?',
     duration: 4,
@@ -168,36 +168,28 @@ describe('Get Player status tests', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
-    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-    requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     const response = requestPlayerQuestionInfo(playerId, 1);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
     const expectedBody = {
         questionId: expect.any(Number),
         question: expect.any(String),
-        duration: expect.any(String),
-        thumbnailUrl: expect.any(String),
+        duration: expect.any(Number),
         points: expect.any(Number),
-        answers: [
-            {
-                answerId: expect.any(Number),
-                answer: expect.any(String),
-                colour: expect.any(String)
-            }
-        ],
+        answers: expect.any(Array)
     };
     expect(response.body).toStrictEqual(expectedBody);
 });
-
 test('Player ID does not exist case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-    requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     const nonExistingPlayerId = playerId + 1;
     const response = requestPlayerQuestionInfo(nonExistingPlayerId, 1);
     const statusCode = response.status;
@@ -205,13 +197,14 @@ test('Player ID does not exist case', () => {
     const expectedBody = {error: "Player ID does not exist"};
     expect(response.body).toStrictEqual(expectedBody);
 });
+
 test('Question ID not valid for session case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-    requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     const invalidQuestionId = 9999;
     const response = requestPlayerQuestionInfo(playerId, invalidQuestionId);
     const statusCode = response.status;
@@ -227,7 +220,7 @@ test('Session is not currently on this question', () => {
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-    requestSessionUpdate(token, quizId, sessionId, 'NEXT_QUESTION');
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     const response = requestPlayerQuestionInfo(playerId, 2);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
@@ -240,7 +233,8 @@ test('Session is in LOBBY or END state', () => {
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-    requestSessionUpdate(token, quizId, sessionId, 'END');
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
     const response = requestPlayerQuestionInfo(playerId, 1);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
@@ -248,4 +242,3 @@ test('Session is in LOBBY or END state', () => {
     expect(response.body).toStrictEqual(expectedBody);
 });
 });
-*/

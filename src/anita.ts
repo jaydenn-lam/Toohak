@@ -30,6 +30,14 @@ function isNameInQuizSessions(name: string): boolean {
     session.players.includes(name)
   );
 }
+function getSessionWithPlayer(playerId: number) {
+  const data = getData();
+  const foundSession = data.quizSessions.find((session) =>
+  session.playerProfiles.some((profile) => profile.playerId === playerId)
+  );
+
+  return foundSession;
+}
 
 export function playerJoin(sessionId: number, name: string): object | error {
   const data = getData();
@@ -77,3 +85,22 @@ export function playerStatus(playerId: number): object | error {
     return { error: 'Player ID does not exist.' };
   }
 }
+export function playerQuestionInfo(playerId: number, questionPosition: number){
+  const data = getData();
+  const quizSession = getSessionWithPlayer(playerId);
+  if(quizSession){
+    if(quizSession.metadata.numQuestions < questionPosition){
+        return {error: "Question position is not valid for the session this player is in"};
+    }
+    else if(quizSession.atQuestion !== questionPosition) {
+      return {error: "Session is not currently on this question"};
+    }
+    if(quizSession.state==="LOBBY" || quizSession.state==="END"){
+      return { error : "Session is in LOBBY or END state"};
+    }
+  }
+  else {
+    return { error: 'Player ID does not exist'};
+  }
+  return quizSession.metadata.questions[questionPosition - 1];
+} 
