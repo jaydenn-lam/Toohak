@@ -59,12 +59,17 @@ interface message {
   timeSent: number
 }
 
+export interface playerProfile {
+  playerId: number;
+  score: number;
+}
+
 export interface quizSession {
   sessionId: number;
   state: string;
   atQuestion: number;
   players: string[];
-  playerIds?: number[];
+  playerProfiles: playerProfile[];
   ownerId: number,
   metadata: quiz;
   messages: message[]
@@ -106,6 +111,7 @@ interface dataStore {
   currentQuestionId: number;
   currentAnswerId: number;
   currentSessionId: number;
+  currentPlayerId: number;
 }
 
 // YOU SHOULD MODIFY THIS OBJECT BELOW
@@ -119,6 +125,7 @@ let data: dataStore = {
   currentQuestionId: 0,
   currentAnswerId: 0,
   currentSessionId: 0,
+  currentPlayerId: 0,
 };
 
 // YOU SHOULDNT NEED TO MODIFY THE FUNCTIONS BELOW IN ITERATION 1
