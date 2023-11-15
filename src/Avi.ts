@@ -165,8 +165,8 @@ function validPlayerIdCheck(playerId: number): boolean {
   const data = getData();
   const sessionArray = data.quizSessions;
   for (const session of sessionArray) {
-    for (const player of session.playerIds) {
-      if (player === playerId) {
+    for (const player of session.playerProfiles) {
+      if (player.playerId === playerId) {
         return true;
       }
     }
@@ -179,13 +179,13 @@ function playerSessionFinder(playerId: number): number {
   const data = getData();
   const sessionArray = data.quizSessions;
   for (const session of sessionArray) {
-    for (const player of session.playerIds) {
-      if (player === playerId) {
+    for (const player of session.playerProfiles) {
+      if (player.playerId === playerId) {
         return session.sessionId;
       }
     }
   }
-  return 0;
+  return 10000;
 }
 
 // Helper function that checks that the message body is of valid type
@@ -199,8 +199,8 @@ function validMessageBodyCheck(message: messageArgumentType) {
 // Helper function that finds the corresponding player's name given the playerId
 function getPlayerName(playerId: number, currentSession: quizSession) {
   let finderIndex = 0;
-  for (let playerIdIndex = 0; playerIdIndex < currentSession.playerIds.length; playerIdIndex++) {
-    if (currentSession.playerIds[playerIdIndex] === playerId) {
+  for (let playerIdIndex = 0; playerIdIndex < currentSession.playerProfiles.length; playerIdIndex++) {
+    if (currentSession.playerProfiles[playerIdIndex].playerId === playerId) {
       finderIndex = playerIdIndex;
     }
   }

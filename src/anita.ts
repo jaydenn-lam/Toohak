@@ -1,13 +1,7 @@
-import { getData, setData } from './dataStore';
+import { getData, setData, playerProfile } from './dataStore';
 import { error } from './auth';
-
-function generatePlayerId(existingIds: number[]): number {
-  let playerId: number;
-  do {
-    playerId = Math.floor(Math.random() * 9000) + 1000;
-  } while (existingIds.includes(playerId));
-  return playerId;
-}
+import { playerSessionFinder } from './will';
+import { findSession } from './other';
 
 function generateRandomName(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -37,13 +31,6 @@ function isNameInQuizSessions(name: string): boolean {
   );
 }
 
-function getSessionWithPlayer(playerId: number) {
-  const data = getData();
-  return data.quizSessions.find(session =>
-    session.playerIds.includes(playerId)
-  );
-}
-
 export function playerJoin(sessionId: number, name: string): object | error {
   const data = getData();
   let playerId;
@@ -60,25 +47,31 @@ export function playerJoin(sessionId: number, name: string): object | error {
         return { error: 'Session not in LOBBY state.' };
       } else {
         existingSession.players.push(name);
-        if (!existingSession.playerIds) {
-          existingSession.playerIds = [];
-        }
-        playerId = generatePlayerId(existingSession.playerIds);
-        existingSession.playerIds.push(playerId);
+        playerId = data.currentPlayerId;
+        console.log(playerId + ' YAYA');
+        data.currentPlayerId++;
+        const playerProfile: playerProfile = {
+          playerId: playerId,
+          score: 0,
+        };
+        existingSession.playerProfiles.push(playerProfile);
       }
     }
   }
+
   setData(data);
   return { playerId: playerId };
 }
 
 export function playerStatus(playerId: number): object | error {
-  const quizSession = getSessionWithPlayer(playerId);
-  if (quizSession) {
+  const quizSessionId = playerSessionFinder(playerId);
+
+  if (quizSessionId !== 100000) {
+    const session = findSession(quizSessionId);
     return {
-      state: quizSession.state,
-      numQuestions: quizSession.metadata.numQuestions,
-      atQuestion: quizSession.atQuestion
+      state: session.state,
+      numQuestions: session.metadata.numQuestions,
+      atQuestion: session.atQuestion
     };
   } else {
     return { error: 'Player ID does not exist.' };
