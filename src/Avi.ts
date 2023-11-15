@@ -1,14 +1,15 @@
-import { getData, setData, quizSession } from './dataStore';
+import { getData, setData, quizSession, playerSubmission } from './dataStore';
 import { error } from './auth';
-// import { playerStatus } from './anita';
-/*
+import { playerStatus } from './anita';
+import { link } from 'fs';
+
 interface playerQuestionResultsType {
   questionId: number,
   playersCorrectList: string[],
   averageAnswerTime: number,
   percentCorrect: number,
 }
-*/
+
 interface message {
   messageBody: string,
   playerId: number,
@@ -41,7 +42,7 @@ interface sessionResultsType {
   questionResults: questionResult[],
 }
 */
-/*
+
 export function playerQuestionResults(playerId: number, questionPosition: number): playerQuestionResultsType | error {
   const data = getData();
   const sessionArray = data.quizSessions;
@@ -71,17 +72,23 @@ export function playerQuestionResults(playerId: number, questionPosition: number
     return { error: 'Session is not yet up to this question' };
   }
   // Create player results object to return
-
+    // function that returns the playerNames given their playerIds
+  const playerArray = linkPlayerIdArrayWithName(currentSession.metadata.questions[questionPosition - 1].correctPlayers, currentSession);
+  // Convert these player Names into an array with accending order by first name
+  const sortedPlayerArray = sortNames(playerArray);
+  // Find the average answer time for all players who submitted an answer
+  const averageTime = computeAverageAnswerTime(currentSession.metadata.questions[questionPosition - 1].correctPlayers, currentSession.metadata.questions[questionPosition - 1].incorrectPlayers);
+  // Create the return type
   const returnResults: playerQuestionResultsType = {
     questionId: currentSession.metadata.questions[questionPosition - 1].questionId,
-    playersCorrectList: [],
+    playersCorrectList: sortedPlayerArray,
     averageAnswerTime: 5,
     percentCorrect: 4
   }
   setData(data);
   return returnResults;
 }
-
+/*
 export function sessionResults(playerId: number): sessionResultsType | error {
   const data = getData();
   const sessionArray = data.quizSessions;
@@ -205,4 +212,34 @@ function getPlayerName(playerId: number, currentSession: quizSession) {
     }
   }
   return currentSession.players[finderIndex];
+}
+
+// Helper function that given an array of playerIds returns the an array of corresponding players that got it correct
+function linkPlayerIdArrayWithName(playerCorrectArray: playerSubmission[], currentSession: quizSession): string[] {
+  // Find the index that the playerId is at -> find the corresponding name for that index in playerName array in quizSession
+  const playerNames = [];
+  for (const player of playerCorrectArray) {
+    for (const playerId in currentSession.playerIds) {
+      if (player.playerId === currentSession.playerIds[playerId]) {
+        playerNames.push(currentSession.players[playerId]);
+      }
+    }
+  }
+  return playerNames;
+}
+
+function sortNames(arr: string[]): string[] {
+  return arr.sort((a, b) => {
+    if (a < b) {
+      return -1;
+    }
+    if (a > b) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
+function computeAverageAnswerTime(playerCorrectArray: playerSubmission[], playerIncorrectArray: playerSubmission[]): number {
+  
 }
