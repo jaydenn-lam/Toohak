@@ -1,4 +1,4 @@
-import { getData, setData, playerProfile } from './dataStore';
+import { getData, setData, playerProfile, quizSession } from './dataStore';
 import { error } from './auth';
 import { playerSessionFinder } from './will';
 import { findSession } from './other';
@@ -32,10 +32,18 @@ function isNameInQuizSessions(name: string): boolean {
 }
 function getSessionWithPlayer(playerId: number) {
   const data = getData();
-  const foundSession = data.quizSessions.find((session) =>
-  session.playerProfiles.some((profile) => profile.playerId === playerId)
-  );
-
+  let foundSession;
+  for (const session of data.quizSessions) {
+    for (const profile of session.playerProfiles) {
+      if (profile.playerId === playerId) {
+        foundSession = session;
+        break;
+      }
+    }
+    if (foundSession) {
+      break;
+  }
+}
   return foundSession;
 }
 
@@ -88,7 +96,8 @@ export function playerStatus(playerId: number): object | error {
 export function playerQuestionInfo(playerId: number, questionPosition: number){
   const data = getData();
   const quizSession = getSessionWithPlayer(playerId);
-  if(quizSession){
+  if(quizSession)
+  {
     if(quizSession.metadata.numQuestions < questionPosition){
         return {error: "Question position is not valid for the session this player is in"};
     }
