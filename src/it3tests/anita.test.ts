@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart, requestSessionUpdate, // requestSessionStatus
-  requestPlayerJoin, requestPlayerStatus,requestPlayerQuestionInfo, requestQuizInfo
+  requestPlayerJoin, requestPlayerStatus, requestPlayerQuestionInfo
 } from '../wrapper';
 
 const port = config.port;
@@ -175,15 +175,15 @@ describe('Get Player question information tests', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
     const expectedBody = {
-        questionId: expect.any(Number),
-        question: expect.any(String),
-        duration: expect.any(Number),
-        points: expect.any(Number),
-        answers: expect.any(Array)
+      questionId: expect.any(Number),
+      question: expect.any(String),
+      duration: expect.any(Number),
+      points: expect.any(Number),
+      answers: expect.any(Array)
     };
     expect(response.body).toStrictEqual(expectedBody);
-});
-test('Player ID does not exist case', () => {
+  });
+  test('Player ID does not exist case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
@@ -194,11 +194,11 @@ test('Player ID does not exist case', () => {
     const response = requestPlayerQuestionInfo(nonExistingPlayerId, 1);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
-    const expectedBody = {error: "Player ID does not exist"};
+    const expectedBody = { error: 'Player ID does not exist' };
     expect(response.body).toStrictEqual(expectedBody);
-});
+  });
 
-test('Question ID not valid for session case', () => {
+  test('Question ID not valid for session case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
@@ -209,11 +209,11 @@ test('Question ID not valid for session case', () => {
     const response = requestPlayerQuestionInfo(playerId, invalidQuestionId);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
-    const expectedBody = {error: "Question position is not valid for the session this player is in"};
+    const expectedBody = { error: 'Question position is not valid for the session this player is in' };
     expect(response.body).toStrictEqual(expectedBody);
-});
+  });
 
-test('Session is not currently on this question', () => {
+  test('Session is not currently on this question', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
@@ -224,10 +224,10 @@ test('Session is not currently on this question', () => {
     const response = requestPlayerQuestionInfo(playerId, 2);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
-    const expectedBody = {error: "Session is not currently on this question"};
+    const expectedBody = { error: 'Session is not currently on this question' };
     expect(response.body).toStrictEqual(expectedBody);
-});
-test('Session is in LOBBY or END state', () => {
+  });
+  test('Session is in LOBBY or END state', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
@@ -238,7 +238,7 @@ test('Session is in LOBBY or END state', () => {
     const response = requestPlayerQuestionInfo(playerId, 1);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
-    const expectedBody = {error: "Session is in LOBBY or END state"};
+    const expectedBody = { error: 'Session is in LOBBY or END state' };
     expect(response.body).toStrictEqual(expectedBody);
-});
+  });
 });
