@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
-  , requestSessionsView, requestQuizInfo
+  , requestSessionsView, requestQuizInfo, requestAnswerSubmit, requestPlayerJoin
 } from '../wrapper';
 
 const port = config.port;
@@ -35,26 +35,27 @@ afterEach(() => {
   );
 });
 
+const questionbody: questionBodyType = {
+  question: 'Who is the Monarch of England?',
+  duration: 4,
+  points: 5,
+  answers: [
+    {
+      answer: 'Prince Charles',
+      correct: true,
+    },
+    {
+      answer: 'Choice one',
+      correct: false,
+    },
+    {
+      answer: 'Choice two',
+      correct: false,
+    }
+  ]
+};
+
 describe('POST Session Start', () => {
-  const questionbody: questionBodyType = {
-    question: 'Who is the Monarch of England?',
-    duration: 4,
-    points: 5,
-    answers: [
-      {
-        answer: 'Prince Charles',
-        correct: true,
-      },
-      {
-        answer: 'Choice one',
-        correct: false,
-      },
-      {
-        answer: 'Choice two',
-        correct: false,
-      }
-    ]
-  };
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -143,25 +144,6 @@ describe('POST Session Start', () => {
 });
 
 describe('GET Sessions View', () => {
-  const questionbody: questionBodyType = {
-    question: 'Who is the Monarch of England?',
-    duration: 4,
-    points: 5,
-    answers: [
-      {
-        answer: 'Prince Charles',
-        correct: true,
-      },
-      {
-        answer: 'Choice one',
-        correct: false,
-      },
-      {
-        answer: 'Choice two',
-        correct: false,
-      }
-    ]
-  };
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -253,25 +235,6 @@ describe('GET Sessions View', () => {
 });
 
 describe('PUT Session State Update', () => {
-  const questionbody: questionBodyType = {
-    question: 'Who is the Monarch of England?',
-    duration: 4,
-    points: 5,
-    answers: [
-      {
-        answer: 'Prince Charles',
-        correct: true,
-      },
-      {
-        answer: 'Choice one',
-        correct: false,
-      },
-      {
-        answer: 'Choice two',
-        correct: false,
-      }
-    ]
-  };
   /*
   const questionbody2: questionBodyType = {
     question: 'Who is the Prime Minister?',
@@ -795,25 +758,6 @@ describe('PUT Session State Update', () => {
 });
 
 describe('GET Session Status', () => {
-  const questionbody: questionBodyType = {
-    question: 'Who is the Monarch of England?',
-    duration: 4,
-    points: 5,
-    answers: [
-      {
-        answer: 'Prince Charles',
-        correct: true,
-      },
-      {
-        answer: 'Choice one',
-        correct: false,
-      },
-      {
-        answer: 'Choice two',
-        correct: false,
-      }
-    ]
-  };
 
   test('Invalid Token', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -889,3 +833,168 @@ describe('GET Session Status', () => {
     });
   });
 });
+
+describe('PUT playerAnswerSubmit', () => {
+  
+const questionbody2: questionBodyType = {
+  question: 'Who is the Prime Minister?',
+  duration: 4,
+  points: 5,
+  answers: [
+    {
+      answer: 'William Lu',
+      correct: true,
+    },
+    {
+      answer: 'Choice one',
+      correct: false,
+    },
+    {
+      answer: 'Choice two',
+      correct: false,
+    }
+  ]
+};
+  test('Invalid playerId ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    const invalidPlayerId = playerId + 1;
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    requestSessionUpdate(token, quizId, sessionId, {action: "SKIP_COUNTDOWN"})
+    expect(requestSessionStatus(token, quizId, sessionId).body.state).toStrictEqual("QUESTION_OPEN")
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    const response = requestAnswerSubmit(invalidPlayerId, 1, {answerIds: [answerId]})
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid playerId' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  })
+
+  test('Invalid questionPosition ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith');
+    console.log(playerId);
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    requestSessionUpdate(token, quizId, sessionId, {action: "SKIP_COUNTDOWN"})
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    //const response = requestAnswerSubmit(playerId, 1000, {answerIds: [answerId]})
+
+    //const error = response.body;
+    //expect(error).toStrictEqual({ error: 'Invalid questionPosition' });
+
+    //const statusCode = response.status;
+    //expect(statusCode).toStrictEqual(400);
+  })
+
+  test('Session not in QUESTION_OPEN state ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    const response = requestAnswerSubmit(playerId, 1, {answerIds: [answerId]})
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Session must be in QUESTION_OPEN state' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  })
+
+  test('Session not up to question ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    requestQuestionCreate(token, quizId, questionbody2);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    const response = requestAnswerSubmit(playerId, 2, {answerIds: [answerId]})
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Session is not up at that question position' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  })
+
+  test('Invalid answerId ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    const invalidAnswerId = answerId + 1
+    const response = requestAnswerSubmit(playerId, 1, {answerIds: [invalidAnswerId]})
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'At least one invalid answerId' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  })
+
+  test('Duplicate answerIds ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    const response = requestAnswerSubmit(playerId, 1, {answerIds: [answerId, answerId]})
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Duplicate answerIds' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  })
+
+  test('No answerIds ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    const response = requestAnswerSubmit(playerId, 1, {answerIds: []})
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'No answerIds have been submitted' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  })
+
+  test('Working Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, {action: "NEXT_QUESTION"})
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId
+    const response = requestAnswerSubmit(playerId, 1, {answerIds: [answerId]})
+
+    const body = response.body;
+    expect(body).toStrictEqual({});
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  })
+})
