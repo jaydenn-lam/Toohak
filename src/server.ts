@@ -19,7 +19,7 @@ import { clear } from './other';
 import HTTPError from 'http-errors';
 import { adminThumbnailUpdate, adminQuizResults, adminQuizResultsCSV } from './jayden';
 import { playerJoin, playerStatus, playerQuestionInfo } from './anita';
-import { sessionChatView, sendChatMessage, playerQuestionResults } from './Avi';
+import { sessionChatView, sendChatMessage, playerQuestionResults, sessionResults } from './Avi';
 
 // Set up web app
 const app = express();
@@ -697,7 +697,7 @@ app.put('/v1/admin/quiz/:quizId/thumbnail', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
-app.put('/v1/admin/quiz/:quizId/session/:sessionId/results', (req: Request, res: Response) => {
+app.get('/v1/admin/quiz/:quizId/session/:sessionId/results', (req: Request, res: Response) => {
   const token = req.header('token') as string;
   const quizId = parseInt(req.params.quizId)
   const sessionId = parseInt(req.params.sessionId);
@@ -714,7 +714,7 @@ app.put('/v1/admin/quiz/:quizId/session/:sessionId/results', (req: Request, res:
   res.status(200).json(response);
 });
 
-app.put('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, res: Response) => {
+app.get('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, res: Response) => {
   const token = req.header('token') as string;
   const quizId = parseInt(req.params.quizId)
   const sessionId = parseInt(req.params.sessionId);
@@ -727,6 +727,15 @@ app.put('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, 
   }
   if ('error' in response && response.error === 'User is unauthorised to modify sessions') {
     throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v1/player/:playerId/results', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const response = sessionResults(playerId);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
   }
   res.status(200).json(response);
 });

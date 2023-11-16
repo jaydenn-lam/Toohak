@@ -1,8 +1,9 @@
-import { getData, setData, quizSession, action } from './dataStore';
+import { getData, setData, quizSession, action, playerProfile } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { error } from './auth';
 import { tokenOwnsQuiz } from './quiz';
 import { findQuiz } from './will';
+import { getPlayerName, playerQuestionResultsType, usersRanked, questionResult, sessionResultsType } from './Avi';
 
 export interface urlBody {
   imgUrl: string;
@@ -54,14 +55,30 @@ export function adminQuizResults (token: string, quizId: number, sessionId: numb
   if (!sessionIdExists(sessionId)) {
     return { error: 'Invalid sessionId' };
   }
-  const session = findSession(sessionId);
-  const state = session?.state;
+  const currentSession = findSession(sessionId);
+  const state = currentSession?.state;
   if (state != 'FINAL_RESULTS') {
     return { error: 'Session is not in final results state'};
   }
-  if (userId !== session?.ownerId) {
+  if (userId !== currentSession?.ownerId) {
     return { error: 'User is unauthorised to modify sessions' };
   }
+  const playersRanked: playerProfile[] = currentSession.playerProfiles;
+  playersRanked.sort((playerA, playerB) => playerB.score - playerA.score);
+  const usersRankedScoreArray: usersRanked[] = [];
+  for (const player of playersRanked) {
+    const userRankedScore: usersRanked = {
+      name: getPlayerName(player.playerId, currentSession),
+      score: player.score
+    };
+    usersRankedScoreArray.push(userRankedScore);
+  }
+  const sessionResults: sessionResultsType = {
+    usersRankedByScore: usersRankedScoreArray,
+    questionResults: currentSession.questionResults
+  };
+  setData(data);
+  return sessionResults;
 };
 
 export function adminQuizResultsCSV (token: string, quizId: number, sessionId: number) {

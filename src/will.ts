@@ -1,5 +1,5 @@
 
-import { getData, setData, quizSession, action, playerSubmission } from './dataStore';
+import { getData, setData, quizSession, action, playerSubmission, questionResult } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { error } from './auth';
 import { tokenOwnsQuiz } from './quiz';
@@ -71,6 +71,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
   const sessionId = data.currentSessionId;
   data.currentSessionId++;
   const ownerId = findUserId(token);
+  const emptyQuestionResults: questionResult[] = [];
   const newSession: quizSession = {
     sessionId,
     state: 'LOBBY',
@@ -80,6 +81,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     ownerId: ownerId,
     metadata: duplicateQuiz,
     messages: [],
+    questionResults: emptyQuestionResults,
   };
   data.quizSessions.push(newSession);
   setData(data);
