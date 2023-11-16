@@ -101,7 +101,7 @@ export function adminSessionsView(token: string, quizId: number): object | error
 
 export function adminSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction): object | error {
   let data = getData();
-  console.log(action.action)
+  console.log(action.action);
   const desiredAction = action.action;
   const userId = findUserId(token);
   if (!tokenExists(token)) {

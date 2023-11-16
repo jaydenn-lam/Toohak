@@ -40,8 +40,6 @@ beforeEach(() => {
   );
 });
 
-
-
 const questionbody: questionBodyType = {
   question: 'Who is the Monarch of England?',
   duration: 4,
@@ -89,10 +87,6 @@ describe('GET Question results', () => {
 
   const playerAction2: actionType = {
     action: 'SKIP_COUNTDOWN',
-  };
-
-  const playerAction3: actionType = {
-    action: 'GO_TO_ANSWER',
   };
 
   test('Invalid playerId', () => {
@@ -145,7 +139,7 @@ describe('GET Question results', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
   });
-  
+
   test('Session is not yet up to this question', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
@@ -160,8 +154,8 @@ describe('GET Question results', () => {
       answerIds: [1],
     };
     requestAnswerSubmit(playerId, 1, answerSubmissions);
-    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER'});
-    console.log(requestSessionStatus(token, quizId, sessionId).body.state)
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    console.log(requestSessionStatus(token, quizId, sessionId).body.state);
     const response = requestPlayerQuestionResults(playerId, 2);
 
     const error = response.body;
@@ -180,14 +174,14 @@ describe('GET Question results', () => {
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
     const timeBefore = Date.now();
-    
+
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
-    
+
     const answerSubmissionTime = Date.now();
     const timeDifference = answerSubmissionTime - timeBefore;
-    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER'});
-    console.log(requestSessionStatus(token, quizId, sessionId).body.state + ' aaaaaaa')
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    console.log(requestSessionStatus(token, quizId, sessionId).body.state + ' aaaaaaa');
     const response = requestPlayerQuestionResults(playerId, 1);
     const body = response.body;
     expect(body).toStrictEqual({
@@ -201,7 +195,6 @@ describe('GET Question results', () => {
 
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
-    
   });
 });
 /*
