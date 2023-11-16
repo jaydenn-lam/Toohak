@@ -143,6 +143,9 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
     data = finalResultsUpdater(session, desiredAction);
   }
   setData(data);
+  let currentState = findSession(sessionId)?.state;
+  console.log('Updated to ' + currentState +' with ' )
+  console.log(action)
   return {};
 }
 
@@ -160,7 +163,7 @@ function lobbyUpdater(token: string, quizId: number, session: quizSession, actio
     setTimeout(() => {
       const currentState = findSession(sessionId)?.state;
       if (currentState === 'QUESTION_COUNTDOWN') {
-        adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+        console.log(adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWWN' }));
       }
     }, 3000);
   }
@@ -220,6 +223,7 @@ function qCloseUpdater(token: string, quizId: number, session: quizSession, acti
     state = 'QUESTION_COUNTDOWN';
     qNum++;
     setTimeout(() => {
+      console.log('poooop')
       const currentState = findSession(sessionId)?.state;
       if (currentState === 'QUESTION_COUNTDOWN') {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
@@ -273,11 +277,14 @@ function answerShowUpdater(token: string, quizId: number, session: quizSession, 
   }
   if (action === 'NEXT_QUESTION') {
     state = 'QUESTION_COUNTDOWN';
+    console.log('Input has been NEXT_QUESTION')
     qNum++;
     setTimeout(() => {
-      const currentState = findSession(sessionId)?.state;
+      let currentState = findSession(sessionId)?.state;
+      console.log('Inside timeout state is' + currentState)
       if (currentState === 'QUESTION_COUNTDOWN') {
-        adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+        console.log('POOOOOO')
+        console.log(adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' }));
       }
     }, 3000);
   }
@@ -290,6 +297,7 @@ function answerShowUpdater(token: string, quizId: number, session: quizSession, 
       existingSession.atQuestion = qNum;
     }
   }
+  
   return data;
 }
 
@@ -377,7 +385,7 @@ export function adminSessionStatus(token: string, quizId: number, sessionId: num
   return {};
 }
 
-export function playerAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds) {
+export function playerAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds): object | error {
   const data = getData();
   const questionIndex = questionPosition - 1;
   let sessionId = 0;

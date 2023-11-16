@@ -121,9 +121,9 @@ describe('Get Player status tests', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
     expect(response.body).toStrictEqual({
-      state: expect.any(String),
-      numQuestions: expect.any(Number),
-      atQuestion: expect.any(Number)
+      state: "LOBBY",
+      numQuestions: 1,
+      atQuestion: 0
     });
   });
 
@@ -142,6 +142,24 @@ describe('Get Player status tests', () => {
       error: 'Player ID does not exist.'
     });
   });
+
+  test('Further Working Case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+
+    const response = requestPlayerStatus(playerId);
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+    expect(response.body).toStrictEqual({
+      state: "QUESTION_COUNTDOWN",
+      numQuestions: 1,
+      atQuestion: 1
+    });
+  })
 });
 
 describe('Get Player question information tests', () => {
