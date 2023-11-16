@@ -73,7 +73,9 @@ export interface quizSession {
   playerProfiles: playerProfile[];
   ownerId: number,
   metadata: quiz;
-  messages: message[]
+  messages: message[];
+  totalUpdates: number;
+  autoStartNum: number;
 }
 
 interface user {

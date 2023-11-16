@@ -1,4 +1,4 @@
-import { getData, quizSession, setData, user } from './dataStore';
+import { getData, setData } from './dataStore';
 
 /*
 Function completely sets the data in dataStore.js to an empty version of the original dataStore we had saved there
@@ -61,19 +61,7 @@ function findUser(userId: number) {
     }
   }
   // This below line should NEVER run
-  console.log('ERROR HAS OCCURED FINDING USER');
-  const substituteUser: user = {
-    userId: 10000,
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    numFailedPasswordsSinceLastLogin: 0,
-    numSuccessfulLogins: 0,
-    pastPasswords: [],
-    trash: [],
-  };
-  return substituteUser;
+  return null;
 }
 
 // Helper function for determining if token exists
@@ -98,29 +86,8 @@ export function findSession(sessionId: number) {
       return session;
     }
   }
-  // This below line should NEVER run
-  console.log('ERROR HAS OCCURED FINDING SESSION ' + sessionId);
-  const substituteSession: quizSession = {
-    sessionId: -1,
-    state: '',
-    atQuestion: -1,
-    players: [],
-    playerProfiles: [],
-    ownerId: -1,
-    metadata: {
-      quizId: -1,
-      name: 'NO_QUIZ_FOUND',
-      timeCreated: 0,
-      timeLastEdited: 0,
-      description: '',
-      userId: -1,
-      numQuestions: -1,
-      questions: [],
-      duration: -1
-    },
-    messages: []
-  };
-  return substituteSession;
+  console.log('popo');
+  return null;
 }
 
 export function sessionIdExists(sessionId: number) {

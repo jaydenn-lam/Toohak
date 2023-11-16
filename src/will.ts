@@ -42,17 +42,7 @@ function findQuiz(quizId: number) {
       return quiz;
     }
   }
-  return {
-    quizId: -1,
-    name: 'NO_QUIZ_FOUND',
-    timeCreated: 0,
-    timeLastEdited: 0,
-    description: '',
-    userId: -1,
-    numQuestions: -1,
-    questions: [],
-    duration: -1
-  };
+  return null;
 }
 
 export function adminSessionStart(token: string, quizId: number, autoStartNum: number): object | error {
@@ -79,6 +69,8 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     ownerId: ownerId,
     metadata: duplicateQuiz,
     messages: [],
+    totalUpdates: 0,
+    autoStartNum: autoStartNum
   };
   data.quizSessions.push(newSession);
   setData(data);
@@ -109,6 +101,7 @@ export function adminSessionsView(token: string, quizId: number): object | error
 
 export function adminSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction): object | error {
   let data = getData();
+  console.log(action.action)
   const desiredAction = action.action;
   const userId = findUserId(token);
   if (!tokenExists(token)) {
@@ -142,16 +135,19 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
   if (state === 'FINAL_RESULTS') {
     data = finalResultsUpdater(session, desiredAction);
   }
+  for (const sessionExist of data.quizSessions) {
+    if (sessionExist.sessionId === sessionId) {
+      sessionExist.totalUpdates++;
+    }
+  }
   setData(data);
-  let currentState = findSession(sessionId)?.state;
-  console.log('Updated to ' + currentState +' with ' )
-  console.log(action)
   return {};
 }
 
 function lobbyUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
+  const updates = session.totalUpdates;
   let state;
   let qNum = session.atQuestion;
   if (action === 'END') {
@@ -161,9 +157,10 @@ function lobbyUpdater(token: string, quizId: number, session: quizSession, actio
     state = 'QUESTION_COUNTDOWN';
     qNum++;
     setTimeout(() => {
-      const currentState = findSession(sessionId)?.state;
-      if (currentState === 'QUESTION_COUNTDOWN') {
-        console.log(adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWWN' }));
+      const currentState = findSession(sessionId).state;
+      const currentUpdates = findSession(sessionId).totalUpdates;
+      if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
+        adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
     }, 3000);
   }
@@ -211,6 +208,7 @@ function qCountdownUpdater(token: string, quizId: number, session: quizSession, 
 function qCloseUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
+  const updates = session.totalUpdates;
   let state;
   let qNum = session.atQuestion;
   if (action === 'END') {
@@ -223,9 +221,9 @@ function qCloseUpdater(token: string, quizId: number, session: quizSession, acti
     state = 'QUESTION_COUNTDOWN';
     qNum++;
     setTimeout(() => {
-      console.log('poooop')
-      const currentState = findSession(sessionId)?.state;
-      if (currentState === 'QUESTION_COUNTDOWN') {
+      const currentState = findSession(sessionId).state;
+      const currentUpdates = findSession(sessionId).totalUpdates;
+      if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
     }, 3000);
@@ -270,6 +268,7 @@ function questionDurationFinder(number: number, quizId: number) {
 function answerShowUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
+  const updates = session.totalUpdates;
   let state;
   let qNum = session.atQuestion;
   if (action === 'END') {
@@ -277,14 +276,12 @@ function answerShowUpdater(token: string, quizId: number, session: quizSession, 
   }
   if (action === 'NEXT_QUESTION') {
     state = 'QUESTION_COUNTDOWN';
-    console.log('Input has been NEXT_QUESTION')
     qNum++;
     setTimeout(() => {
-      let currentState = findSession(sessionId)?.state;
-      console.log('Inside timeout state is' + currentState)
-      if (currentState === 'QUESTION_COUNTDOWN') {
-        console.log('POOOOOO')
-        console.log(adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' }));
+      const currentState = findSession(sessionId).state;
+      const currentUpdates = findSession(sessionId).totalUpdates;
+      if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
+        adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
     }, 3000);
   }
@@ -297,7 +294,7 @@ function answerShowUpdater(token: string, quizId: number, session: quizSession, 
       existingSession.atQuestion = qNum;
     }
   }
-  
+
   return data;
 }
 
@@ -432,12 +429,6 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
     if (existingSession.sessionId === sessionId) {
       existingSession.metadata.questions[questionIndex] = question;
       existingSession.playerProfiles = session.playerProfiles;
-    }
-  }
-  for (const existingSession of data.quizSessions) {
-    if (existingSession.sessionId === sessionId) {
-      console.log('QUETSION');
-      console.log(existingSession.metadata.questions[questionIndex]);
     }
   }
   setData(data);

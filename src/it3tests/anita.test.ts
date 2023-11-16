@@ -121,7 +121,7 @@ describe('Get Player status tests', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
     expect(response.body).toStrictEqual({
-      state: "LOBBY",
+      state: 'LOBBY',
       numQuestions: 1,
       atQuestion: 0
     });
@@ -155,11 +155,11 @@ describe('Get Player status tests', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
     expect(response.body).toStrictEqual({
-      state: "QUESTION_COUNTDOWN",
+      state: 'QUESTION_COUNTDOWN',
       numQuestions: 1,
       atQuestion: 1
     });
-  })
+  });
 });
 
 describe('Get Player question information tests', () => {
