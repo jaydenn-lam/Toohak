@@ -679,6 +679,7 @@ app.get('/v1/player/:playerId/question/:questionPosition/results', (req: Request
   }
   res.status(200).json(response);
 });
+<<<<<<< HEAD
 
 app.put('/v1/admin/quiz/:quizId/thumbnail', (req: Request, res: Response) => {
   const token = req.header('token') as string;
@@ -731,6 +732,8 @@ app.get('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, 
   res.status(200).json(response);
 });
 
+=======
+>>>>>>> 894ce0d9510ba9c4b7dbc75d258f75143fe36ee9
 app.get('/v1/player/:playerId/results', (req: Request, res: Response) => {
   const playerId = parseInt(req.params.playerId);
   const response = sessionResults(playerId);
