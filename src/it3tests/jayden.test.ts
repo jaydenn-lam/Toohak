@@ -275,7 +275,7 @@ describe('GET Quiz final results CSV', () => {
     const response = requestQuizResultsCSV(token, quizId, sessionId);
     const body = response.body;
     const url = SERVER_URL + '/public/output.csv';
-    expect(body).toStrictEqual({url});
+    expect(body).toStrictEqual({ url });
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
   });

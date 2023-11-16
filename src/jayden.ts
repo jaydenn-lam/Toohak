@@ -106,7 +106,7 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
     }
   }
   for (let i = 0; i < data.quizzes[quizIndex].numQuestions; i++) {
-    csv += ',question' + (i+1).toString() + 'score,' + 'question' + (i+1).toString() + 'rank';
+    csv += ',question' + (i + 1).toString() + 'score,' + 'question' + (i + 1).toString() + 'rank';
   }
   csv += '\n';
   fs.writeFile('public/output.csv', csv, (err) => {
