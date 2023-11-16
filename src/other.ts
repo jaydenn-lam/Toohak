@@ -23,16 +23,6 @@ function clear() {
   return {};
 }
 
-function userIdExists(userId: number): boolean {
-  const data = getData();
-  for (const user of data.users) {
-    if (user.userId === userId) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function quizIdExists(quizId: number): boolean {
   const data = getData();
   for (const quiz of data.quizzes) {
@@ -60,20 +50,6 @@ function findUser(userId: number) {
       return existingUser;
     }
   }
-  // This below line should NEVER run
-  console.log('ERROR HAS OCCURED FINDING USER');
-  const substituteUser: user = {
-    userId: 10000,
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    numFailedPasswordsSinceLastLogin: 0,
-    numSuccessfulLogins: 0,
-    pastPasswords: [],
-    trash: [],
-  };
-  return substituteUser;
 }
 
 // Helper function for determining if token exists
@@ -135,4 +111,4 @@ export function sessionIdExists(sessionId: number) {
   return false;
 }
 
-export { clear, userIdExists, quizIdExists, findUserId, findUser, tokenExists };
+export { clear, quizIdExists, findUserId, findUser, tokenExists };

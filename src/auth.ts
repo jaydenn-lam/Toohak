@@ -159,9 +159,6 @@ function adminUserDetails(token: string): user | error {
   const user = userArray.find((userArray) => userArray.userId === userToken.userId);
   // if no user is found return error: 'Invalid authUserId'
   // construct and return user details
-  if (!user) {
-    return { error: 'Invalid token' };
-  }
   return {
     user: {
       userId: user.userId,

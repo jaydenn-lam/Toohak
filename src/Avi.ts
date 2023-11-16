@@ -70,7 +70,10 @@ export function playerQuestionResults(playerId: number, questionPosition: number
   }
   // Create player results object to return
   // function that returns the playerNames given their playerIds
-  const playerArray = linkPlayerIdArrayWithName(currentSession.metadata.questions[questionPosition - 1].correctPlayers, currentSession);
+  let playerArray: string[] = [];
+  if (currentSession.metadata.questions[questionPosition - 1].correctPlayers) {
+    playerArray = linkPlayerIdArrayWithName(currentSession.metadata.questions[questionPosition - 1].correctPlayers, currentSession);
+  }
   // Convert these player Names into an array with accending order by first name
   const sortedPlayerArray = sortNames(playerArray);
   // Find the average answer time for all players who submitted an answer
@@ -223,7 +226,6 @@ function playerSessionFinder(playerId: number): number {
       }
     }
   }
-  return 10000;
 }
 
 // Helper function that checks that the message body is of valid type
@@ -264,10 +266,12 @@ function sortNames(arr: string[]): string[] {
     if (a < b) {
       return -1;
     }
+    /*
     if (a > b) {
       return 1;
     }
     return 0;
+    */
   });
 }
 
