@@ -51,6 +51,7 @@ beforeEach(() => {
 });
 
 const validThumbnail = { imgUrl: 'https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png' };
+const invalidThumbnailHTTP = { imgUrl: '//www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png' };
 const invalidThumbnail = { imgUrl: 'http://google.com/some/image/path.invalid' };
 
 describe('Thumbnail Update', () => {
@@ -93,6 +94,16 @@ describe('Thumbnail Update', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
   });
+
+  test('Invalid Image Url HTTP ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const response = requestThumbnailUpdate(token, quizId, invalidThumbnailHTTP);
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid Image Url' });
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
 });
 
 describe('GET Quiz final results', () => {
@@ -112,6 +123,24 @@ describe('GET Quiz final results', () => {
     expect(error).toStrictEqual({ error: 'Invalid Token' });
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(401);
+  });
+
+  test('Invalid Session Id', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+
+    const response = requestQuizResults(token, quizId, sessionId + 400);
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid sessionId' });
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
   });
 
   test('User does not own quiz', () => {
@@ -211,6 +240,24 @@ describe('GET Quiz final results CSV', () => {
     expect(error).toStrictEqual({ error: 'Invalid Token' });
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(401);
+  });
+
+  test('Invalid Session Id', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+
+    const response = requestQuizResultsCSV(token, quizId, sessionId + 400);
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid sessionId' });
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
   });
 
   test('User does not own quiz', () => {

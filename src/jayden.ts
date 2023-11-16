@@ -111,7 +111,6 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
   csv += '\n';
   fs.writeFile('public/output.csv', csv, (err) => {
     if (err) {
-      throw HTTPError(400, err);
     } else {
       console.log('File written successfully\n');
     }
