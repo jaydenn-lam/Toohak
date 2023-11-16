@@ -14,11 +14,12 @@ import {
   adminQuizCreate, adminQuizRestore, adminQuizDescriptionUpdate, adminQuizInfo, adminQuizList, adminQuizRemove,
   adminQuizNameUpdate, adminTrashEmpty, adminQuizViewTrash, adminQuizQuestionCreate, adminQuizQuestionMove, adminQuizTransfer, adminQuizQuestionDuplicate, adminQuestionDelete, adminQuestionUpdate
 } from './quiz';
-import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSessionsView } from './will';
+import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSessionsView, playerAnswerSubmit } from './will';
 import { clear } from './other';
 import HTTPError from 'http-errors';
-import { playerJoin } from './anita';
 import { adminThumbnailUpdate, adminQuizResults, adminQuizResultsCSV } from './jayden';
+import { playerJoin, playerStatus, playerQuestionInfo } from './anita';
+import { sessionChatView, sendChatMessage, playerQuestionResults } from './Avi';
 
 // Set up web app
 const app = express();
@@ -619,6 +620,60 @@ app.put('/v1/admin/quiz/:quizid/session/:sessionid', (req: Request, res: Respons
 app.post('/v1/player/join', (req: Request, res: Response) => {
   const { sessionId, name } = req.body;
   const response = playerJoin(sessionId, name);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v1/player/:playerId', (req: Request, res: Response) => {
+  const response = playerStatus(parseInt(req.params.playerId));
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v1/player/:playerId/chat', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const response = sessionChatView(playerId);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.post('/v1/player/:playerId/chat', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const { message } = req.body;
+  const response = sendChatMessage(playerId, message);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.put('/v1/player/:playerid/question/:questionposition/answer', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerid);
+  const questionPosition = parseInt(req.params.questionposition);
+  const { answerIds } = req.body;
+  const response = playerAnswerSubmit(playerId, questionPosition, answerIds);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+app.get('/v1/player/:playerId/question/:questionposition', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const questionPosition = parseInt(req.params.questionposition);
+  const response = playerQuestionInfo(playerId, questionPosition);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v1/player/:playerId/question/:questionPosition/results', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const questionPosition = parseInt(req.params.questionPosition);
+  const response = playerQuestionResults(playerId, questionPosition);
   if ('error' in response) {
     throw HTTPError(400, response.error);
   }

@@ -511,7 +511,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
         question: questionBody.question,
         duration: questionBody.duration,
         points: questionBody.points,
-        answers: answerArray
+        answers: answerArray,
       });
       quiz.numQuestions++;
       quiz.duration = quiz.duration + questionBody.duration;

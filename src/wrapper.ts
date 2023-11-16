@@ -1,6 +1,6 @@
 import request from 'sync-request-curl';
 import config from './config.json';
-
+import { parameterAction } from './will';
 const port = config.port;
 const url = config.url;
 const SERVER_URL = `${url}:${port}`;
@@ -8,6 +8,10 @@ const SERVER_URL = `${url}:${port}`;
 interface Answer {
   answer: string;
   correct: boolean;
+}
+
+export interface answerIds {
+  answerIds: number[]
 }
 
 interface questionBodyType {
@@ -19,6 +23,10 @@ interface questionBodyType {
 
 interface urlBody {
   imgUrl: string;
+}
+
+interface messageType {
+  messageBody: string;
 }
 
 export function requestAuthRegister(email: string, password: string, nameFirst: string, nameLast: string) {
@@ -381,7 +389,7 @@ export function requestSessionsView(token: string, quizId: number) {
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
-export function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: string) {
+export function requestSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction) {
   const res = request(
     'PUT',
     SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}`,
@@ -494,4 +502,54 @@ export function requestPlayerQuestionInfo(playerId: number, questionPosition: nu
     }
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-};
+}
+
+export function requestSessionChatView(playerId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/player/${playerId}/chat`,
+    {
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestSendChatMessage(playerId: number, message: messageType) {
+  const res = request(
+    'POST',
+    SERVER_URL + `/v1/player/${playerId}/chat`,
+    {
+      json: {
+        message,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds) {
+  const res = request(
+    'PUT',
+    SERVER_URL + `/v1/player/${playerId}/question/${questionPosition}/answer`,
+    {
+      json: {
+        answerIds,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestPlayerQuestionResults(playerId: number, questionPosition: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/player/${playerId}/question/${questionPosition}/results`,
+    {
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
