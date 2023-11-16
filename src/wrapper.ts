@@ -490,7 +490,7 @@ export function requestQuizResultsCSV(token: string, quizId: number, sessionId: 
     }
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-};
+}
 
 export function requestPlayerQuestionInfo(playerId: number, questionPosition: number) {
   const res = request(

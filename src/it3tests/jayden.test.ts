@@ -1,9 +1,11 @@
 
 import request from 'sync-request-curl';
 import config from '../config.json';
-import { requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
-, requestSessionsView, requestQuizInfo, requestThumbnailUpdate, requestPlayerJoin, requestAnswerSubmit, requestSessionResults, requestPlayerQuestionResults
-, requestQuizResults, requestQuizResultsCSV } from '../wrapper';
+import {
+  requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart, requestSessionUpdate
+  , requestQuizInfo, requestThumbnailUpdate, requestPlayerJoin, requestAnswerSubmit, requestSessionResults, requestPlayerQuestionResults
+  , requestQuizResults
+} from '../wrapper';
 
 const port = config.port;
 const url = config.url;
@@ -42,24 +44,24 @@ const questionbody: questionBodyType = {
 };
 
 beforeEach(() => {
-request(
+  request(
     'DELETE',
     SERVER_URL + '/v1/clear'
-);
+  );
 });
 
-const validThumbnail = {imgUrl: "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png"}
-const invalidThumbnail = {imgUrl: "http://google.com/some/image/path.invalid"}
+const validThumbnail = { imgUrl: 'https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png' };
+const invalidThumbnail = { imgUrl: 'http://google.com/some/image/path.invalid' };
 
 describe('Thumbnail Update', () => {
   test('Success', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    const response = requestThumbnailUpdate(token, quizId, validThumbnail)
+    const response = requestThumbnailUpdate(token, quizId, validThumbnail);
     expect(response.body).toEqual({});
     expect(response.status).toEqual(200);
   });
-  
+
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;

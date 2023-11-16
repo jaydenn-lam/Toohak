@@ -116,7 +116,8 @@ export function findSession(sessionId: number) {
       userId: -1,
       numQuestions: -1,
       questions: [],
-      duration: -1
+      duration: -1,
+      thumbnail: ''
     },
     messages: [],
     questionResults: [],
