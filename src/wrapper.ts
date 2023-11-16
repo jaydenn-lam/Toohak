@@ -3,7 +3,7 @@ import config from './config.json';
 import { parameterAction } from './will';
 const port = config.port;
 const url = config.url;
-const SERVER_URL = `${url}:${port}`;
+export const SERVER_URL = `${url}:${port}`;
 
 interface Answer {
   answer: string;

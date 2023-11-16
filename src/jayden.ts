@@ -3,6 +3,8 @@ import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } f
 import { tokenOwnsQuiz } from './quiz';
 import { findQuiz } from './will';
 import { getPlayerName, usersRanked, sessionResultsType } from './Avi';
+import fs from 'fs';
+import { SERVER_URL } from './wrapper';
 
 export interface urlBody {
   imgUrl: string;
@@ -55,7 +57,7 @@ export function adminQuizResults (token: string, quizId: number, sessionId: numb
   const currentSession = findSession(sessionId);
   const state = currentSession?.state;
   if (state !== 'FINAL_RESULTS') {
-    return { error: 'Session is not in final results state' };
+    return { error: 'Session not in FINAL_RESULTS state' };
   }
   if (userId !== currentSession?.ownerId) {
     return { error: 'User is unauthorised to modify sessions' };
@@ -79,6 +81,7 @@ export function adminQuizResults (token: string, quizId: number, sessionId: numb
 }
 
 export function adminQuizResultsCSV (token: string, quizId: number, sessionId: number) {
+  const data = getData();
   const userId = findUserId(token);
   if (!tokenExists(token)) {
     return { error: 'Invalid Token' };
@@ -89,9 +92,29 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
   const session = findSession(sessionId);
   const state = session?.state;
   if (state !== 'FINAL_RESULTS') {
-    return { error: 'Session is not in final results state' };
+    return { error: 'Session not in FINAL_RESULTS state' };
   }
   if (userId !== session?.ownerId) {
     return { error: 'User is unauthorised to modify sessions' };
   }
+  let csv = 'Player';
+  let quizIndex;
+  for (let quiz = 0; quiz < data.quizzes.length; quiz++) {
+    if (data.quizzes[quiz].quizId === quizId) {
+      quizIndex = quiz;
+    }
+  }
+  for (let i = 0; i < data.quizzes[quizIndex].numQuestions; i++) {
+    csv += ',question' + (i + 1).toString() + 'score,' + 'question' + (i + 1).toString() + 'rank';
+  }
+  csv += '\n';
+  fs.writeFile('public/output.csv', csv, (err) => {
+    if (err) {
+      console.log('Error writing file\n');
+    } else {
+      console.log('File written successfully\n');
+    }
+  });
+  const url = SERVER_URL + '/public/output.csv';
+  return { url: url };
 }
