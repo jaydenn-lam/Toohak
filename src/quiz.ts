@@ -128,7 +128,8 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
     userId: findUserId(token),
     numQuestions: 0,
     questions: emptyQuestions,
-    duration: 0
+    duration: 0,
+    thumbnail: ''
   };
   data.quizzes.push(quizData);
   setData(data);

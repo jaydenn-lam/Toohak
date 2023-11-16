@@ -30,7 +30,7 @@ function sessionValidator(startNum: number, quizId: number) {
   return {};
 }
 
-function findQuiz(quizId: number) {
+export function findQuiz(quizId: number) {
   const data = getData();
   for (const quiz of data.quizzes) {
     if (quiz.quizId === quizId) {
@@ -46,7 +46,8 @@ function findQuiz(quizId: number) {
     userId: -1,
     numQuestions: -1,
     questions: [],
-    duration: -1
+    duration: -1,
+    thumbnail: ''
   };
 }
 

@@ -31,7 +31,7 @@ request(
 });
 
 const validThumbnail = {imgUrl: "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png"}
-const invalidThumbnail = {imgUrl: "http://google.com/some/image/path.jpg"}
+const invalidThumbnail = {imgUrl: "http://google.com/some/image/path.invalid"}
 
 describe('Thumbnail Update', () => {
   test('Success', () => {

@@ -18,6 +18,7 @@ import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSession
 import { clear } from './other';
 import HTTPError from 'http-errors';
 import { playerJoin } from './anita';
+import { adminThumbnailUpdate, adminQuizResults, adminQuizResultsCSV } from './jayden';
 
 // Set up web app
 const app = express();
@@ -624,6 +625,56 @@ app.post('/v1/player/join', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 
+app.put('/v1/admin/quiz/:quizId/thumbnail', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizId)
+  const { body } = req.body;
+  const response = adminThumbnailUpdate(token, quizId, body);
+  if ('error' in response && response.error === 'Invalid Image Url') {
+    throw HTTPError(400, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response && response.error === 'quizId is not owned by user') {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.put('/v1/admin/quiz/:quizId/session/:sessionId/results', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizId)
+  const sessionId = parseInt(req.params.sessionId);
+  const response = adminQuizResults(token, quizId, sessionId);
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session is not in final results state')) {
+    throw HTTPError(400, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response && response.error === 'User is unauthorised to modify sessions') {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.put('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizId)
+  const sessionId = parseInt(req.params.sessionId);
+  const response = adminQuizResultsCSV(token, quizId, sessionId);
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session is not in final results state')) {
+    throw HTTPError(400, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response && response.error === 'User is unauthorised to modify sessions') {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================

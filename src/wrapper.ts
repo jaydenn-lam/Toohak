@@ -415,7 +415,7 @@ export function requestSessionStatus(token: string, quizId: number, sessionId: n
 export function requestThumbnailUpdate(token: string, quizId: number, body: urlBody) {
   const res = request(
     'PUT',
-    SERVER_URL + `v1/admin/quiz/${quizId}/thumbnail`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/thumbnail`,
     {
       headers: {
         token
@@ -444,10 +444,10 @@ export function requestPlayerJoin(sessionId: number, name: string) {
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
-export function requestFinalResults(token: string, quizId: number, sessionId: number) {
+export function requestQuizResults(token: string, quizId: number, sessionId: number) {
   const res = request(
     'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}/results`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}/results`,
     {
       headers: {
         token
@@ -470,10 +470,10 @@ export function requestPlayerStatus(playerId: number) {
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
-export function requestFinalResultsCSV(token: string, quizId: number, sessionId: number) {
+export function requestQuizResultsCSV(token: string, quizId: number, sessionId: number) {
   const res = request(
     'GET',
-    SERVER_URL + `v1/admin/quiz/${quizId}/session/${sessionId}/results/csv`,
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}/results/csv`,
     {
       headers: {
         token
