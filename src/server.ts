@@ -702,7 +702,7 @@ app.get('/v1/admin/quiz/:quizId/session/:sessionId/results', (req: Request, res:
   const quizId = parseInt(req.params.quizId);
   const sessionId = parseInt(req.params.sessionId);
   const response = adminQuizResults(token, quizId, sessionId);
-  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session is not in final results state')) {
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state')) {
     throw HTTPError(400, response.error);
   }
   if ('error' in response && response.error === 'Invalid Token') {
@@ -719,7 +719,7 @@ app.get('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, 
   const quizId = parseInt(req.params.quizId);
   const sessionId = parseInt(req.params.sessionId);
   const response = adminQuizResultsCSV(token, quizId, sessionId);
-  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session is not in final results state')) {
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state')) {
     throw HTTPError(400, response.error);
   }
   if ('error' in response && response.error === 'Invalid Token') {
@@ -739,6 +739,8 @@ app.get('/v1/player/:playerId/results', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+
+app.use('/public', express.static('public'));
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================
