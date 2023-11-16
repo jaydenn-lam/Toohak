@@ -118,7 +118,8 @@ export function findSession(sessionId: number) {
       questions: [],
       duration: -1
     },
-    messages: []
+    messages: [],
+    questionResults: [],
   };
   return substituteSession;
 }
