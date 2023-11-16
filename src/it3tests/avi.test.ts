@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart,
-  requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionResults
+  requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionStatus, requestSessionResults
 } from '../wrapper';
 
 const port = config.port;
@@ -34,13 +34,6 @@ interface questionBodyType {
 }
 
 beforeEach(() => {
-  request(
-    'DELETE',
-    SERVER_URL + '/v1/clear'
-  );
-});
-
-afterEach(() => {
   request(
     'DELETE',
     SERVER_URL + '/v1/clear'
@@ -134,7 +127,7 @@ describe('GET Question results', () => {
     expect(statusCode).toStrictEqual(400);
   });
 
-  test('Session is not in ANSWER_SHOW state', () => {
+  test('Session is not instate ANSWER_SHOW state', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
@@ -165,7 +158,8 @@ describe('GET Question results', () => {
       answerIds: [1],
     };
     requestAnswerSubmit(playerId, 1, answerSubmissions);
-    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    console.log(requestSessionStatus(token, quizId, sessionId).body.state);
     const response = requestPlayerQuestionResults(playerId, 2);
 
     const error = response.body;
@@ -178,21 +172,24 @@ describe('GET Question results', () => {
   test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate(token, quizId, questionbody);
+    const questionId = requestQuestionCreate(token, quizId, questionbody).body.questionId;
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
     const timeBefore = Date.now();
+
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+
     const answerSubmissionTime = Date.now();
     const timeDifference = answerSubmissionTime - timeBefore;
-    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    console.log(requestSessionStatus(token, quizId, sessionId).body.state + ' aaaaaaa');
     const response = requestPlayerQuestionResults(playerId, 1);
     const body = response.body;
     expect(body).toStrictEqual({
-      questionId: 0,
+      questionId: questionId,
       playersCorrectList: [
         'Hayden',
       ],

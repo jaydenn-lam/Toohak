@@ -82,6 +82,8 @@ export interface quizSession {
   ownerId: number,
   metadata: quiz;
   messages: message[];
+  totalUpdates: number;
+  autoStartNum: number;
   questionResults: questionResult[];
 }
 

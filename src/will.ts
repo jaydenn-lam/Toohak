@@ -21,7 +21,7 @@ function sessionValidator(startNum: number, quizId: number) {
   if (startNum > 50 || startNum < 0) {
     return { error: 'autoStartNum cannot be greater than 50 or negative' };
   }
-  if (quiz.numQuestions === 0) {
+  if (quiz?.numQuestions === 0) {
     return { error: 'Quiz has no questions' };
   }
   for (const session of data.quizSessions) {
@@ -42,18 +42,6 @@ export function findQuiz(quizId: number) {
       return quiz;
     }
   }
-  return {
-    quizId: -1,
-    name: 'NO_QUIZ_FOUND',
-    timeCreated: 0,
-    timeLastEdited: 0,
-    description: '',
-    userId: -1,
-    numQuestions: -1,
-    questions: [],
-    duration: -1,
-    thumbnail: ''
-  };
 }
 
 export function adminSessionStart(token: string, quizId: number, autoStartNum: number): object | error {
@@ -81,6 +69,8 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     ownerId: ownerId,
     metadata: duplicateQuiz,
     messages: [],
+    totalUpdates: 0,
+    autoStartNum: autoStartNum,
     questionResults: emptyQuestionResults,
   };
   data.quizSessions.push(newSession);
@@ -112,6 +102,7 @@ export function adminSessionsView(token: string, quizId: number): object | error
 
 export function adminSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction): object | error {
   let data = getData();
+  console.log(action.action);
   const desiredAction = action.action;
   const userId = findUserId(token);
   if (!tokenExists(token)) {
@@ -145,6 +136,11 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
   if (state === 'FINAL_RESULTS') {
     data = finalResultsUpdater(session, desiredAction);
   }
+  for (const sessionExist of data.quizSessions) {
+    if (sessionExist.sessionId === sessionId) {
+      sessionExist.totalUpdates++;
+    }
+  }
   setData(data);
   return {};
 }
@@ -152,6 +148,7 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
 function lobbyUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
+  const updates = session.totalUpdates;
   let state;
   let qNum = session.atQuestion;
   if (action === 'END') {
@@ -162,7 +159,8 @@ function lobbyUpdater(token: string, quizId: number, session: quizSession, actio
     qNum++;
     setTimeout(() => {
       const currentState = findSession(sessionId)?.state;
-      if (currentState === 'QUESTION_COUNTDOWN') {
+      const currentUpdates = findSession(sessionId)?.totalUpdates;
+      if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
     }, 3000);
@@ -211,6 +209,7 @@ function qCountdownUpdater(token: string, quizId: number, session: quizSession, 
 function qCloseUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
+  const updates = session.totalUpdates;
   let state;
   let qNum = session.atQuestion;
   if (action === 'END') {
@@ -224,7 +223,8 @@ function qCloseUpdater(token: string, quizId: number, session: quizSession, acti
     qNum++;
     setTimeout(() => {
       const currentState = findSession(sessionId)?.state;
-      if (currentState === 'QUESTION_COUNTDOWN') {
+      const currentUpdates = findSession(sessionId)?.totalUpdates;
+      if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
     }, 3000);
@@ -261,14 +261,15 @@ function qOpenUpdater(session: quizSession, action: string) {
 
 function questionDurationFinder(number: number, quizId: number) {
   const quiz = findQuiz(quizId);
-  const question = quiz.questions[number - 1];
-  const duration = question.duration;
+  const question = quiz?.questions[number - 1];
+  const duration = question?.duration;
   return duration;
 }
 
 function answerShowUpdater(token: string, quizId: number, session: quizSession, action: string) {
   const data = getData();
   const sessionId = session.sessionId;
+  const updates = session.totalUpdates;
   let state;
   let qNum = session.atQuestion;
   if (action === 'END') {
@@ -279,7 +280,8 @@ function answerShowUpdater(token: string, quizId: number, session: quizSession, 
     qNum++;
     setTimeout(() => {
       const currentState = findSession(sessionId)?.state;
-      if (currentState === 'QUESTION_COUNTDOWN') {
+      const currentUpdates = findSession(sessionId)?.totalUpdates;
+      if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
     }, 3000);
@@ -293,6 +295,7 @@ function answerShowUpdater(token: string, quizId: number, session: quizSession, 
       existingSession.atQuestion = qNum;
     }
   }
+
   return data;
 }
 
@@ -365,22 +368,22 @@ export function adminSessionStatus(token: string, quizId: number, sessionId: num
   if (userId !== ownerId) {
     return { error: 'User is unauthorised to view sessions' };
   }
+  let sessionStatus;
   for (const session of data.quizSessions) {
     if (session.sessionId === sessionId) {
       const { userId, ...returnedData } = session.metadata;
-      const sessionStatus = {
+      sessionStatus = {
         state: session.state,
         atQuestion: session.atQuestion,
         players: session.players,
         metadata: returnedData
       };
-      return sessionStatus;
     }
   }
-  return {};
+  return sessionStatus;
 }
 
-export function playerAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds) {
+export function playerAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds): object | error {
   const data = getData();
   const questionIndex = questionPosition - 1;
   let sessionId = 0;
@@ -394,7 +397,7 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
   if (error) {
     return error;
   }
-  const question = session.metadata.questions[questionIndex];
+  const question = session?.metadata.questions[questionIndex];
   const correctAnswerArray: number[] = [];
   for (const answer of question.answers) {
     if (answer.correct === true) {
@@ -407,13 +410,13 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
     submissionTime: Math.round(Date.now() / 1000),
   };
   if (correct) {
-    if (!question.correctPlayers) {
+    if (!question?.correctPlayers) {
       question.correctPlayers = [];
     }
-    question.correctPlayers.push(playerEntry);
+    question?.correctPlayers.push(playerEntry);
     for (const player of session.playerProfiles) {
       if (player.playerId === playerId) {
-        player.score = player.score + question?.points;
+        player.score = player.score + question.points;
       }
     }
   } else if (!correct) {
@@ -427,12 +430,6 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
     if (existingSession.sessionId === sessionId) {
       existingSession.metadata.questions[questionIndex] = question;
       existingSession.playerProfiles = session.playerProfiles;
-    }
-  }
-  for (const existingSession of data.quizSessions) {
-    if (existingSession.sessionId === sessionId) {
-      console.log('QUETSION');
-      console.log(existingSession.metadata.questions[questionIndex]);
     }
   }
   setData(data);

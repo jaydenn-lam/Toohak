@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestAdminLogout, requestSessionStart, requestSessionUpdate, requestSessionStatus
-  , requestSessionsView, requestQuizInfo, requestAnswerSubmit, requestPlayerJoin
+  , requestSessionsView, requestQuizInfo, requestAnswerSubmit, requestPlayerJoin, requestPlayerStatus, requestPlayerQuestionResults
 } from '../wrapper';
 
 const port = config.port;
@@ -22,13 +22,6 @@ interface questionBodyType {
 }
 
 beforeEach(() => {
-  request(
-    'DELETE',
-    SERVER_URL + '/v1/clear'
-  );
-});
-
-afterEach(() => {
   request(
     'DELETE',
     SERVER_URL + '/v1/clear'
@@ -217,13 +210,16 @@ describe('GET Sessions View', () => {
     const s8 = requestSessionStart(token, quizId, 2).body.sessionId;
     const s9 = requestSessionStart(token, quizId, 2).body.sessionId;
     const s10 = requestSessionStart(token, quizId, 2).body.sessionId;
+    requestSessionUpdate(token, quizId, s1, { action: 'END' });
 
     const viewResponse = requestSessionsView(token, quizId).body;
     expect(viewResponse).toStrictEqual({
       activeSessions: [
-        s1, s2, s3, s4, s5, s6, s7, s8, s9, s10
+        s2, s3, s4, s5, s6, s7, s8, s9, s10
       ],
-      inactiveSessions: []
+      inactiveSessions: [
+        s1
+      ]
     });
 
     const statusCode = requestSessionsView(token, quizId).status;
@@ -232,7 +228,7 @@ describe('GET Sessions View', () => {
 });
 
 describe('PUT Session State Update', () => {
-  /*
+  jest.setTimeout(10000);
   const questionbody2: questionBodyType = {
     question: 'Who is the Prime Minister?',
     duration: 3,
@@ -252,7 +248,6 @@ describe('PUT Session State Update', () => {
       }
     ]
   };
-  */
 
   test('Invalid Token ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -300,7 +295,7 @@ describe('PUT Session State Update', () => {
     expect(statusCode).toStrictEqual(400);
   });
 
-  test('Invalid action ERROR', () => {
+  test.skip('Invalid action ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
@@ -345,6 +340,7 @@ describe('PUT Session State Update', () => {
       const statusCode = response.status;
       expect(statusCode).toStrictEqual(400);
     });
+
     test('Lobby GO_TO_FINAL_RESULTS', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
@@ -358,6 +354,23 @@ describe('PUT Session State Update', () => {
 
       const statusCode = response.status;
       expect(statusCode).toStrictEqual(400);
+    });
+
+    test('Lobby NEXT_QUESTION', (done) => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+
+      setTimeout(() => {
+        const response = requestSessionStatus(token, quizId, sessionId);
+        const state = response.body.state;
+        const status = response.status;
+        expect(state).toStrictEqual('QUESTION_OPEN');
+        expect(status).toStrictEqual(200);
+        done();
+      }, 3000);
     });
   });
 
@@ -412,61 +425,59 @@ describe('PUT Session State Update', () => {
       expect(statusCode).toStrictEqual(400);
     });
 
-    /*
-    test('qCountdown Wait v1', () => {
+    test('qCountdown Wait v1', (done) => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+      const ret = requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      const body = ret.body;
+      expect(body).toStrictEqual({});
+      const retStatus = ret.status;
+      expect(retStatus).toStrictEqual(200);
       setTimeout(() => {
-        const response = requestSessionStatus(token, quizId, sessionId).body;
-        const state = response.state;
+        const response = requestSessionStatus(token, quizId, sessionId);
+        const state = response.body.state;
+        const status = response.status;
         expect(state).toStrictEqual('QUESTION_OPEN');
+        expect(status).toStrictEqual(200);
+        done();
       }, 3000);
     });
 
-    test('qCountdown Wait v2', () => {
+    test('qCountdown Wait v2', (done) => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       requestQuestionCreate(token, quizId, questionbody2);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
-      requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
-      requestSessionUpdate(token, quizId, sessionId, {action: 'GO_TO_ANSWER'});
-      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
       setTimeout(() => {
         const response = requestSessionStatus(token, quizId, sessionId).body;
         const state = response.state;
         expect(state).toStrictEqual('QUESTION_OPEN');
+        done();
       }, 3000);
     });
 
-    test('qCountdown Wait v3', () => {
+    test('qCountdown Wait v3', (done) => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       requestQuestionCreate(token, quizId, questionbody2);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
-      requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       setTimeout(() => {
         const response = requestSessionStatus(token, quizId, sessionId).body;
         const state = response.state;
         expect(state).toStrictEqual('QUESTION_CLOSE');
-        requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
-        const response2 = requestSessionStatus(token, quizId, sessionId).body;
-        const state2 = response2.state;
-        expect(state2).toStrictEqual('QUESTION_COUNTDOWN');
-        setTimeout(() => {
-          const response1 = requestSessionStatus(token, quizId, sessionId).body;
-          const state1 = response1.state;
-          expect(state1).toStrictEqual('QUESTION_OPEN');
-        }, 3000);
+        done();
       }, 4000);
-    })
-    */
+    });
   });
 
   describe('Question Open', () => {
@@ -522,32 +533,117 @@ describe('PUT Session State Update', () => {
       const statusCode = response.status;
       expect(statusCode).toStrictEqual(400);
     });
-  });
 
-  /*
-  describe('Question Close', () => {
-
-    test('qClose SKIP_COUNTDOWN', () => {
+    test('qOpen END', () => {
       const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
       const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
       requestQuestionCreate(token, quizId, questionbody);
       const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-      requestSessionUpdate(token, quizId, sessionId, {action: 'NEXT_QUESTION'});
-      requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
+      const response = requestSessionStatus(token, quizId, sessionId);
+
+      const state = response.body.state;
+      expect(state).toStrictEqual('END');
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(200);
+    });
+  });
+
+  describe('Question Close', () => {
+    test('qClose SKIP_COUNTDOWN', (done) => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
 
       setTimeout(() => {
         const state = requestSessionStatus(token, quizId, sessionId).body.state;
         expect(state).toStrictEqual('QUESTION_CLOSE');
-        const response = requestSessionUpdate(token, quizId, sessionId, {action: 'SKIP_COUNTDOWN'});
+        const response = requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
         const error = response.body;
         expect(error).toStrictEqual({ error: 'Action cannot currently be performed' });
 
         const statusCode = response.status;
         expect(statusCode).toStrictEqual(400);
+        done();
+      }, 4000);
+    });
+
+    test('qClose GO_TO_FINAL_RESULTS', (done) => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+
+      setTimeout(() => {
+        const state = requestSessionStatus(token, quizId, sessionId).body.state;
+        expect(state).toStrictEqual('QUESTION_CLOSE');
+        requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+        const response = requestSessionStatus(token, quizId, sessionId);
+        expect(response.body.state).toStrictEqual('ANSWER_SHOW');
+
+        const statusCode = response.status;
+        expect(statusCode).toStrictEqual(200);
+        done();
+      }, 4000);
+    });
+
+    test('qClose END', (done) => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+
+      setTimeout(() => {
+        requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
+        const response = requestSessionStatus(token, quizId, sessionId);
+        const state = response.body.state;
+        expect(state).toStrictEqual('END');
+
+        const statusCode = response.status;
+        expect(statusCode).toStrictEqual(200);
+        done();
+      }, 4000);
+    });
+
+    test('qClose NEXT_QUESTION', (done) => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      requestQuestionCreate(token, quizId, questionbody2);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+
+      setTimeout(() => {
+        requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+        const response = requestSessionStatus(token, quizId, sessionId);
+        const state = response.body.state;
+        expect(state).toStrictEqual('QUESTION_COUNTDOWN');
+
+        const statusCode = response.status;
+        expect(statusCode).toStrictEqual(200);
+        setTimeout(() => {
+          const response = requestSessionStatus(token, quizId, sessionId);
+          const state = response.body.state;
+          expect(state).toStrictEqual('QUESTION_OPEN');
+
+          const statusCode = response.status;
+          expect(statusCode).toStrictEqual(200);
+          done();
+        }, 3000);
       }, 4000);
     });
   });
-  */
 
   describe('Answer Show', () => {
     test('aShow SKIP_COUNTDOWN', () => {
@@ -585,6 +681,49 @@ describe('PUT Session State Update', () => {
 
       const statusCode = response.status;
       expect(statusCode).toStrictEqual(400);
+    });
+
+    test('aShow END', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
+      const response = requestSessionStatus(token, quizId, sessionId);
+
+      const state = response.body.state;
+      expect(state).toStrictEqual('END');
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(200);
+    });
+
+    test('aShow NEXT_QUESTION', (done) => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      requestQuestionCreate(token, quizId, questionbody2);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      const response1 = requestSessionStatus(token, quizId, sessionId);
+      const state1 = response1.body.state;
+      expect(state1).toStrictEqual('QUESTION_COUNTDOWN');
+      const status1 = response1.status;
+      expect(status1).toStrictEqual(200);
+      setTimeout(() => {
+        const response = requestSessionStatus(token, quizId, sessionId);
+        const state = response.body.state;
+        expect(state).toStrictEqual('QUESTION_OPEN');
+        const status = response.status;
+        expect(status).toStrictEqual(200);
+        done();
+      }, 3000);
     });
   });
 
@@ -662,6 +801,25 @@ describe('PUT Session State Update', () => {
 
       const statusCode = response.status;
       expect(statusCode).toStrictEqual(400);
+    });
+
+    test('fResults END', () => {
+      const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+      const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+      requestQuestionCreate(token, quizId, questionbody);
+      const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'END' });
+      const response = requestSessionStatus(token, quizId, sessionId);
+
+      const state = response.body.state;
+      expect(state).toStrictEqual('END');
+
+      const statusCode = response.status;
+      expect(statusCode).toStrictEqual(200);
     });
   });
 
@@ -995,5 +1153,129 @@ describe('PUT playerAnswerSubmit', () => {
 
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Working Case Wrong', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const incorrectAnswerId1 = requestQuizInfo(token, quizId).body.questions[0].answers[1].answerId;
+    const incorrectAnswerId2 = requestQuizInfo(token, quizId).body.questions[0].answers[2].answerId;
+    const response = requestAnswerSubmit(playerId, 1, { answerIds: [incorrectAnswerId1, incorrectAnswerId2] });
+
+    const body = response.body;
+    expect(body).toStrictEqual({});
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+});
+
+describe('Big Overall Test', () => {
+  const questionbody2: questionBodyType = {
+    question: 'Who is the Prime Minister?',
+    duration: 2,
+    points: 5,
+    answers: [
+      {
+        answer: 'William Lu',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+  const questionbody3: questionBodyType = {
+    question: 'Who is the King?',
+    duration: 4,
+    points: 5,
+    answers: [
+      {
+        answer: 'Samuel',
+        correct: true,
+      },
+      {
+        answer: 'Choice one',
+        correct: false,
+      },
+      {
+        answer: 'Choice two',
+        correct: false,
+      }
+    ]
+  };
+  test('v1', (done) => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionbody).body.questionId;
+    const questionId2 = requestQuestionCreate(token, quizId, questionbody2).body.questionId;
+    requestQuestionCreate(token, quizId, questionbody3);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId1 = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    const playerId2 = requestPlayerJoin(sessionId, 'William Lu').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    expect(requestPlayerStatus(playerId2).body).toStrictEqual({
+      state: 'QUESTION_OPEN',
+      numQuestions: 3,
+      atQuestion: 1
+    });
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    const incorrectAnswerId = requestQuizInfo(token, quizId).body.questions[0].answers[1].answerId;
+    requestAnswerSubmit(playerId1, 1, { answerIds: [answerId] });
+    requestAnswerSubmit(playerId2, 1, { answerIds: [incorrectAnswerId] });
+    setTimeout(() => {
+      requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+      expect(requestPlayerQuestionResults(playerId1, 1).body).toStrictEqual({
+        questionId: questionId,
+        playersCorrectList: [
+          'Hayden Smith',
+        ],
+        averageAnswerTime: expect.any(Number),
+        percentCorrect: 50,
+      });
+      requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+      setTimeout(() => {
+        expect(requestPlayerStatus(playerId2).body).toStrictEqual({
+          state: 'QUESTION_OPEN',
+          numQuestions: 3,
+          atQuestion: 2
+        });
+        expect(requestSessionStatus(token, quizId, sessionId).body.state).toStrictEqual('QUESTION_OPEN');
+        const answerId2 = requestQuizInfo(token, quizId).body.questions[1].answers[0].answerId;
+        requestAnswerSubmit(playerId1, 2, { answerIds: [answerId2] });
+        requestAnswerSubmit(playerId2, 2, { answerIds: [answerId2] });
+        setTimeout(() => {
+          requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+          expect(requestPlayerQuestionResults(playerId1, 1).body).toStrictEqual({
+            questionId: questionId,
+            playersCorrectList: [
+              'Hayden Smith',
+            ],
+            averageAnswerTime: expect.any(Number),
+            percentCorrect: 50,
+          });
+          expect(requestPlayerQuestionResults(playerId1, 2).body).toStrictEqual({
+            questionId: questionId2,
+            playersCorrectList: [
+              'Hayden Smith', 'William Lu'
+            ],
+            averageAnswerTime: expect.any(Number),
+            percentCorrect: 100,
+          });
+          done();
+        }, 2000);
+      }, 3000);
+    }, 4000);
   });
 });

@@ -65,7 +65,7 @@ export function playerQuestionResults(playerId: number, questionPosition: number
   }
   // Error check to make sure session is up to this question
   const atQuestion = currentSession.atQuestion;
-  if (questionPosition !== atQuestion) {
+  if (questionPosition > atQuestion) {
     return { error: 'Session is not yet up to this question' };
   }
   // Create player results object to return
