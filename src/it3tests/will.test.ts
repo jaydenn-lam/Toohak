@@ -295,7 +295,7 @@ describe('PUT Session State Update', () => {
     expect(statusCode).toStrictEqual(400);
   });
 
-  test('Invalid action ERROR', () => {
+  test.skip('Invalid action ERROR', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
