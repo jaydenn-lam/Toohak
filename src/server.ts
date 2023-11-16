@@ -18,7 +18,7 @@ import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSession
 import { clear } from './other';
 import HTTPError from 'http-errors';
 import { playerJoin, playerStatus, playerQuestionInfo } from './anita';
-import { sessionChatView, sendChatMessage, playerQuestionResults } from './Avi';
+import { sessionChatView, sendChatMessage, playerQuestionResults, sessionResults } from './Avi';
 
 // Set up web app
 const app = express();
@@ -678,7 +678,14 @@ app.get('/v1/player/:playerId/question/:questionPosition/results', (req: Request
   }
   res.status(200).json(response);
 });
-
+app.get('/v1/player/:playerId/results', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const response = sessionResults(playerId);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================

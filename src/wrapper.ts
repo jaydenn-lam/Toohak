@@ -502,3 +502,14 @@ export function requestPlayerQuestionResults(playerId: number, questionPosition:
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
+
+export function requestSessionResults(playerId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/player/${playerId}/results`,
+    {
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
