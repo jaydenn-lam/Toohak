@@ -206,19 +206,6 @@ describe('GET Question results', () => {
 });
 
 describe('GET Final results', () => {
-
-  const playerAction: actionType = {
-    action: 'NEXT_QUESTION',
-  }
-
-  const playerAction2: actionType = {
-    action: 'SKIP_QUESTION',
-  }
-
-  const playerAction3: actionType = {
-    action: 'GO_TO_FINAL_RESULTS',
-  }
-
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
@@ -297,7 +284,6 @@ describe('GET Final results', () => {
     expect(statusCode).toStrictEqual(200);
   });
 });
-
 
 describe('GET Players session chat', () => {
   test('Invalid playerId', () => {
