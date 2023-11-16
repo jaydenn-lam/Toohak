@@ -17,8 +17,9 @@ import {
 import { adminSessionStart, adminSessionStatus, adminSessionUpdate, adminSessionsView, playerAnswerSubmit } from './will';
 import { clear } from './other';
 import HTTPError from 'http-errors';
+import { adminThumbnailUpdate, adminQuizResults, adminQuizResultsCSV } from './jayden';
 import { playerJoin, playerStatus, playerQuestionInfo } from './anita';
-import { sessionChatView, sendChatMessage, playerQuestionResults } from './Avi';
+import { sessionChatView, sendChatMessage, playerQuestionResults, sessionResults } from './Avi';
 
 // Set up web app
 const app = express();
@@ -679,6 +680,67 @@ app.get('/v1/player/:playerId/question/:questionPosition/results', (req: Request
   res.status(200).json(response);
 });
 
+app.put('/v1/admin/quiz/:quizId/thumbnail', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizId);
+  const { body } = req.body;
+  const response = adminThumbnailUpdate(token, quizId, body);
+  if ('error' in response && response.error === 'Invalid Image Url') {
+    throw HTTPError(400, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response && response.error === 'quizId is not owned by user') {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v1/admin/quiz/:quizId/session/:sessionId/results', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizId);
+  const sessionId = parseInt(req.params.sessionId);
+  const response = adminQuizResults(token, quizId, sessionId);
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state')) {
+    throw HTTPError(400, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response && response.error === 'User is unauthorised to modify sessions') {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const quizId = parseInt(req.params.quizId);
+  const sessionId = parseInt(req.params.sessionId);
+  const response = adminQuizResultsCSV(token, quizId, sessionId);
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state')) {
+    throw HTTPError(400, response.error);
+  }
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  }
+  if ('error' in response && response.error === 'User is unauthorised to modify sessions') {
+    throw HTTPError(403, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.get('/v1/player/:playerId/results', (req: Request, res: Response) => {
+  const playerId = parseInt(req.params.playerId);
+  const response = sessionResults(playerId);
+  if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+
+app.use('/public', express.static('public'));
 // ====================================================================
 //  ================= WORK IS DONE ABOVE THIS LINE ===================
 // ====================================================================

@@ -1,5 +1,5 @@
 
-import { getData, setData, quizSession, action, playerSubmission } from './dataStore';
+import { getData, setData, quizSession, action, playerSubmission, questionResult } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { error } from './auth';
 import { tokenOwnsQuiz } from './quiz';
@@ -35,7 +35,7 @@ function sessionValidator(startNum: number, quizId: number) {
   return {};
 }
 
-function findQuiz(quizId: number) {
+export function findQuiz(quizId: number) {
   const data = getData();
   for (const quiz of data.quizzes) {
     if (quiz.quizId === quizId) {
@@ -60,6 +60,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
   const sessionId = data.currentSessionId;
   data.currentSessionId++;
   const ownerId = findUserId(token);
+  const emptyQuestionResults: questionResult[] = [];
   const newSession: quizSession = {
     sessionId,
     state: 'LOBBY',
@@ -71,7 +72,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     messages: [],
     totalUpdates: 0,
     autoStartNum: autoStartNum
-  };
+    questionResults: emptyQuestionResults,
   data.quizSessions.push(newSession);
   setData(data);
   return { sessionId };

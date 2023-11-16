@@ -1,4 +1,4 @@
-import { getData, setData } from './dataStore';
+import { getData, quizSession, setData } from './dataStore';
 
 /*
 Function completely sets the data in dataStore.js to an empty version of the original dataStore we had saved there
@@ -21,16 +21,6 @@ function clear() {
     }
   );
   return {};
-}
-
-function userIdExists(userId: number): boolean {
-  const data = getData();
-  for (const user of data.users) {
-    if (user.userId === userId) {
-      return true;
-    }
-  }
-  return false;
 }
 
 function quizIdExists(quizId: number): boolean {
@@ -100,4 +90,4 @@ export function sessionIdExists(sessionId: number) {
   return false;
 }
 
-export { clear, userIdExists, quizIdExists, findUserId, findUser, tokenExists };
+export { clear, quizIdExists, findUserId, findUser, tokenExists };

@@ -1,7 +1,7 @@
-import { getData, setData, quizSession, playerSubmission } from './dataStore';
+import { getData, setData, quizSession, playerSubmission, playerProfile } from './dataStore';
 import { error } from './auth';
 
-interface playerQuestionResultsType {
+export interface playerQuestionResultsType {
   questionId: number,
   playersCorrectList: string[],
   averageAnswerTime: number,
@@ -22,24 +22,23 @@ interface messagesType {
 interface messageArgumentType {
   messageBody: string,
 }
-/*
-interface usersRanked {
+
+export interface usersRanked {
   name: string,
   score: number
 }
 
-interface questionResult {
+export interface questionResult {
   questionId: number,
   playersCorrectList: string[],
   averageAnswerTime: number,
   percentCorrect: number
 }
 
-interface sessionResultsType {
+export interface sessionResultsType {
   usersRankedByScore: usersRanked[],
   questionResults: questionResult[],
 }
-*/
 
 export function playerQuestionResults(playerId: number, questionPosition: number): playerQuestionResultsType | error {
   const data = getData();
@@ -96,10 +95,15 @@ export function playerQuestionResults(playerId: number, questionPosition: number
     averageAnswerTime: averageTime,
     percentCorrect: percentage,
   };
+  for (const session of sessionArray) {
+    if (session.sessionId === currentSession.sessionId) {
+      session.questionResults.push(returnResults);
+    }
+  }
   setData(data);
   return returnResults;
 }
-/*
+
 export function sessionResults(playerId: number): sessionResultsType | error {
   const data = getData();
   const sessionArray = data.quizSessions;
@@ -119,12 +123,27 @@ export function sessionResults(playerId: number): sessionResultsType | error {
   if (currentSession.state !== 'FINAL_RESULTS') {
     return { error: 'Session not in FINAL_RESULTS state' };
   }
-
+  // Create the users ranked by score array
+  const playersRanked: playerProfile[] = currentSession.playerProfiles;
+  playersRanked.sort((playerA, playerB) => playerB.score - playerA.score);
+  // convert the array to have playerNames instead of playerId for each element
+  const usersRankedScoreArray: usersRanked[] = [];
+  for (const player of playersRanked) {
+    const userRankedScore: usersRanked = {
+      name: getPlayerName(player.playerId, currentSession),
+      score: player.score
+    };
+    usersRankedScoreArray.push(userRankedScore);
+  }
+  // Store the question results for each question in dataStore
+  const sessionResults: sessionResultsType = {
+    usersRankedByScore: usersRankedScoreArray,
+    questionResults: currentSession.questionResults
+  };
   setData(data);
-  return;
+  return sessionResults;
 }
 
-*/
 export function sessionChatView(playerId: number): error | messagesType {
   const data = getData();
   const sessionArray = data.quizSessions;
@@ -171,7 +190,11 @@ export function sendChatMessage(playerId: number, message: messageArgumentType):
     playerName: playerName,
     timeSent: Math.round(Date.now() / 1000),
   };
-  currentSession.messages.push(sendMessage);
+  for (const session of sessionArray) {
+    if (session.sessionId === currentSession.sessionId) {
+      session.messages.push(sendMessage);
+    }
+  }
   setData(data);
   return {};
 }
@@ -203,7 +226,6 @@ function playerSessionFinder(playerId: number): number {
       }
     }
   }
-  return 10000;
 }
 
 // Helper function that checks that the message body is of valid type
@@ -215,7 +237,7 @@ function validMessageBodyCheck(message: messageArgumentType) {
 }
 
 // Helper function that finds the corresponding player's name given the playerId
-function getPlayerName(playerId: number, currentSession: quizSession) {
+export function getPlayerName(playerId: number, currentSession: quizSession): string {
   let finderIndex = 0;
   for (let playerIdIndex = 0; playerIdIndex < currentSession.playerProfiles.length; playerIdIndex++) {
     if (currentSession.playerProfiles[playerIdIndex].playerId === playerId) {
@@ -244,10 +266,7 @@ function sortNames(arr: string[]): string[] {
     if (a < b) {
       return -1;
     }
-    if (a > b) {
-      return 1;
-    }
-    return 0;
+    return 1;
   });
 }
 

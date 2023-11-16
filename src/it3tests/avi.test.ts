@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart,
-  requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionStatus
+  requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionStatus, requestSessionResults
 } from '../wrapper';
 
 const port = config.port;
@@ -196,42 +196,108 @@ describe('GET Question results', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
   });
+
+  test('Success case with no correct players', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const timeBefore = Date.now();
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId + 1] });
+    const answerSubmissionTime = Date.now();
+    const timeDifference = answerSubmissionTime - timeBefore;
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    const response = requestPlayerQuestionResults(playerId, 1);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: [],
+      averageAnswerTime: Math.round(timeDifference / 1000),
+      percentCorrect: 0,
+    });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Success case with multiple players', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Avi').body.playerId;
+    const playerId2 = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const timeBefore = Date.now();
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+    requestAnswerSubmit(playerId2, 1, { answerIds: [answerId] });
+    const answerSubmissionTime = Date.now();
+    const timeDifference = answerSubmissionTime - timeBefore;
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    const response = requestPlayerQuestionResults(playerId, 1);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: ['Avi', 'Hayden'],
+      averageAnswerTime: Math.round(timeDifference / 1000),
+      percentCorrect: 100,
+    });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Success case with multiple players - test whether players Correct list gives ascending order', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    const playerId2 = requestPlayerJoin(sessionId, 'Avi').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const timeBefore = Date.now();
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+    requestAnswerSubmit(playerId2, 1, { answerIds: [answerId] });
+    const answerSubmissionTime = Date.now();
+    const timeDifference = answerSubmissionTime - timeBefore;
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    const response = requestPlayerQuestionResults(playerId, 1);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: ['Avi', 'Hayden'],
+      averageAnswerTime: Math.round(timeDifference / 1000),
+      percentCorrect: 100,
+    });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
 });
-/*
+
 describe('GET Final results', () => {
-
-  const playerAction: actionType = {
-    action: 'NEXT_QUESTION',
-  }
-
-  const playerAction2: actionType = {
-    action: 'SKIP_QUESTION',
-  }
-
-  const playerAction3: actionType = {
-    action: 'GO_TO_FINAL_RESULTS',
-  }
-
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-    requestSessionUpdate(quizId, sessionId, token, playerAction);
-    const answerSubmissions: answerSubmissionType = {
-      answerIds: [1],
-    };
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
 
-    requestPlayerAnswerSubmission(answerSubmissions, playerId, 1);
-    requestSessionUpdate(quizId, sessionId, token, playerAction2);
-    requestSessionUpdate(quizId, sessionId, token, playerAction3);
-    const response = requestSessionResults(playerId + 1, 1);
-
+    const response = requestSessionResults(playerId + 1);
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Invalid playerId' });
-
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
   });
@@ -241,14 +307,11 @@ describe('GET Final results', () => {
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-
-    const response = requestSessionResults(playerId, 1);
+    const response = requestSessionResults(playerId);
 
     const error = response.body;
     expect(error).toStrictEqual({ error: 'Session not in FINAL_RESULTS state' });
-
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(400);
   });
@@ -258,32 +321,36 @@ describe('GET Final results', () => {
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
-
-    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
-
-    requestSessionUpdate(quizId, sessionId, token, playerAction);
-
-    requestSessionUpdate(quizId, sessionId, token, playerAction2);
+    const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
     const currentTime = Date.now();
-    const answerSubmissions: answerSubmissionType = {
-      answerIds: [1],
-    };
-    requestPlayerAnswerSubmission(answerSubmissions, playerId, 1);
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
     const answerTime = Date.now();
     const timeDifference = answerTime - currentTime;
-    setTimeout(() => {}, 4000);
-    requestSessionUpdate(quizId, sessionId, token, playerAction3);
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    const responseA = requestPlayerQuestionResults(playerId, 1);
+    const bodyA = responseA.body;
+    expect(bodyA).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: [
+        'Hayden',
+      ],
+      averageAnswerTime: Math.round(timeDifference / 1000),
+      percentCorrect: 100,
+    });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
 
     const response = requestSessionResults(playerId);
-
     const body = response.body;
     expect(body).toStrictEqual({
       usersRankedByScore: [{
-        name: 'Hayden Smith',
+        name: 'Hayden',
         score: 5
       }],
       questionResults: [{
-        questionId: 1,
+        questionId: 0,
         playersCorrectList: [
           'Hayden'
         ],
@@ -291,12 +358,10 @@ describe('GET Final results', () => {
         percentCorrect: 100,
       }]
     });
-
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
   });
 });
-*/
 
 describe('GET Players session chat', () => {
   test('Invalid playerId', () => {

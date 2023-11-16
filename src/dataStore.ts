@@ -51,6 +51,7 @@ interface quiz {
   numQuestions: number;
   questions: Question[];
   duration: number;
+  thumbnail: string;
 }
 
 interface message {
@@ -58,6 +59,13 @@ interface message {
   playerId: number,
   playerName: string,
   timeSent: number
+}
+
+interface questionResult {
+  questionId: number;
+  playersCorrectList: string[];
+  averageAnswerTime: number;
+  percentCorrect: number;
 }
 
 export interface playerProfile {
@@ -76,6 +84,7 @@ export interface quizSession {
   messages: message[];
   totalUpdates: number;
   autoStartNum: number;
+  questionResults: questionResult[];
 }
 
 interface user {
@@ -162,4 +171,4 @@ function setData(newData: dataStore) {
   return {};
 }
 
-export { getData, setData, token, trash, trashQuiz, Question, Answer, quiz, user };
+export { getData, setData, token, trash, trashQuiz, Question, Answer, quiz, user, questionResult };
