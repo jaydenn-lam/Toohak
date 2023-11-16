@@ -21,7 +21,7 @@ function sessionValidator(startNum: number, quizId: number) {
   if (startNum > 50 || startNum < 0) {
     return { error: 'autoStartNum cannot be greater than 50 or negative' };
   }
-  if (quiz.numQuestions === 0) {
+  if (quiz?.numQuestions === 0) {
     return { error: 'Quiz has no questions' };
   }
   for (const session of data.quizSessions) {
@@ -157,8 +157,8 @@ function lobbyUpdater(token: string, quizId: number, session: quizSession, actio
     state = 'QUESTION_COUNTDOWN';
     qNum++;
     setTimeout(() => {
-      const currentState = findSession(sessionId).state;
-      const currentUpdates = findSession(sessionId).totalUpdates;
+      const currentState = findSession(sessionId)?.state;
+      const currentUpdates = findSession(sessionId)?.totalUpdates;
       if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
@@ -221,8 +221,8 @@ function qCloseUpdater(token: string, quizId: number, session: quizSession, acti
     state = 'QUESTION_COUNTDOWN';
     qNum++;
     setTimeout(() => {
-      const currentState = findSession(sessionId).state;
-      const currentUpdates = findSession(sessionId).totalUpdates;
+      const currentState = findSession(sessionId)?.state;
+      const currentUpdates = findSession(sessionId)?.totalUpdates;
       if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
@@ -260,8 +260,8 @@ function qOpenUpdater(session: quizSession, action: string) {
 
 function questionDurationFinder(number: number, quizId: number) {
   const quiz = findQuiz(quizId);
-  const question = quiz.questions[number - 1];
-  const duration = question.duration;
+  const question = quiz?.questions[number - 1];
+  const duration = question?.duration;
   return duration;
 }
 
@@ -278,8 +278,8 @@ function answerShowUpdater(token: string, quizId: number, session: quizSession, 
     state = 'QUESTION_COUNTDOWN';
     qNum++;
     setTimeout(() => {
-      const currentState = findSession(sessionId).state;
-      const currentUpdates = findSession(sessionId).totalUpdates;
+      const currentState = findSession(sessionId)?.state;
+      const currentUpdates = findSession(sessionId)?.totalUpdates;
       if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
@@ -367,19 +367,19 @@ export function adminSessionStatus(token: string, quizId: number, sessionId: num
   if (userId !== ownerId) {
     return { error: 'User is unauthorised to view sessions' };
   }
+  let sessionStatus;
   for (const session of data.quizSessions) {
     if (session.sessionId === sessionId) {
       const { userId, ...returnedData } = session.metadata;
-      const sessionStatus = {
+      sessionStatus = {
         state: session.state,
         atQuestion: session.atQuestion,
         players: session.players,
         metadata: returnedData
       };
-      return sessionStatus;
     }
   }
-  return {};
+  return sessionStatus;
 }
 
 export function playerAnswerSubmit(playerId: number, questionPosition: number, answerIds: answerIds): object | error {
@@ -396,7 +396,7 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
   if (error) {
     return error;
   }
-  const question = session.metadata.questions[questionIndex];
+  const question = session?.metadata.questions[questionIndex];
   const correctAnswerArray: number[] = [];
   for (const answer of question.answers) {
     if (answer.correct === true) {
@@ -409,13 +409,13 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
     submissionTime: Math.round(Date.now() / 1000),
   };
   if (correct) {
-    if (!question.correctPlayers) {
+    if (!question?.correctPlayers) {
       question.correctPlayers = [];
     }
-    question.correctPlayers.push(playerEntry);
+    question?.correctPlayers.push(playerEntry);
     for (const player of session.playerProfiles) {
       if (player.playerId === playerId) {
-        player.score = player.score + question?.points;
+        player.score = player.score + question.points;
       }
     }
   } else if (!correct) {

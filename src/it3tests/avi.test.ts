@@ -165,7 +165,7 @@ describe('GET Question results', () => {
     expect(statusCode).toStrictEqual(400);
   });
 
-  test.only('Success case', () => {
+  test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     const questionId = requestQuestionCreate(token, quizId, questionbody).body.questionId;
