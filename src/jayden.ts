@@ -4,7 +4,6 @@ import { tokenOwnsQuiz } from './quiz';
 import { findQuiz } from './will';
 import { getPlayerName, usersRanked, sessionResultsType } from './Avi';
 import fs from 'fs';
-import HTTPError from 'http-errors';
 import { SERVER_URL } from './wrapper';
 
 export interface urlBody {
@@ -111,6 +110,7 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
   csv += '\n';
   fs.writeFile('public/output.csv', csv, (err) => {
     if (err) {
+      console.log('Error writing file\n');
     } else {
       console.log('File written successfully\n');
     }
