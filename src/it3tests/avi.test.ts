@@ -89,6 +89,10 @@ describe('GET Question results', () => {
     action: 'SKIP_COUNTDOWN',
   };
 
+  const playerAction3: actionType = {
+    action: 'GO_TO_ANSWER',
+  };
+
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;

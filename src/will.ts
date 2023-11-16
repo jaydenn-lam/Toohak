@@ -42,7 +42,6 @@ export function findQuiz(quizId: number) {
       return quiz;
     }
   }
-  return null;
 }
 
 export function adminSessionStart(token: string, quizId: number, autoStartNum: number): object | error {
@@ -71,8 +70,9 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     metadata: duplicateQuiz,
     messages: [],
     totalUpdates: 0,
-    autoStartNum: autoStartNum
+    autoStartNum: autoStartNum,
     questionResults: emptyQuestionResults,
+  };
   data.quizSessions.push(newSession);
   setData(data);
   return { sessionId };
