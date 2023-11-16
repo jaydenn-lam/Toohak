@@ -1,7 +1,7 @@
 import { getData, setData, quizSession, playerSubmission, playerProfile } from './dataStore';
 import { error } from './auth';
 
-interface playerQuestionResultsType {
+export interface playerQuestionResultsType {
   questionId: number,
   playersCorrectList: string[],
   averageAnswerTime: number,
@@ -23,19 +23,19 @@ interface messageArgumentType {
   messageBody: string,
 }
 
-interface usersRanked {
+export interface usersRanked {
   name: string,
   score: number
 }
 
-interface questionResult {
+export interface questionResult {
   questionId: number,
   playersCorrectList: string[],
   averageAnswerTime: number,
   percentCorrect: number
 }
 
-interface sessionResultsType {
+export interface sessionResultsType {
   usersRankedByScore: usersRanked[],
   questionResults: questionResult[],
 }
@@ -235,7 +235,7 @@ function validMessageBodyCheck(message: messageArgumentType) {
 }
 
 // Helper function that finds the corresponding player's name given the playerId
-function getPlayerName(playerId: number, currentSession: quizSession): string {
+export function getPlayerName(playerId: number, currentSession: quizSession): string {
   let finderIndex = 0;
   for (let playerIdIndex = 0; playerIdIndex < currentSession.playerProfiles.length; playerIdIndex++) {
     if (currentSession.playerProfiles[playerIdIndex].playerId === playerId) {

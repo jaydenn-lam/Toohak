@@ -21,6 +21,10 @@ interface questionBodyType {
   answers: Answer[];
 }
 
+interface urlBody {
+  imgUrl: string;
+}
+
 interface messageType {
   messageBody: string;
 }
@@ -416,6 +420,23 @@ export function requestSessionStatus(token: string, quizId: number, sessionId: n
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
+export function requestThumbnailUpdate(token: string, quizId: number, body: urlBody) {
+  const res = request(
+    'PUT',
+    SERVER_URL + `/v1/admin/quiz/${quizId}/thumbnail`,
+    {
+      headers: {
+        token
+      },
+      json: {
+        body
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
 export function requestPlayerJoin(sessionId: number, name: string) {
   const res = request(
     'POST',
@@ -424,6 +445,20 @@ export function requestPlayerJoin(sessionId: number, name: string) {
       json: {
         sessionId,
         name
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestQuizResults(token: string, quizId: number, sessionId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}/results`,
+    {
+      headers: {
+        token
       },
       timeout: 100
     }
@@ -442,6 +477,21 @@ export function requestPlayerStatus(playerId: number) {
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
+
+export function requestQuizResultsCSV(token: string, quizId: number, sessionId: number) {
+  const res = request(
+    'GET',
+    SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}/results/csv`,
+    {
+      headers: {
+        token
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
 export function requestPlayerQuestionInfo(playerId: number, questionPosition: number) {
   const res = request(
     'GET',
@@ -453,6 +503,7 @@ export function requestPlayerQuestionInfo(playerId: number, questionPosition: nu
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
+
 export function requestSessionChatView(playerId: number) {
   const res = request(
     'GET',

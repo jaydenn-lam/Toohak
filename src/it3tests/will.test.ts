@@ -820,6 +820,7 @@ describe('GET Session Status', () => {
       numQuestions: quizInfo.numQuestions,
       questions: quizInfo.questions,
       duration: quizInfo.duration,
+      thumbnail: ''
     };
     expect(body).toStrictEqual({
       state: 'LOBBY',

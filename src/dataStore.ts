@@ -51,6 +51,7 @@ interface quiz {
   numQuestions: number;
   questions: Question[];
   duration: number;
+  thumbnail: string;
 }
 
 interface message {
