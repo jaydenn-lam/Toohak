@@ -1,10 +1,14 @@
-import { getData, setData, playerProfile } from './dataStore';
+import { getData, setData, playerProfile, quiz } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { tokenOwnsQuiz } from './quiz';
 import { findQuiz } from './will';
 import { getPlayerName, usersRanked, sessionResultsType } from './Avi';
 import fs from 'fs';
-import { SERVER_URL } from './wrapper';
+import config from './config.json';
+
+const port = config.port;
+const url = config.url;
+export const SERVER_URL = `${url}:${port}`;
 
 export interface urlBody {
   imgUrl: string;
@@ -38,7 +42,7 @@ export function adminThumbnailUpdate (token: string, quizId: number, body: urlBo
   if (thumbnail === '' || !checkHTTP(thumbnail) || !checkJPGPNG(thumbnail)) {
     return { error: 'Invalid Image Url' };
   }
-  const quiz = findQuiz(quizId);
+  const quiz = findQuiz(quizId) as quiz;
   quiz.thumbnail = thumbnail;
   data.quizzes[data.quizzes.indexOf(quiz)] = quiz;
   setData(data);
