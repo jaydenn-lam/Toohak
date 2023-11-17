@@ -1,7 +1,8 @@
-import { getData, setData, quiz } from './dataStore';
+import { getData, setData, quiz, user } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
-import { findUserId, tokenExists } from './other';
+import { findUserId, tokenExists, findUser } from './other';
+import { usersRanked } from './Avi';
 
 interface returnToken {
   token: string;
@@ -11,7 +12,7 @@ export interface error {
   error: string;
 }
 
-interface user {
+interface userBody {
   user: {
     userId: number;
     name: string;
@@ -143,7 +144,7 @@ If the user is not found, it returns a error message, error: 'Invalid authUserId
 @param {number} token - The unique token of the user.
 @returns {object} -  An object containing user details.
 */
-function adminUserDetails(token: string): user | error {
+function adminUserDetails(token: string): userBody | error {
   // grabs the data from the data store
   const data = getData();
   const tokenArray = data.tokens;
@@ -156,7 +157,8 @@ function adminUserDetails(token: string): user | error {
     return { error: 'Invalid token' };
   }
   // find the user with the matching userToken
-  const user = userArray.find((userArray) => userArray.userId === userToken.userId);
+  const userId = findUserId(userToken.token as string); 
+  const user = findUser(userId) as user; 
   // if no user is found return error: 'Invalid authUserId'
   // construct and return user details
   return {
