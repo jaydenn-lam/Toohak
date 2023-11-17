@@ -1,5 +1,5 @@
 
-import { getData, setData, quizSession, action, playerSubmission, questionResult, quiz } from './dataStore';
+import { getData, setData, quizSession, action, questionResult, quiz, playerProfile } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { error } from './auth';
 import { tokenOwnsQuiz } from './quiz';
@@ -127,7 +127,7 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
     data = qCountdownUpdater(token, quizId, session, desiredAction);
   }
   if (state === 'QUESTION_OPEN') {
-    data = qOpenUpdater(session, desiredAction);
+    data = qOpenUpdater(quizId, session, desiredAction);
   }
   if (state === 'QUESTION_CLOSE') {
     data = qCloseUpdater(token, quizId, session, desiredAction);
@@ -180,6 +180,7 @@ function qCountdownUpdater(token: string, quizId: number, session: quizSession, 
   const data = getData();
   const sessionId = session.sessionId;
   const qNum = session.atQuestion;
+  const updates = session.totalUpdates;
   const duration = questionDurationFinder(qNum, quizId) as number;
   let state;
   if (action === 'END') {
@@ -195,7 +196,8 @@ function qCountdownUpdater(token: string, quizId: number, session: quizSession, 
     }
     setTimeout(() => {
       const currentState = findSession(sessionId)?.state;
-      if (currentState === 'QUESTION_OPEN') {
+      const currentUpdates = findSession(sessionId)?.totalUpdates;
+      if (currentState === 'QUESTION_OPEN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'OPEN_TO_CLOSE' });
       }
     }, duration * 1000);
@@ -240,17 +242,19 @@ function qCloseUpdater(token: string, quizId: number, session: quizSession, acti
   return data;
 }
 
-function qOpenUpdater(session: quizSession, action: string) {
-  const data = getData();
+function qOpenUpdater(quizId: number, session: quizSession, action: string) {
+  let data = getData();
   const sessionId = session.sessionId;
   let state;
   if (action === 'END') {
     state = 'END';
   }
   if (action === 'GO_TO_ANSWER') {
+    data = scoreCalculator(quizId, session);
     state = 'ANSWER_SHOW';
   }
   if (action === 'OPEN_TO_CLOSE') {
+    data = scoreCalculator(quizId, session);
     state = 'QUESTION_CLOSE';
   }
   for (const existingSession of data.quizSessions) {
@@ -259,6 +263,64 @@ function qOpenUpdater(session: quizSession, action: string) {
     }
   }
   return data;
+}
+
+function scoreCalculator(quizId: number, session: quizSession) {
+  const data = getData();
+  const questionIndex = session.atQuestion - 1;
+  const question = session.metadata.questions[questionIndex];
+  const correctAnswerArray: number[] = [];
+  for (const answer of question.answers) {
+    if (answer.correct === true) {
+      correctAnswerArray.push(answer.answerId);
+    }
+  }
+  for (const player of session.playerProfiles) {
+    const correct = answerIdChecker(player.lastSubmittedAnswer, correctAnswerArray);
+    const playerEntry: playerProfile = {
+      name: player.name,
+      playerId: player.playerId,
+      submissionTime: player.submissionTime,
+      lastSubmittedAnswer: [],
+      score: 0,
+    };
+    if (correct) {
+      if (!question.correctPlayers) {
+        question.correctPlayers = [];
+      }
+      const add = addScoreCalc(question.answerOrder, question.points, player.playerId);
+      playerEntry.score = playerEntry.score + add;
+      player.score = player.score + add;
+      question.correctPlayers.push(playerEntry);
+    } else if (!correct) {
+      if (!question.incorrectPlayers) {
+        question.incorrectPlayers = [];
+      }
+      question.incorrectPlayers.push(playerEntry);
+    }
+  }
+
+  for (const existingSession of data.quizSessions) {
+    if (session.sessionId === existingSession.sessionId) {
+      existingSession.metadata.questions[questionIndex] = question;
+      existingSession.playerProfiles = session.playerProfiles;
+    }
+  }
+  setData(data);
+  return data;
+}
+
+function addScoreCalc(orderArray: number[], points: number, playerId: number) {
+  let index = 1;
+  let add = 0;
+  for (const orderPlayerId of orderArray) {
+    if (orderPlayerId === playerId) {
+      add = points * (1 / index);
+    }
+    index++;
+  }
+  const roundedAdd = Number(add.toFixed(1));
+  return roundedAdd;
 }
 
 function questionDurationFinder(number: number, quizId: number) {
@@ -319,7 +381,6 @@ function finalResultsUpdater(session: quizSession, action: string) {
 function actionVerifier(session: quizSession, desiredAction: string) {
   const state = session.state;
   if (!Object.keys(action).includes(desiredAction) && desiredAction !== 'OPEN_TO_CLOSE') {
-    console.log(desiredAction);
     return { error: 'Invalid action' };
   }
   if (state === 'LOBBY') {
@@ -374,6 +435,9 @@ export function adminSessionStatus(token: string, quizId: number, sessionId: num
   let sessionStatus;
   for (const session of data.quizSessions) {
     if (session.sessionId === sessionId) {
+      for (const question of session.metadata.questions) {
+        delete question.answerOrder;
+      }
       const { userId, ...returnedData } = session.metadata;
       sessionStatus = {
         state: session.state,
@@ -401,34 +465,18 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
     return error;
   }
   const question = session?.metadata.questions[questionIndex];
-  const correctAnswerArray: number[] = [];
-  for (const answer of question.answers) {
-    if (answer.correct === true) {
-      correctAnswerArray.push(answer.answerId);
+  for (const player of session.playerProfiles) {
+    if (player.playerId === playerId) {
+      player.lastSubmittedAnswer = answerIds.answerIds;
+      player.submissionTime = Math.round(Date.now() / 1000);
     }
   }
-  const correct = answerIdChecker(answerIds.answerIds, correctAnswerArray);
-  const playerEntry: playerSubmission = {
-    playerId: playerId,
-    submissionTime: Math.round(Date.now() / 1000),
-  };
-  if (correct) {
-    if (!question?.correctPlayers) {
-      question.correctPlayers = [];
+  for (const submittedPlayer of question.answerOrder) {
+    if (submittedPlayer === playerId) {
+      question.answerOrder = question.answerOrder.filter(value => value !== playerId);
     }
-    question?.correctPlayers.push(playerEntry);
-    for (const player of session.playerProfiles) {
-      if (player.playerId === playerId) {
-        player.score = player.score + question.points;
-      }
-    }
-  } else if (!correct) {
-    if (!question.incorrectPlayers) {
-      question.incorrectPlayers = [];
-    }
-    question.incorrectPlayers.push(playerEntry);
   }
-
+  question.answerOrder.push(playerId);
   for (const existingSession of data.quizSessions) {
     if (existingSession.sessionId === sessionId) {
       existingSession.metadata.questions[questionIndex] = question;

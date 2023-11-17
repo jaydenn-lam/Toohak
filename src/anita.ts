@@ -102,8 +102,11 @@ export function playerJoin(sessionId: number, name: string): object | error {
         data.currentPlayerId++;
         // Create a player profile for the newly added player
         const playerProfile: playerProfile = {
+          name: name,
           playerId: playerId,
           score: 0,
+          submissionTime: 0,
+          lastSubmittedAnswer: []
         };
         // Add the playerProfile to the session
         existingSession.playerProfiles.push(playerProfile);
@@ -181,5 +184,7 @@ export function playerQuestionInfo(playerId: number, questionPosition: number) {
     return { error: 'Player ID does not exist' };
   }
   // Return information about the specified question
-  return quizSession.metadata.questions[questionPosition - 1];
+  const returnQuestion = quizSession.metadata.questions[questionPosition - 1];
+  delete returnQuestion.answerOrder;
+  return returnQuestion;
 }

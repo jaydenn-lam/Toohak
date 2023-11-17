@@ -18,6 +18,7 @@ interface questionBodyType {
   duration: number;
   points: number;
   answers: Answer[];
+  answerOrder?: number[]
 }
 
 interface quiz {
@@ -228,6 +229,9 @@ function adminQuizInfo(token: string, quizId: number): error | quiz {
     return { error: 'Quiz Id is not owned by this user' };
   }
   delete quizInfo.userId;
+  for (const question of quizInfo.questions) {
+    delete question.answerOrder;
+  }
   return quizInfo;
 }
 
@@ -512,6 +516,7 @@ function adminQuizQuestionCreate(token: string, quizId: number, questionBody: qu
         duration: questionBody.duration,
         points: questionBody.points,
         answers: answerArray,
+        answerOrder: []
       });
       quiz.numQuestions++;
       quiz.duration = quiz.duration + questionBody.duration;
