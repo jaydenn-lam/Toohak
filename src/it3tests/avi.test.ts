@@ -4,6 +4,9 @@ import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart,
   requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionResults
 } from '../wrapper';
+import {
+  requestQuizCreate2, requestQuestionCreate2
+} from '../wrapper';
 
 const port = config.port;
 const url = config.url;
@@ -283,13 +286,205 @@ describe('GET Question results', () => {
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
   });
+
+  ////v2 test
+  test('Invalid playerId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+
+    const response = requestPlayerQuestionResults(playerId + 1, 1);
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid playerId' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Invalid question position is not valid for players session', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+
+    const response = requestPlayerQuestionResults(playerId, 2);
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Question position is not valid for this players session' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Session is not instate ANSWER_SHOW state', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+
+    const response = requestPlayerQuestionResults(playerId, 1);
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Session not in ANSWER_SHOW state' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Session is not yet up to this question', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
+    requestQuestionCreate2(token, quizId, questionbody2);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, playerAction);
+    requestSessionUpdate(token, quizId, sessionId, playerAction2);
+    const answerSubmissions: answerSubmissionType = {
+      answerIds: [1],
+    };
+    requestAnswerSubmit(playerId, 1, answerSubmissions);
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    const response = requestPlayerQuestionResults(playerId, 2);
+
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Session is not yet up to this question' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Success case', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    const questionId = requestQuestionCreate2(token, quizId, questionbody).body.questionId;
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    // const timeBefore = Date.now();
+
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    const response = requestPlayerQuestionResults(playerId, 1);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      questionId: questionId,
+      playersCorrectList: [
+        'Hayden',
+      ],
+      averageAnswerTime: expect.any(Number),
+      percentCorrect: 100,
+    });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Success case with no correct players', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    // const timeBefore = Date.now();
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId + 1] });
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    const response = requestPlayerQuestionResults(playerId, 1);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: [],
+      averageAnswerTime: expect.any(Number),
+      percentCorrect: 0,
+    });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Success case with multiple players', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Avi').body.playerId;
+    const playerId2 = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    // const timeBefore = Date.now();
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+    requestAnswerSubmit(playerId2, 1, { answerIds: [answerId] });
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    const response = requestPlayerQuestionResults(playerId, 1);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: ['Avi', 'Hayden'],
+      averageAnswerTime: expect.any(Number),
+      percentCorrect: 100,
+    });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Success case with multiple players - test whether players Correct list gives ascending order', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    const playerId2 = requestPlayerJoin(sessionId, 'Avi').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    // const timeBefore = Date.now();
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+    requestAnswerSubmit(playerId2, 1, { answerIds: [answerId] });
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
+    requestSessionUpdate(token, quizId, sessionId, playerAction3);
+    const response = requestPlayerQuestionResults(playerId, 1);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: ['Avi', 'Hayden'],
+      averageAnswerTime: expect.any(Number),
+      percentCorrect: 100,
+    });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
 });
 
 describe('GET Final results', () => {
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate(token, quizId, questionbody);
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
@@ -306,8 +501,8 @@ describe('GET Final results', () => {
 
   test('Session is not in FINAL_RESULTS state', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate(token, quizId, questionbody);
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     const response = requestSessionResults(playerId);
@@ -320,8 +515,8 @@ describe('GET Final results', () => {
 
   test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    const questionId = requestQuestionCreate(token, quizId, questionbody).body.questionId;
+    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate2(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
@@ -421,7 +616,7 @@ describe('GET Players session chat', () => {
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate(token, quizId, questionbody);
+    requestQuestionCreate2(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
@@ -437,7 +632,7 @@ describe('GET Players session chat', () => {
   test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate(token, quizId, questionbody);
+    requestQuestionCreate2(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     requestSendChatMessage(playerId, {
