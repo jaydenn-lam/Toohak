@@ -1,17 +1,20 @@
 
-import { getData, setData, quizSession, action, playerSubmission, questionResult } from './dataStore';
+import { getData, setData, quizSession, action, playerSubmission, questionResult, quiz } from './dataStore';
 import { quizIdExists, tokenExists, findUserId, findSession, sessionIdExists } from './other';
 import { error } from './auth';
 import { tokenOwnsQuiz } from './quiz';
-import { answerIds } from './wrapper';
 
 interface viewSession {
   activeSessions: number[],
   inactiveSessions: number[]
 }
 
-export interface parameterAction {
+interface parameterAction {
   action: string;
+}
+
+interface answerIds {
+  answerIds: number[]
 }
 
 function sessionValidator(startNum: number, quizId: number) {
@@ -55,13 +58,13 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
   if ('error' in sessionValidator(autoStartNum, quizId)) {
     return sessionValidator(autoStartNum, quizId);
   }
-  const duplicateQuiz = { ...findQuiz(quizId) };
-  const sessionId = data.currentSessionId;
-  data.currentSessionId++;
+  const duplicateQuiz = { ...findQuiz(quizId) } as quiz;
+  const sessionId = generateUniqueSessionId();
+  data.sessionIds.push(sessionId);
   const ownerId = findUserId(token);
   const emptyQuestionResults: questionResult[] = [];
   const newSession: quizSession = {
-    sessionId,
+    sessionId: sessionId,
     state: 'LOBBY',
     atQuestion: 0,
     players: [],
@@ -102,7 +105,6 @@ export function adminSessionsView(token: string, quizId: number): object | error
 
 export function adminSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction): object | error {
   let data = getData();
-  console.log(action.action);
   const desiredAction = action.action;
   const userId = findUserId(token);
   if (!tokenExists(token)) {
@@ -178,7 +180,7 @@ function qCountdownUpdater(token: string, quizId: number, session: quizSession, 
   const data = getData();
   const sessionId = session.sessionId;
   const qNum = session.atQuestion;
-  const duration = questionDurationFinder(qNum, quizId);
+  const duration = questionDurationFinder(qNum, quizId) as number;
   let state;
   if (action === 'END') {
     state = 'END';
@@ -317,6 +319,7 @@ function finalResultsUpdater(session: quizSession, action: string) {
 function actionVerifier(session: quizSession, desiredAction: string) {
   const state = session.state;
   if (!Object.keys(action).includes(desiredAction) && desiredAction !== 'OPEN_TO_CLOSE') {
+    console.log(desiredAction);
     return { error: 'Invalid action' };
   }
   if (state === 'LOBBY') {
@@ -392,7 +395,7 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
   } else {
     sessionId = playerSessionFinder(playerId);
   }
-  const session = findSession(sessionId);
+  const session = findSession(sessionId) as quizSession;
   const error = answerErrorThrower(questionPosition, answerIds, session);
   if (error) {
     return error;
@@ -494,4 +497,15 @@ function answerErrorThrower(questionPosition: number, answerIds: answerIds, sess
   if (answerArray.length <= 0) {
     return { error: 'No answerIds have been submitted' };
   }
+}
+
+function generateUniqueSessionId(): number {
+  const data = getData();
+  let randomNumber: number;
+  const sessionIdArray = data.sessionIds;
+  do {
+    randomNumber = Math.floor(Math.random() * 100);
+  } while (sessionIdArray.includes(randomNumber));
+
+  return randomNumber;
 }

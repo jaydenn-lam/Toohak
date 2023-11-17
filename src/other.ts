@@ -1,4 +1,5 @@
 import { getData, setData } from './dataStore';
+import * as crypto from 'crypto';
 
 /*
 Function completely sets the data in dataStore.js to an empty version of the original dataStore we had saved there
@@ -16,7 +17,7 @@ function clear() {
       currentQuizId: 0,
       currentQuestionId: 0,
       currentAnswerId: 0,
-      currentSessionId: 0,
+      sessionIds: [],
       currentPlayerId: 0,
     }
   );
@@ -50,8 +51,6 @@ function findUser(userId: number) {
       return existingUser;
     }
   }
-  // This below line should NEVER run
-  return null;
 }
 
 // Helper function for determining if token exists
@@ -76,7 +75,6 @@ export function findSession(sessionId: number) {
       return session;
     }
   }
-  console.log('popo');
   return null;
 }
 
@@ -88,6 +86,13 @@ export function sessionIdExists(sessionId: number) {
     }
   }
   return false;
+}
+
+export function hashPassword(password: string) {
+  const sha256 = crypto.createHash('sha256');
+  sha256.update(password);
+  const hash = sha256.digest('hex');
+  return hash;
 }
 
 export { clear, quizIdExists, findUserId, findUser, tokenExists };

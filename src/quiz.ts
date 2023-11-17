@@ -1,4 +1,4 @@
-import { getData, setData, trash, Question, Answer } from './dataStore';
+import { getData, setData, trash, Question, Answer, user } from './dataStore';
 import { quizIdExists, findUserId, findUser, tokenExists } from './other';
 
 interface error {
@@ -129,7 +129,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
     numQuestions: 0,
     questions: emptyQuestions,
     duration: 0,
-    thumbnail: ''
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Black_question_mark.png'
   };
   data.quizzes.push(quizData);
   setData(data);
@@ -151,7 +151,7 @@ function adminQuizRemove(token: string, quizId: number): error | object {
     return { error: 'Invalid Token' };
   }
   const userId = findUserId(token);
-  const desiredUser = findUser(userId);
+  const desiredUser = findUser(userId) as user;
   const trashArray = desiredUser.trash;
 
   // Check for invalid quiz
@@ -328,7 +328,7 @@ function adminQuizRestore(token: string, quizId: number): error | object {
     return { error: 'Invalid Token' };
   }
   const userId = findUserId(token);
-  const desiredUser = findUser(userId);
+  const desiredUser = findUser(userId) as user;
   const trashArray = desiredUser.trash;
 
   // Error check for incorrect quizId for the specified user
@@ -389,7 +389,7 @@ function adminQuizViewTrash(token: string): error | trash {
     return { error: 'Invalid Token' };
   }
   const userId = findUserId(token);
-  const desiredUser = findUser(userId);
+  const desiredUser = findUser(userId) as user;
   const trashArray = desiredUser.trash;
   const trash: trash = {
     quizzes: []
@@ -416,7 +416,7 @@ function adminTrashEmpty(token: string, quizIds: number[]) {
     return { error: 'Invalid Token' };
   }
   const userId = findUserId(token);
-  const desiredUser = findUser(userId);
+  const desiredUser = findUser(userId) as user;
   const trashArray = desiredUser.trash;
   console.log(trashArray);
   // check whether user owns the quiz provided
@@ -854,7 +854,7 @@ function answerTypeError(questionBody: questionBodyType): string | null {
 // Helper function for determining if quizId is in the trash
 function quizExistsInTrash(quizId: number, token: string) {
   const userId = findUserId(token);
-  const user = findUser(userId);
+  const user = findUser(userId) as user;
   const trashArray = user.trash;
   for (const quiz of trashArray) {
     if (quiz.quizId === quizId) {

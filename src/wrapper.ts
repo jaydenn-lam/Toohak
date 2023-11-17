@@ -1,6 +1,5 @@
 import request from 'sync-request-curl';
 import config from './config.json';
-import { parameterAction } from './will';
 const port = config.port;
 const url = config.url;
 export const SERVER_URL = `${url}:${port}`;
@@ -10,8 +9,12 @@ interface Answer {
   correct: boolean;
 }
 
-export interface answerIds {
+interface answerIds {
   answerIds: number[]
+}
+
+interface parameterAction {
+  action: string;
 }
 
 interface questionBodyType {

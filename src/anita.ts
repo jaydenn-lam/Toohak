@@ -1,4 +1,4 @@
-import { getData, setData, playerProfile } from './dataStore';
+import { getData, setData, playerProfile, quizSession } from './dataStore';
 import { error } from './auth';
 import { playerSessionFinder } from './will';
 import { findSession } from './other';
@@ -133,7 +133,7 @@ export function playerStatus(playerId: number): object | error {
   // Check if the player ID exists
   if (quizSessionId !== 100000) {
   // Retrieve the quiz session based on the quiz session ID
-    const session = findSession(quizSessionId);
+    const session = findSession(quizSessionId) as quizSession;
     // Return an object containing the player's status within the session
     return {
       state: session.state,

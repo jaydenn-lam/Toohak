@@ -978,7 +978,7 @@ describe('GET Session Status', () => {
       numQuestions: quizInfo.numQuestions,
       questions: quizInfo.questions,
       duration: quizInfo.duration,
-      thumbnail: ''
+      thumbnail: 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Black_question_mark.png'
     };
     expect(body).toStrictEqual({
       state: 'LOBBY',

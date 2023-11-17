@@ -1,8 +1,7 @@
 import { getData, setData, quiz, user } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
-import { findUserId, tokenExists, findUser } from './other';
-import { usersRanked } from './Avi';
+import { findUserId, tokenExists, hashPassword, findUser } from './other';
 
 interface returnToken {
   token: string;
@@ -55,10 +54,11 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   const emptyTrash: quiz[] = [];
   const authUserId = data.currentUserId;
   data.currentUserId = data.currentUserId + 1;
+  const hash = hashPassword(password);
   const userData = {
     userId: authUserId,
     email: email,
-    password: password,
+    password: hash,
     firstName: nameFirst,
     lastName: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
@@ -148,7 +148,6 @@ function adminUserDetails(token: string): userBody | error {
   // grabs the data from the data store
   const data = getData();
   const tokenArray = data.tokens;
-  const userArray = data.users;
 
   // finds the token with the matching token
   const userToken = tokenArray.find((tokenArray) => tokenArray.token === token);
@@ -157,8 +156,8 @@ function adminUserDetails(token: string): userBody | error {
     return { error: 'Invalid token' };
   }
   // find the user with the matching userToken
-  const userId = findUserId(userToken.token as string); 
-  const user = findUser(userId) as user; 
+  const userId = findUserId(userToken.token as string);
+  const user = findUser(userId) as user;
   // if no user is found return error: 'Invalid authUserId'
   // construct and return user details
   return {
@@ -190,8 +189,9 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   if (!user) {
     return { error: 'Invalid email address' };
   }
+  const hash = hashPassword(password);
   // check if the provided password matches the stored password
-  if (user.password !== password) {
+  if (user.password !== hash) {
     // increment numFailedPasswordsSinceLastLogin by 1 and return an error
     for (const existingUser of data.users) {
       if (existingUser.userId === user.userId) {
@@ -276,21 +276,23 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
       userId = existingToken.userId;
     }
   }
+  const oldHash = hashPassword(oldPassword);
+  const newHash = hashPassword(newPassword);
   for (const existingUser of data.users) {
     if (existingUser.userId === userId) {
-      if (oldPassword !== existingUser.password) {
+      if (oldHash !== existingUser.password) {
         return { error: 'Password is incorrect' };
       }
-      if (newPassword === oldPassword) {
+      if (newHash === oldHash) {
         return { error: 'New password cannot be the same as the old password' };
       }
       for (const oldPasswords of existingUser.pastPasswords) {
-        if (newPassword === oldPasswords) {
+        if (newHash === hashPassword(oldPasswords)) {
           return { error: 'New password cannot be the same as a past password' };
         }
       }
-      existingUser.pastPasswords.push(newPassword);
-      existingUser.password = newPassword;
+      existingUser.pastPasswords.push(newHash);
+      existingUser.password = newHash;
     }
   }
   setData(data);
