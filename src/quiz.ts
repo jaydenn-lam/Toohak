@@ -129,7 +129,7 @@ function adminQuizCreate(token: string, name: string, description: string): quiz
     numQuestions: 0,
     questions: emptyQuestions,
     duration: 0,
-    thumbnail: ''
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Black_question_mark.png'
   };
   data.quizzes.push(quizData);
   setData(data);

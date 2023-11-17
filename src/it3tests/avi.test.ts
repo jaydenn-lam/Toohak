@@ -2,7 +2,7 @@ import request from 'sync-request-curl';
 import config from '../config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart,
-  requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionStatus, requestSessionResults
+  requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionResults
 } from '../wrapper';
 
 const port = config.port;
@@ -159,7 +159,6 @@ describe('GET Question results', () => {
     };
     requestAnswerSubmit(playerId, 1, answerSubmissions);
     requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
-    console.log(requestSessionStatus(token, quizId, sessionId).body.state);
     const response = requestPlayerQuestionResults(playerId, 2);
 
     const error = response.body;
@@ -185,7 +184,6 @@ describe('GET Question results', () => {
     const answerSubmissionTime = Date.now();
     const timeDifference = answerSubmissionTime - timeBefore;
     requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
-    console.log(requestSessionStatus(token, quizId, sessionId).body.state + ' aaaaaaa');
     const response = requestPlayerQuestionResults(playerId, 1);
     const body = response.body;
     expect(body).toStrictEqual({
