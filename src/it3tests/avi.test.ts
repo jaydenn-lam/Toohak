@@ -4,9 +4,6 @@ import {
   requestAuthRegister, requestQuizCreate, requestQuestionCreate, requestSessionStart,
   requestPlayerJoin, requestSessionChatView, requestSendChatMessage, requestAnswerSubmit, requestPlayerQuestionResults, requestSessionUpdate, requestQuizInfo, requestSessionResults
 } from '../wrapper';
-import {
-  requestQuizCreate2, requestQuestionCreate2
-} from '../wrapper';
 
 const port = config.port;
 const url = config.url;
@@ -483,8 +480,8 @@ describe('GET Question results', () => {
 describe('GET Final results', () => {
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate2(token, quizId, questionbody);
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
@@ -501,8 +498,8 @@ describe('GET Final results', () => {
 
   test('Session is not in FINAL_RESULTS state', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate2(token, quizId, questionbody);
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     const response = requestSessionResults(playerId);
@@ -515,8 +512,8 @@ describe('GET Final results', () => {
 
   test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
-    const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
-    const questionId = requestQuestionCreate2(token, quizId, questionbody).body.questionId;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionbody).body.questionId;
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
@@ -616,7 +613,7 @@ describe('GET Players session chat', () => {
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate2(token, quizId, questionbody);
+    requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
 
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
@@ -632,7 +629,7 @@ describe('GET Players session chat', () => {
   test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate2(token, quizId, questionbody);
+    requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     requestSendChatMessage(playerId, {
