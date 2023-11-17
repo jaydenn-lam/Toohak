@@ -80,32 +80,32 @@ function getSessionWithPlayer(playerId: number) {
 export function playerJoin(sessionId: number, name: string): object | error {
   const data = getData();
   let playerId;
-  //If the provided name is empty generate a random name
+  // If the provided name is empty generate a random name
   if (name === '') {
     name = generateRandomName();
   } else {
-    //check if the name is already in use within the quiz session
+    // check if the name is already in use within the quiz session
     if (isNameInQuizSessions(name)) {
       return { error: 'Player name is not unique.' };
     }
   }
-  //iterate through the quiz sessions to find the matching session
+  // iterate through the quiz sessions to find the matching session
   for (const existingSession of data.quizSessions) {
     if (existingSession.sessionId === sessionId) {
       if (existingSession.state !== 'LOBBY') {
-        //Return an error if the session is not in LOBBY state 
+        // Return an error if the session is not in LOBBY state
         return { error: 'Session not in LOBBY state.' };
       } else {
-        //Add the player to the session and assign a unique playerId
+        // Add the player to the session and assign a unique playerId
         existingSession.players.push(name);
         playerId = data.currentPlayerId;
         data.currentPlayerId++;
-        //Create a player profile for the newly added player 
+        // Create a player profile for the newly added player
         const playerProfile: playerProfile = {
           playerId: playerId,
           score: 0,
         };
-        //Add the playerProfile to the session
+        // Add the playerProfile to the session
         existingSession.playerProfiles.push(playerProfile);
       }
     }
@@ -134,14 +134,14 @@ export function playerStatus(playerId: number): object | error {
   if (quizSessionId !== 100000) {
   // Retrieve the quiz session based on the quiz session ID
     const session = findSession(quizSessionId);
-  // Return an object containing the player's status within the session
+    // Return an object containing the player's status within the session
     return {
       state: session.state,
       numQuestions: session.metadata.numQuestions,
       atQuestion: session.atQuestion
     };
   } else {
-    //return an error if the player ID does not exist 
+    // return an error if the player ID does not exist
     return { error: 'Player ID does not exist.' };
   }
 }
