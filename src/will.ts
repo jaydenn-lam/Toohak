@@ -56,8 +56,8 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
     return sessionValidator(autoStartNum, quizId);
   }
   const duplicateQuiz = { ...findQuiz(quizId) };
-  const sessionId = data.currentSessionId;
-  data.currentSessionId++;
+  const sessionId = generateUniqueSessionId();
+  data.sessionIds.push(sessionId);
   const ownerId = findUserId(token);
   const emptyQuestionResults: questionResult[] = [];
   const newSession: quizSession = {
@@ -494,4 +494,15 @@ function answerErrorThrower(questionPosition: number, answerIds: answerIds, sess
   if (answerArray.length <= 0) {
     return { error: 'No answerIds have been submitted' };
   }
+}
+
+function generateUniqueSessionId(): number {
+  const data = getData();
+  let randomNumber: number;
+  const sessionIdArray = data.sessionIds;
+  do {
+    randomNumber = Math.floor(Math.random() * 100);
+  } while (sessionIdArray.includes(randomNumber));
+
+  return randomNumber;
 }

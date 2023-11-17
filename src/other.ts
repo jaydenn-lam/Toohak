@@ -16,7 +16,7 @@ function clear() {
       currentQuizId: 0,
       currentQuestionId: 0,
       currentAnswerId: 0,
-      currentSessionId: 0,
+      sessionIds: [],
       currentPlayerId: 0,
     }
   );
