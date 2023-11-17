@@ -51,8 +51,6 @@ function findUser(userId: number) {
       return existingUser;
     }
   }
-  // This below line should NEVER run
-  return null;
 }
 
 // Helper function for determining if token exists

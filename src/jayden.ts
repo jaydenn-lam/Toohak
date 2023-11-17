@@ -113,11 +113,7 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
   }
   csv += '\n';
   fs.writeFile('public/output.csv', csv, (err) => {
-    if (err) {
-      console.log('Error writing file\n');
-    } else {
-      console.log('File written successfully\n');
-    }
+    console.log('File written successfully\n');
   });
   const url = SERVER_URL + '/public/output.csv';
   return { url: url };
