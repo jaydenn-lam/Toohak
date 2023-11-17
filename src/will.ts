@@ -58,7 +58,7 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
   if ('error' in sessionValidator(autoStartNum, quizId)) {
     return sessionValidator(autoStartNum, quizId);
   }
-  const duplicateQuiz = { ...findQuiz(quizId) };
+  const duplicateQuiz = { ...findQuiz(quizId) } as quiz;
   const sessionId = generateUniqueSessionId();
   data.sessionIds.push(sessionId);
   const ownerId = findUserId(token);
