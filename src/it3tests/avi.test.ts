@@ -177,13 +177,13 @@ describe('GET Question results', () => {
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
-    const timeBefore = Date.now();
+    // const timeBefore = Date.now();
 
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
 
-    const answerSubmissionTime = Date.now();
-    const timeDifference = answerSubmissionTime - timeBefore;
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
     requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
     console.log(requestSessionStatus(token, quizId, sessionId).body.state + ' aaaaaaa');
     const response = requestPlayerQuestionResults(playerId, 1);
@@ -209,11 +209,11 @@ describe('GET Question results', () => {
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
-    const timeBefore = Date.now();
+    // const timeBefore = Date.now();
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId + 1] });
-    const answerSubmissionTime = Date.now();
-    const timeDifference = answerSubmissionTime - timeBefore;
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
     requestSessionUpdate(token, quizId, sessionId, playerAction3);
     const response = requestPlayerQuestionResults(playerId, 1);
     const body = response.body;
@@ -237,12 +237,12 @@ describe('GET Question results', () => {
     const playerId2 = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
-    const timeBefore = Date.now();
+    // const timeBefore = Date.now();
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
     requestAnswerSubmit(playerId2, 1, { answerIds: [answerId] });
-    const answerSubmissionTime = Date.now();
-    const timeDifference = answerSubmissionTime - timeBefore;
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
     requestSessionUpdate(token, quizId, sessionId, playerAction3);
     const response = requestPlayerQuestionResults(playerId, 1);
     const body = response.body;
@@ -266,12 +266,12 @@ describe('GET Question results', () => {
     const playerId2 = requestPlayerJoin(sessionId, 'Avi').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
-    const timeBefore = Date.now();
+    // const timeBefore = Date.now();
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
     requestAnswerSubmit(playerId2, 1, { answerIds: [answerId] });
-    const answerSubmissionTime = Date.now();
-    const timeDifference = answerSubmissionTime - timeBefore;
+    // const answerSubmissionTime = Date.now();
+    // const timeDifference = answerSubmissionTime - timeBefore;
     requestSessionUpdate(token, quizId, sessionId, playerAction3);
     const response = requestPlayerQuestionResults(playerId, 1);
     const body = response.body;
@@ -328,11 +328,11 @@ describe('GET Final results', () => {
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
-    const currentTime = Date.now();
+    // const currentTime = Date.now();
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
-    const answerTime = Date.now();
-    const timeDifference = answerTime - currentTime;
+    // const answerTime = Date.now();
+    // const timeDifference = answerTime - currentTime;
     requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
     const responseA = requestPlayerQuestionResults(playerId, 1);
     const bodyA = responseA.body;
