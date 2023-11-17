@@ -89,6 +89,17 @@ describe('Post player join', () => {
     const body = response.body;
     expect(body).toStrictEqual({ error: 'Session not in LOBBY state.' });
   });
+  test('Name of user is blank', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
+    requestPlayerJoin(sessionId, 'Hayden Smith');
+    const response = requestPlayerJoin(sessionId, '');
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+    expect(response.body).toStrictEqual({ playerId: expect.any(Number) });
+  });
 });
 
 describe('Get Player status tests', () => {
