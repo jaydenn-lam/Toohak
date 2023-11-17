@@ -599,8 +599,7 @@ export function requestSessionResults(playerId: number) {
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
-/////// v2
-
+/// //// v2
 
 export function requestAuthDetail2(token: string) {
   const res = request(
@@ -662,8 +661,6 @@ export function requestDetailsUpdate2(token: string, email: string, nameFirst: s
 
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
-
-
 
 export function requestQuestionUpdate2(token: string, quizId: number, questionBody: questionBodyType, questionId: number) {
   const res = request(
@@ -776,12 +773,3 @@ export function requestadminQuizRestore2(token: string, quizId: number) {
 
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
-
-
-
-
-
-
-
-
-

@@ -5,9 +5,8 @@ import {
   requestPlayerJoin, requestPlayerStatus, requestPlayerQuestionInfo
 } from '../wrapper';
 import {
-   requestQuizCreate2, requestQuestionCreate2,
+  requestQuizCreate2, requestQuestionCreate2,
 } from '../wrapper';
-
 
 const port = config.port;
 const url = config.url;
@@ -107,7 +106,7 @@ describe('Post player join', () => {
   test('successful join v2', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
-    console.log(quizId)
+    console.log(quizId);
     requestQuestionCreate2(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
     const response = requestPlayerJoin(sessionId, 'Hayden Smith');
@@ -223,7 +222,7 @@ describe('Get Player status tests', () => {
       atQuestion: 1
     });
   });
-  //// v2
+  /// / v2
   test('Successful return of player status', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -239,7 +238,7 @@ describe('Get Player status tests', () => {
       atQuestion: 0
     });
   });
-  
+
   test('Player ID does not exist case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -255,7 +254,7 @@ describe('Get Player status tests', () => {
       error: 'Player ID does not exist.'
     });
   });
-  
+
   test('Further Working Case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -263,7 +262,7 @@ describe('Get Player status tests', () => {
     const sessionId = requestSessionStart(token, quizId, 1).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
-  
+
     const response = requestPlayerStatus(playerId);
     const statusCode = response.status;
     expect(statusCode).toStrictEqual(200);
@@ -272,7 +271,7 @@ describe('Get Player status tests', () => {
       numQuestions: 1,
       atQuestion: 1
     });
-});
+  });
 });
 
 describe('Get Player question information tests', () => {
@@ -372,7 +371,7 @@ describe('Get Player question information tests', () => {
     const expectedBody = { error: 'Session is in LOBBY or END state' };
     expect(response.body).toStrictEqual(expectedBody);
   });
-  ////v2
+  /// /v2
   test('Successful return of information about question that guest player is on', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -392,7 +391,7 @@ describe('Get Player question information tests', () => {
     };
     expect(response.body).toStrictEqual(expectedBody);
   });
-  
+
   test('Player ID does not exist case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -407,7 +406,7 @@ describe('Get Player question information tests', () => {
     const expectedBody = { error: 'Player ID does not exist' };
     expect(response.body).toStrictEqual(expectedBody);
   });
-  
+
   test('Question ID not valid for session case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -422,7 +421,7 @@ describe('Get Player question information tests', () => {
     const expectedBody = { error: 'Question position is not valid for the session this player is in' };
     expect(response.body).toStrictEqual(expectedBody);
   });
-  
+
   test('Session is not currently on this question', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -437,7 +436,7 @@ describe('Get Player question information tests', () => {
     const expectedBody = { error: 'Session is not currently on this question' };
     expect(response.body).toStrictEqual(expectedBody);
   });
-  
+
   test('Session is in LOBBY or END state', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -453,4 +452,3 @@ describe('Get Player question information tests', () => {
     expect(response.body).toStrictEqual(expectedBody);
   });
 });
-

@@ -287,7 +287,7 @@ describe('GET Question results', () => {
     expect(statusCode).toStrictEqual(200);
   });
 
-  ////v2 test
+  /// /v2 test
   test('Invalid playerId', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
@@ -516,7 +516,7 @@ describe('GET Final results', () => {
   test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate2(token, 'Quiz1', 'description').body.quizId;
-    requestQuestionCreate2(token, quizId, questionbody);
+    const questionId = requestQuestionCreate2(token, quizId, questionbody).body.questionId;
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
