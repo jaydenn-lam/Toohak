@@ -122,7 +122,7 @@ interface dataStore {
   currentQuizId: number;
   currentQuestionId: number;
   currentAnswerId: number;
-  currentSessionId: number;
+  sessionIds: number[];
   currentPlayerId: number;
 }
 
@@ -136,7 +136,7 @@ let data: dataStore = {
   currentQuizId: 0,
   currentQuestionId: 0,
   currentAnswerId: 0,
-  currentSessionId: 0,
+  sessionIds: [],
   currentPlayerId: 0,
 };
 
