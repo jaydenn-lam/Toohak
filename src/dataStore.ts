@@ -25,23 +25,19 @@ interface Answer {
   colour: string;
 }
 
-export interface playerSubmission {
-  playerId: number;
-  submissionTime: number;
-}
-
-interface Question {
+export interface Question {
   questionId: number;
   question: string;
   duration: number;
   points: number;
   answers: Answer[];
-  correctPlayers?: playerSubmission[];
-  incorrectPlayers?: playerSubmission[];
+  correctPlayers?: playerProfile[];
+  incorrectPlayers?: playerProfile[];
   timeQuestionOpened?: number;
+  answerOrder?: number[]
 }
 
-interface quiz {
+export interface quiz {
   quizId: number;
   name: string;
   timeCreated: number;
@@ -69,8 +65,11 @@ interface questionResult {
 }
 
 export interface playerProfile {
+  name: string;
   playerId: number;
   score: number;
+  lastSubmittedAnswer: number[];
+  submissionTime: number;
 }
 
 export interface quizSession {
@@ -171,4 +170,4 @@ function setData(newData: dataStore) {
   return {};
 }
 
-export { getData, setData, token, trash, trashQuiz, Question, Answer, quiz, user, questionResult };
+export { getData, setData, token, trash, trashQuiz, Answer, user, questionResult };
