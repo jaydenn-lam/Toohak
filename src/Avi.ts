@@ -216,7 +216,7 @@ function validPlayerIdCheck(playerId: number): boolean {
 }
 
 // Helper function finds the session that a player is in returning the sessionId given playerId
-function playerSessionFinder(playerId: number): number {
+function playerSessionFinder(playerId: number) {
   const data = getData();
   const sessionArray = data.quizSessions;
   for (const session of sessionArray) {
@@ -275,7 +275,7 @@ function computeAverageAnswerTime(playerCorrectArray: playerSubmission[], player
   let timeDifference = 0;
   let incorrectLength;
   let correctLength;
-  const questionOpenTime = currentSession.metadata.questions[questionPosition - 1].timeQuestionOpened;
+  const questionOpenTime = currentSession.metadata.questions[questionPosition - 1].timeQuestionOpened as number;
   // players correct list answer time computation
   if (playerCorrectArray) {
     for (const player of playerCorrectArray) {

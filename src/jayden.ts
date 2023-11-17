@@ -4,7 +4,11 @@ import { tokenOwnsQuiz } from './quiz';
 import { findQuiz } from './will';
 import { getPlayerName, usersRanked, sessionResultsType } from './Avi';
 import fs from 'fs';
-import { SERVER_URL } from './wrapper';
+import config from './config.json';
+
+const port = config.port;
+const url = config.url;
+export const SERVER_URL = `${url}:${port}`;
 
 export interface urlBody {
   imgUrl: string;

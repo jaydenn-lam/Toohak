@@ -70,6 +70,19 @@ app.post('/v1/admin/quiz', (req: Request, res: Response) => {
   }
   res.status(200).json(response);
 });
+
+app.post('/v2/admin/quiz', (req: Request, res: Response) => {
+  const token = req.header('token') as string;
+  const { name, description } = req.body;
+  const response = adminQuizCreate(token, name, description);
+  if ('error' in response && response.error === 'Invalid Token') {
+    throw HTTPError(401, response.error);
+  } else if ('error' in response) {
+    throw HTTPError(400, response.error);
+  }
+  res.status(200).json(response);
+});
+
 app.post('/v1/admin/auth/login', (req: Request, res: Response) => {
   const { email, password } = req.body;
   const result = adminAuthLogin(email, password);

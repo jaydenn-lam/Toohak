@@ -76,7 +76,6 @@ export function findSession(sessionId: number) {
       return session;
     }
   }
-  console.log('popo');
   return null;
 }
 
