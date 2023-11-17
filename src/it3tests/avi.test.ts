@@ -156,7 +156,7 @@ describe('GET Question results', () => {
 
     const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, playerAction);
-    requestSessionUpdate(token, quizId, sessionId, playerAction2);
+    console.log(requestSessionUpdate(token, quizId, sessionId, playerAction2));
     const answerSubmissions: answerSubmissionType = {
       answerIds: [1],
     };
@@ -530,7 +530,7 @@ describe('GET Final results', () => {
     const responseA = requestPlayerQuestionResults(playerId, 1);
     const bodyA = responseA.body;
     expect(bodyA).toStrictEqual({
-      questionId: 0,
+      questionId: questionId,
       playersCorrectList: [
         'Hayden',
       ],
@@ -547,9 +547,61 @@ describe('GET Final results', () => {
         score: 5
       }],
       questionResults: [{
-        questionId: 0,
+        questionId: questionId,
         playersCorrectList: [
           'Hayden'
+        ],
+        averageAnswerTime: expect.any(Number),
+        percentCorrect: 100,
+      }]
+    });
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Working Case Resubmit', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    const questionId = requestQuestionCreate(token, quizId, questionbody).body.questionId;
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    const playerId2 = requestPlayerJoin(sessionId, 'William Lu').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const correctAnswerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    const incorrectAnswerId2 = requestQuizInfo(token, quizId).body.questions[0].answers[2].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [incorrectAnswerId2] });
+    requestAnswerSubmit(playerId2, 1, { answerIds: [correctAnswerId] });
+    requestAnswerSubmit(playerId, 1, { answerIds: [correctAnswerId] });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
+    const responseA = requestPlayerQuestionResults(playerId, 1);
+    const bodyA = responseA.body;
+    expect(bodyA).toStrictEqual({
+      questionId: 0,
+      playersCorrectList: [
+        'Hayden Smith', 'William Lu'
+      ],
+      averageAnswerTime: expect.any(Number),
+      percentCorrect: 100,
+    });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
+    const response = requestSessionResults(playerId);
+    const body = response.body;
+    expect(body).toStrictEqual({
+      usersRankedByScore: [
+        {
+          name: 'William Lu',
+          score: 5
+        },
+        {
+          name: 'Hayden Smith',
+          score: 2.5
+        }
+      ],
+      questionResults: [{
+        questionId: questionId,
+        playersCorrectList: [
+          'Hayden Smith', 'William Lu'
         ],
         averageAnswerTime: expect.any(Number),
         percentCorrect: 100,
