@@ -1,7 +1,7 @@
 import { getData, setData, quiz } from './dataStore';
 import validator from 'validator';
 import { v4 as uuidv4 } from 'uuid';
-import { findUserId, tokenExists } from './other';
+import { findUserId, tokenExists, hashPassword } from './other';
 
 interface returnToken {
   token: string;
@@ -54,10 +54,11 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   const emptyTrash: quiz[] = [];
   const authUserId = data.currentUserId;
   data.currentUserId = data.currentUserId + 1;
+  const hash = hashPassword(password);
   const userData = {
     userId: authUserId,
     email: email,
-    password: password,
+    password: hash,
     firstName: nameFirst,
     lastName: nameLast,
     numFailedPasswordsSinceLastLogin: 0,
@@ -188,8 +189,9 @@ function adminAuthLogin(email: string, password: string): returnToken | error {
   if (!user) {
     return { error: 'Invalid email address' };
   }
+  const hash = hashPassword(password);
   // check if the provided password matches the stored password
-  if (user.password !== password) {
+  if (user.password !== hash) {
     // increment numFailedPasswordsSinceLastLogin by 1 and return an error
     for (const existingUser of data.users) {
       if (existingUser.userId === user.userId) {
@@ -274,21 +276,23 @@ function adminPasswordUpdate(token: string, oldPassword: string, newPassword: st
       userId = existingToken.userId;
     }
   }
+  const oldHash = hashPassword(oldPassword);
+  const newHash = hashPassword(newPassword);
   for (const existingUser of data.users) {
     if (existingUser.userId === userId) {
-      if (oldPassword !== existingUser.password) {
+      if (oldHash !== existingUser.password) {
         return { error: 'Password is incorrect' };
       }
-      if (newPassword === oldPassword) {
+      if (newHash === oldHash) {
         return { error: 'New password cannot be the same as the old password' };
       }
       for (const oldPasswords of existingUser.pastPasswords) {
-        if (newPassword === oldPasswords) {
+        if (newHash === hashPassword(oldPasswords)) {
           return { error: 'New password cannot be the same as a past password' };
         }
       }
-      existingUser.pastPasswords.push(newPassword);
-      existingUser.password = newPassword;
+      existingUser.pastPasswords.push(newHash);
+      existingUser.password = newHash;
     }
   }
   setData(data);
