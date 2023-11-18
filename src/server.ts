@@ -715,7 +715,8 @@ app.get('/v1/admin/quiz/:quizId/session/:sessionId/results', (req: Request, res:
   const quizId = parseInt(req.params.quizId);
   const sessionId = parseInt(req.params.sessionId);
   const response = adminQuizResults(token, quizId, sessionId);
-  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state')) {
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state' ||
+    response.error === 'Invalid quizId')) {
     throw HTTPError(400, response.error);
   }
   if ('error' in response && response.error === 'Invalid Token') {
@@ -732,7 +733,8 @@ app.get('/v1/admin/quiz/:quizId/session/:sessionId/results/csv', (req: Request, 
   const quizId = parseInt(req.params.quizId);
   const sessionId = parseInt(req.params.sessionId);
   const response = adminQuizResultsCSV(token, quizId, sessionId);
-  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state')) {
+  if ('error' in response && (response.error === 'Invalid sessionId' || response.error === 'Session not in FINAL_RESULTS state' ||
+    response.error === 'Invalid quizId')) {
     throw HTTPError(400, response.error);
   }
   if ('error' in response && response.error === 'Invalid Token') {

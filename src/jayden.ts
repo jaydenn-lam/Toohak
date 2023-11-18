@@ -92,6 +92,10 @@ export function adminQuizResults (token: string, quizId: number, sessionId: numb
   if (!sessionIdExists(sessionId)) {
     return { error: 'Invalid sessionId' };
   }
+  // Check if the quiz ID exists
+  if (!quizIdExists(quizId)) {
+    return { error: 'Invalid quizId' };
+  }
   // Find the current session and its state
   const currentSession = findSession(sessionId);
   const state = currentSession?.state;
@@ -144,6 +148,10 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
   if (!sessionIdExists(sessionId)) {
     return { error: 'Invalid sessionId' };
   }
+  // Check if the quiz ID exists
+  if (!quizIdExists(quizId)) {
+    return { error: 'Invalid quizId' };
+  }
   const session = findSession(sessionId);
   const state = session?.state;
   if (state !== 'FINAL_RESULTS') {
@@ -155,8 +163,8 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
   // Initialize CSV string with header row
   let csv = 'Player';
   let quizIndex;
-  for (let quiz = 0; quiz < data.quizzes.length; quiz++) {
-    if (data.quizzes[quiz].quizId === quizId) {
+  for (let quiz = 0; quiz < data.quizSessions.length; quiz++) {
+    if (data.quizSessions[quiz].sessionId === sessionId) {
       quizIndex = quiz;
     }
   }
@@ -164,7 +172,38 @@ export function adminQuizResultsCSV (token: string, quizId: number, sessionId: n
     csv += ',question' + (i + 1).toString() + 'score,' + 'question' + (i + 1).toString() + 'rank';
   }
   csv += '\n';
-  // Write the CSV file to the 'public' directory
+  const players = data.quizSessions[quizIndex].playerProfiles;
+  for (let i = 0; i < players.length; i++) {
+    for (let j = 0; j < players.length - i - 1; j++) {
+      if (players[j + 1].name < players[j].name) {
+        [players[j + 1], players[j]] = [players[j], players[j + 1]];
+      }
+    }
+  }
+  for (let i = 0; i < players.length; i++) {
+    csv += players[i].name;
+    for (let j = 0; j < data.quizSessions[quizIndex].metadata.numQuestions; j++) {
+      if (data.quizSessions[quizIndex].metadata.questions[j].correctPlayers !== undefined) {
+        const correctQuestionProfiles = data.quizSessions[quizIndex].metadata.questions[j].correctPlayers;
+        for (let k = 0; k < correctQuestionProfiles.length; k++) {
+          if (correctQuestionProfiles[k].name === players[i].name) {
+            csv += ',' + correctQuestionProfiles[k].score.toString();
+            csv += ',' + correctQuestionProfiles[k].rank.toString();
+          }
+        }
+      }
+      if (data.quizSessions[quizIndex].metadata.questions[j].incorrectPlayers !== undefined) {
+        const wrongQuestionProfiles = data.quizSessions[quizIndex].metadata.questions[j].incorrectPlayers;
+        for (let k = 0; k < wrongQuestionProfiles.length; k++) {
+          if (wrongQuestionProfiles[k].name === players[i].name) {
+            csv += ',' + wrongQuestionProfiles[k].score.toString();
+            csv += ',' + wrongQuestionProfiles[k].rank.toString();
+          }
+        }
+      }
+    }
+    csv += '\n';
+  }
   fs.writeFile('public/output.csv', csv, (err) => {
     console.log('File written successfully\n');
   });
