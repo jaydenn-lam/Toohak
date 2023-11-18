@@ -1166,7 +1166,7 @@ describe('PUT playerAnswerSubmit', () => {
     const incorrectAnswerId1 = requestQuizInfo(token, quizId).body.questions[0].answers[1].answerId;
     const incorrectAnswerId2 = requestQuizInfo(token, quizId).body.questions[0].answers[2].answerId;
     const response = requestAnswerSubmit(playerId, 1, { answerIds: [incorrectAnswerId1, incorrectAnswerId2] });
-
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
     const body = response.body;
     expect(body).toStrictEqual({});
 

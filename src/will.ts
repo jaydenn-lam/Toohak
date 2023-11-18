@@ -18,17 +18,17 @@ interface answerIds {
 }
 /**
  * Validates whether a new quiz session can be started based on specified criteria.
- * 
+ *
  * @param {number} startNum - The auto-start number for the new quiz session.
  * @param {number} quizId - The ID of the quiz for which to start a new session.
- * 
+ *
  * @returns {object} - An empty object if validation passes, otherwise an object with an error message.
  */
 function sessionValidator(startNum: number, quizId: number): object {
   const data = getData();
   let totalSessions = 0;
   // Find the quiz based on the provided quizId
-  const quiz = findQuiz(quizId);
+  const quiz = findQuiz(quizId) as quiz;
   // Validate auto-start number range
   if (startNum > 50 || startNum < 0) {
     return { error: 'autoStartNum cannot be greater than 50 or negative' };
@@ -52,9 +52,9 @@ function sessionValidator(startNum: number, quizId: number): object {
 }
 /**
  * Finds and returns a quiz based on the provided quizId.
- * 
+ *
  * @param {number} quizId - The ID of the quiz to find.
- * 
+ *
  * @returns {object | undefined} - The quiz object if found, or undefined if not found.
  */
 export function findQuiz(quizId: number): object | undefined {
@@ -65,17 +65,15 @@ export function findQuiz(quizId: number): object | undefined {
       return quiz;
     }
   }
-  // Return undefined if the quiz with the specified quizId is not found
-  return undefined;
 }
 /**
  * Initiates a new quiz session, updating the state to LOBBY and setting up necessary metadata.
- * 
+ *
  * @param {string} token - The authentication token of the user initiating the session.
  * @param {number} quizId - The ID of the quiz for which the session is started.
  * @param {number} autoStartNum - The number of players required to automatically start the session.
- * 
- * @returns {object | error} - An object containing the newly created sessionId if successful, 
+ *
+ * @returns {object | error} - An object containing the newly created sessionId if successful,
  *                             or an error object if any validation fails.
  */
 export function adminSessionStart(token: string, quizId: number, autoStartNum: number): object | error {
@@ -125,11 +123,11 @@ export function adminSessionStart(token: string, quizId: number, autoStartNum: n
 }
 /**
  * Retrieves information about active and inactive quiz sessions associated with a quiz.
- * 
+ *
  * @param {string} token - The authentication token of the user requesting the session information.
  * @param {number} quizId - The ID of the quiz for which the session information is requested.
- * 
- * @returns {object | error} - An object containing arrays of active and inactive session IDs 
+ *
+ * @returns {object | error} - An object containing arrays of active and inactive session IDs
  *                             if successful, or an error object if any validation fails.
  */
 export function adminSessionsView(token: string, quizId: number): object | error {
@@ -160,13 +158,13 @@ export function adminSessionsView(token: string, quizId: number): object | error
 }
 /**
  * Updates the state and properties of a quiz session based on the specified action.
- * 
+ *
  * @param {string} token - The authentication token of the user initiating the session update.
  * @param {number} quizId - The ID of the quiz associated with the session to be updated.
  * @param {number} sessionId - The ID of the session to be updated.
  * @param {parameterAction} action - The action object specifying the desired update.
- * 
- * @returns {object | error} - An empty object if the update is successful, or an error object 
+ *
+ * @returns {object | error} - An empty object if the update is successful, or an error object
  *                             if any validation fails during the update process.
  */
 export function adminSessionUpdate(token: string, quizId: number, sessionId: number, action: parameterAction): object | error {
@@ -219,12 +217,12 @@ export function adminSessionUpdate(token: string, quizId: number, sessionId: num
 }
 /**
  * Updates the state and properties of a quiz session in the lobby state based on the specified action.
- * 
+ *
  * @param {string} token - The authentication token of the user initiating the session update.
  * @param {number} quizId - The ID of the quiz associated with the session to be updated.
  * @param {quizSession} session - The quiz session object to be updated.
  * @param {string} action - The action to be performed on the session in the lobby state.
- * 
+ *
  * @returns {object} - The updated data object containing the modified quiz session.
  */
 function lobbyUpdater(token: string, quizId: number, session: quizSession, action: string) {
@@ -343,7 +341,7 @@ function qCloseUpdater(token: string, quizId: number, session: quizSession, acti
       if (currentState === 'QUESTION_COUNTDOWN' && currentUpdates === updates + 1) {
         adminSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
       }
-    }, 3000); 
+    }, 3000);
   }
   // Update the state and question number in the existing session
   for (const existingSession of data.quizSessions) {
@@ -409,7 +407,7 @@ function scoreCalculator(quizId: number, session: quizSession) {
   const questionIndex = session.atQuestion - 1;
   const question = session.metadata.questions[questionIndex];
   // Array to store correct answer IDs
-  const correctAnswerArray = [];
+  const correctAnswerArray: number[] = [];
   // Populate correctAnswerArray with correct answer IDs
   for (const answer of question.answers) {
     if (answer.correct === true) {
@@ -421,7 +419,7 @@ function scoreCalculator(quizId: number, session: quizSession) {
     // Check if the player's last submitted answer is correct
     const correct = answerIdChecker(player.lastSubmittedAnswer, correctAnswerArray);
     // Create a player entry with default values
-    const playerEntry = {
+    const playerEntry: playerProfile = {
       name: player.name,
       playerId: player.playerId,
       submissionTime: player.submissionTime,
@@ -495,9 +493,9 @@ function addScoreCalc(orderArray: number[], points: number, playerId: number) {
  */
 function questionDurationFinder(number: number, quizId: number) {
   // Find the quiz based on the provided quizId
-  const quiz = findQuiz(quizId);
+  const quiz = findQuiz(quizId) as quiz;
   // Retrieve the specified question based on its position
-  const question = quiz?.questions[number - 1];
+  const question = quiz.questions[number - 1];
   // Extract the duration of the question, if available
   const duration = question?.duration;
   // Return the duration of the question, or undefined if not found
