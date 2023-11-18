@@ -106,7 +106,8 @@ export function playerJoin(sessionId: number, name: string): object | error {
           playerId: playerId,
           score: 0,
           submissionTime: 0,
-          lastSubmittedAnswer: []
+          lastSubmittedAnswer: [],
+          rank: 0,
         };
         // Add the playerProfile to the session
         existingSession.playerProfiles.push(playerProfile);

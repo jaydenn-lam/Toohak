@@ -33,6 +33,7 @@ export interface Question {
   answers: Answer[];
   correctPlayers?: playerProfile[];
   incorrectPlayers?: playerProfile[];
+  nonSubmissionPlayers?: playerProfile[];
   timeQuestionOpened?: number;
   answerOrder?: number[]
 }
@@ -70,6 +71,7 @@ export interface playerProfile {
   score: number;
   lastSubmittedAnswer: number[];
   submissionTime: number;
+  rank: number;
 }
 
 export interface quizSession {
