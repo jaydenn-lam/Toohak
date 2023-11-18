@@ -125,6 +125,24 @@ describe('GET Quiz final results', () => {
     expect(statusCode).toStrictEqual(401);
   });
 
+  test('Invalid quizId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+
+    const response = requestQuizResults(token, quizId + 400, sessionId);
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid quizId' });
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
   test('Invalid Session Id', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
@@ -260,6 +278,24 @@ describe('GET Quiz final results CSV', () => {
     expect(statusCode).toStrictEqual(400);
   });
 
+  test('Invalid quizId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
+    requestQuestionCreate(token, quizId, questionbody);
+    const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
+    const playerId = requestPlayerJoin(sessionId, 'Hayden Smith').body.playerId;
+    requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
+    const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
+    requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+
+    const response = requestQuizResultsCSV(token, quizId + 400, sessionId);
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid quizId' });
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
   test('User does not own quiz', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const token2 = requestAuthRegister('jayden@unsw.edu.au', '5678efgh', 'Jayden', 'Lam').body.token;
@@ -293,7 +329,7 @@ describe('GET Quiz final results CSV', () => {
     expect(statusCode).toStrictEqual(400);
   });
 
-  test.only('Success case', () => {
+  test('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
