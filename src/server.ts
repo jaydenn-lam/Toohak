@@ -229,7 +229,7 @@ app.delete('/v1/admin/quiz/:quizid', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 app.delete('/v2/admin/quiz/:quizid', (req: Request, res: Response) => {
-  const token = req.query.token as string;
+  const token = req.header('token') as string;
   const response = adminQuizRemove(token, parseInt(req.params.quizid));
   if ('error' in response && response.error === 'Invalid Token') {
     throw HTTPError(401, response.error);
@@ -388,35 +388,13 @@ app.post('/v1/admin/quiz/:quizid/transfer', (req: Request, res: Response) => {
   res.status(200).json(response);
 });
 app.post('/v2/admin/quiz/:quizid/transfer', (req: Request, res: Response) => {
-  const token = req.header('token') as string;
+  const token = req.header('token');
   const { userEmail } = req.body;
   const response = adminQuizTransfer(token, userEmail, parseInt(req.params.quizid));
   if ('error' in response && response.error === 'Invalid Token') {
     throw HTTPError(401, response.error);
   } else if ('error' in response && response.error === 'Quiz Id is not owned by this user') {
     throw HTTPError(403, response.error);
-  } else if ('error' in response) {
-    throw HTTPError(400, response.error);
-  }
-  res.status(200).json(response);
-});
-
-app.put('/v1/admin/user/password', (req: Request, res: Response) => {
-  const { token, oldPassword, newPassword } = req.body;
-  const response = adminPasswordUpdate(token, oldPassword, newPassword);
-  if ('error' in response && response.error === 'Invalid Token') {
-    throw HTTPError(401, response.error);
-  } else if ('error' in response) {
-    throw HTTPError(400, response.error);
-  }
-  res.status(200).json(response);
-});
-app.put('/v2/admin/user/password', (req: Request, res: Response) => {
-  const token = req.header('token') as string;
-  const { oldPassword, newPassword } = req.body;
-  const response = adminPasswordUpdate(token, oldPassword, newPassword);
-  if ('error' in response && response.error === 'Invalid Token') {
-    throw HTTPError(401, response.error);
   } else if ('error' in response) {
     throw HTTPError(400, response.error);
   }

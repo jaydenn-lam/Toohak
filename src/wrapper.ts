@@ -1,5 +1,7 @@
 import request from 'sync-request-curl';
 import config from './config.json';
+import { stringify } from 'querystring';
+import { json } from 'stream/consumers';
 const port = config.port;
 const url = config.url;
 export const SERVER_URL = `${url}:${port}`;
@@ -333,6 +335,23 @@ export function requestadminQuizTransfer(token: string, quizId: number, userEmai
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
 
+export function requestadminQuizTransfer2(token: string, quizId: number, userEmail: string) {
+  const res = request(
+    'POST',
+    SERVER_URL + `/v2/admin/quiz/${quizId}/transfer`,
+    {
+      headers: {
+        token,
+      },
+      json: {
+        userEmail,
+      },
+    }
+  );
+
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
 export function requestQuestionDelete(token: string, quizId: number, questionId: number) {
   const res = request(
     'DELETE',
@@ -606,7 +625,7 @@ export function requestAuthDetail2(token: string) {
     'GET',
     SERVER_URL + '/v2/admin/user/details',
     {
-      qs: {
+      headers: {
         token
       },
       timeout: 100
@@ -620,7 +639,7 @@ export function requestAdminLogout2(token: string) {
     'POST',
     SERVER_URL + '/v2/admin/auth/logout',
     {
-      json: {
+      headers: {
         token
       },
       timeout: 100
@@ -634,8 +653,10 @@ export function requestPasswordUpdate2(token: string, oldPassword: string, newPa
     'PUT',
     SERVER_URL + '/v2/admin/user/password',
     {
-      json: {
+      headers: {
         token,
+      },
+      json: {
         oldPassword,
         newPassword
       },
@@ -650,8 +671,10 @@ export function requestDetailsUpdate2(token: string, email: string, nameFirst: s
     'PUT',
     SERVER_URL + '/v2/admin/user/details',
     {
-      json: {
+      headers: {
         token,
+      },
+      json: {
         email,
         nameFirst,
         nameLast
@@ -703,7 +726,7 @@ export function requestQuizList2(token: string) {
     'GET',
     SERVER_URL + '/v2/admin/quiz/list',
     {
-      qs: {
+      headers: {
         token
       },
       timeout: 100
@@ -718,8 +741,10 @@ export function requestQuizDescriptionUpdate2(token: string, description: string
     'PUT',
     SERVER_URL + '/v2/admin/quiz/' + quizId + '/description',
     {
+      headers: {
+        token
+      },
       json: {
-        token,
         description
       },
       timeout: 100
@@ -734,7 +759,7 @@ export function requestQuizInfo2(token: string, quizId: number) {
     'GET',
     SERVER_URL + '/v2/admin/quiz/' + quizId,
     {
-      qs: {
+      headers: {
         token,
       },
       timeout: 100
@@ -749,7 +774,7 @@ export function requestQuizRemove2(token: string, quizId: number) {
     'DELETE',
     SERVER_URL + `/v2/admin/quiz/${quizId}`,
     {
-      qs: {
+      headers: {
         token,
       },
       timeout: 100
@@ -764,12 +789,119 @@ export function requestadminQuizRestore2(token: string, quizId: number) {
     'POST',
     SERVER_URL + `/v2/admin/quiz/${quizId}/restore`,
     {
-      json: {
+      headers: {
         token,
       },
       timeout: 100
     }
   );
 
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestQuizViewTrash2(token: string) {
+  const res = request(
+    'GET',
+    SERVER_URL + '/v2/admin/quiz/trash',
+    {
+      headers: {
+        token
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestQuiznameUpdate2(token: string, quizId: number, name: string) {
+  const res = request(
+    'PUT',
+    SERVER_URL + '/v2/admin/quiz/' + quizId + '/name',
+    {
+      headers: {
+        token,
+      },
+      json: {
+        name,
+      },
+      timeout: 100
+    }
+  );
+
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestTrashEmpty2(token: string, quizzesArray: number[]) {
+  const quizIds = JSON.stringify(quizzesArray);
+  const res = request(
+    'DELETE',
+    SERVER_URL + '/v2/admin/quiz/trash/empty',
+    {
+      headers: {
+        token,
+      },
+      qs: {
+        quizIds
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestQuestionMove2(token: string, quizId: number, questionId: number, newPosition: number) {
+  const res = request(
+    'PUT',
+    SERVER_URL + '/v2/admin/quiz/' + quizId + '/question/' + questionId + '/move',
+    {
+      headers: {
+        token,
+      },
+      json: {
+        newPosition,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestQuestionDelete2(token: string, quizId: number, questionId: number) {
+  const res = request(
+    'DELETE',
+    SERVER_URL + '/v2/admin/quiz/' + quizId + '/question/' + questionId,
+    {
+      headers: {
+        token
+      },
+      timeout: 100
+    }
+  );
+
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestQuestionDuplicate2(token: string, quizId: number, questionId: number) {
+  const res = request(
+    'POST',
+    SERVER_URL + `/v2/admin/quiz/${quizId}/question/${questionId}/duplicate`,
+    {
+      headers: {
+        token,
+      },
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestInvalidUrlWrapper() {
+  const res = request(
+    'POST',
+    SERVER_URL + ``,
+    {
+      timeout: 100
+    }
+  );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
