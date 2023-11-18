@@ -3,7 +3,7 @@ import config from './config.json';
 import {
   requestAuthRegister, requestQuizCreate, requestQuizList, requestQuizInfo, requestQuizDescriptionUpdate, requestQuizRemove
   , requestQuizRemove2, requestQuizViewTrash, requestQuiznameUpdate, requestadminQuizRestore, requestTrashEmpty, requestadminQuizTransfer, requestQuestionCreate, requestQuizViewTrash2,
-  requestQuestionMove, requestQuestionDelete, requestQuestionDuplicate, requestQuestionUpdate, requestadminQuizTransfer2, requestQuizCreate2, requestQuestionUpdate2, requestQuestionCreate2, requestQuizInfo2, requestQuizList2, requestDetailsUpdate2, requestQuizDescriptionUpdate2,
+  requestQuestionMove, requestQuestionDelete, requestQuestionDuplicate, requestQuestionUpdate, requestadminQuizTransfer2, requestQuizCreate2, requestQuestionUpdate2, requestQuestionCreate2, requestQuizInfo2, requestQuizList2, requestQuizDescriptionUpdate2,
   requestadminQuizRestore2, requestQuiznameUpdate2, requestTrashEmpty2, requestQuestionMove2, requestQuestionDelete2, requestQuestionDuplicate2
 } from './wrapper';
 
@@ -3826,13 +3826,6 @@ describe('PUT /v1/admin/quiz/{quizId}/question/{questionId}', () => {
     expect(response.status).toStrictEqual(403);
   });
 });
-
-
-
-
-
-
-
 
 describe('PUT /v1/admin/quiz/{quizId}/question/{questionId}', () => {
   beforeEach(() => {

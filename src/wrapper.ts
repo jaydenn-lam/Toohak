@@ -1,7 +1,5 @@
 import request from 'sync-request-curl';
 import config from './config.json';
-import { stringify } from 'querystring';
-import { json } from 'stream/consumers';
 const port = config.port;
 const url = config.url;
 export const SERVER_URL = `${url}:${port}`;
@@ -285,22 +283,6 @@ export function requestQuestionCreate(token: string, quizId: number, questionBod
   );
   return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
 }
-export function requestQuestionCreate2(token: string, quizId: number, questionBody: questionBodyType) {
-  const res = request(
-    'POST',
-    SERVER_URL + '/v2/admin/quiz/' + quizId + '/question',
-    {
-      headers: {
-        token,
-      },
-      json: {
-        questionBody,
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
 
 export function requestQuestionMove(token: string, quizId: number, questionId: number, newPosition: number) {
   const res = request(
@@ -431,22 +413,6 @@ export function requestSessionUpdate(token: string, quizId: number, sessionId: n
   const res = request(
     'PUT',
     SERVER_URL + `/v1/admin/quiz/${quizId}/session/${sessionId}`,
-    {
-      headers: {
-        token,
-      },
-      json: {
-        action,
-      },
-      timeout: 100
-    }
-  );
-  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
-}
-export function requestSessionUpdate2(token: string, quizId: number, sessionId: number, action: parameterAction) {
-  const res = request(
-    'PUT',
-    SERVER_URL + `/v2/admin/quiz/${quizId}/session/${sessionId}`,
     {
       headers: {
         token,
@@ -898,8 +864,25 @@ export function requestQuestionDuplicate2(token: string, quizId: number, questio
 export function requestInvalidUrlWrapper() {
   const res = request(
     'POST',
-    SERVER_URL + ``,
+    SERVER_URL + '',
     {
+      timeout: 100
+    }
+  );
+  return { status: res.statusCode, body: JSON.parse(res.body.toString()) };
+}
+
+export function requestQuestionCreate2(token: string, quizId: number, questionBody: questionBodyType) {
+  const res = request(
+    'POST',
+    SERVER_URL + '/v2/admin/quiz/' + quizId + '/question',
+    {
+      headers: {
+        token
+      },
+      json: {
+        questionBody,
+      },
       timeout: 100
     }
   );
