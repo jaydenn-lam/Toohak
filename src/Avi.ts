@@ -262,7 +262,7 @@ function linkPlayerIdArrayWithName(playerCorrectArray: playerProfile[], currentS
   return playerNames;
 }
 
-function sortNames(arr: string[]): string[] {
+export function sortNames(arr: string[]): string[] {
   return arr.sort((a, b) => {
     if (a < b) {
       return -1;

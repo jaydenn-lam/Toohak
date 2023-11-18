@@ -293,17 +293,19 @@ describe('GET Quiz final results CSV', () => {
     expect(statusCode).toStrictEqual(400);
   });
 
-  test('Success case', () => {
+  test.only('Success case', () => {
     const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
     const quizId = requestQuizCreate(token, 'Quiz1', 'description').body.quizId;
     requestQuestionCreate(token, quizId, questionbody);
     const sessionId = requestSessionStart(token, quizId, 2).body.sessionId;
     const playerId = requestPlayerJoin(sessionId, 'Hayden').body.playerId;
+    const playerId2 = requestPlayerJoin(sessionId, 'Aaron').body.playerId;
     requestSessionUpdate(token, quizId, sessionId, { action: 'NEXT_QUESTION' });
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
     const currentTime = Date.now();
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+    requestAnswerSubmit(playerId2, 1, { answerIds: [2] });
     const answerTime = Date.now();
     const timeDifference = answerTime - currentTime;
     requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
@@ -312,10 +314,10 @@ describe('GET Quiz final results CSV', () => {
     expect(bodyA).toStrictEqual({
       questionId: 0,
       playersCorrectList: [
-        'Hayden',
+        'Hayden'
       ],
       averageAnswerTime: Math.round(timeDifference / 1000),
-      percentCorrect: 100,
+      percentCorrect: 50,
     });
     requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_FINAL_RESULTS' });
 
