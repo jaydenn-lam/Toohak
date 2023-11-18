@@ -1,6 +1,6 @@
 import request from 'sync-request-curl';
 import { port, url } from './config.json';
-import { requestAuthRegister, requestAuthLogin, requestAdminLogout, requestAuthDetail, requestDetailsUpdate, requestPasswordUpdate } from './wrapper';
+import { requestAuthRegister, requestAuthLogin, requestAdminLogout, requestAuthDetail, requestDetailsUpdate, requestPasswordUpdate, requestAuthDetail2, requestAdminLogout2, requestPasswordUpdate2, requestDetailsUpdate2, requestInvalidUrlWrapper } from './wrapper';
 const SERVER_URL = `${url}:${port}`;
 
 beforeEach(() => {
@@ -299,6 +299,117 @@ describe('adminUserDetail', () => {
   });
 });
 
+describe('adminUserDetail version 2', () => {
+  beforeEach(() => {
+    request('DELETE',
+      SERVER_URL + '/v1/clear'
+    );
+  });
+
+  test('Return user details for a valid authUserId', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestAuthDetail2(token);
+    const userDetail = response.body;
+    const expectedUserDetails = {
+      user: {
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 0,
+        numSuccessfulLogins: 1,
+        userId: 0,
+      }
+    };
+    expect(userDetail).toEqual(expectedUserDetails);
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Return an error for an invalid token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const invalidToken = token + 'Invalid';
+    const response = requestAuthDetail2(invalidToken);
+    const error = response.body;
+    expect(error).toEqual({ error: 'Invalid token' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(401);
+  });
+
+  test('Test two successful logins', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').body.token;
+    const response1 = requestAuthDetail2(token);
+    const userDetails1 = response1.body;
+    const response2 = requestAuthDetail2(loginToken);
+    const userDetails2 = response2.body;
+    const expectedUserDetails = {
+      user: {
+        userId: 0,
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 0,
+        numSuccessfulLogins: 2
+      }
+    };
+    expect(userDetails1).toEqual(expectedUserDetails);
+    expect(userDetails2).toEqual(expectedUserDetails);
+
+    const statusCode1 = response1.status;
+    expect(statusCode1).toStrictEqual(200);
+
+    const statusCode2 = response2.status;
+    expect(statusCode2).toStrictEqual(200);
+  });
+
+  test('Test one unsuccessful login', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    requestAuthLogin('william@unsw.edu.au', 'IncorrectPassword');
+    const response = requestAuthDetail2(token);
+    const userDetail = response.body;
+    const expectedUserDetails = {
+      user: {
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 1,
+        numSuccessfulLogins: 1,
+        userId: 0,
+      }
+    };
+    expect(userDetail).toEqual(expectedUserDetails);
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+  });
+
+  test('Test unsuccessful login reset on success', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    requestAuthLogin('william@unsw.edu.au', 'IncorrectPassword');
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').body.token;
+    const response1 = requestAuthDetail2(token);
+    const userDetails1 = response1.body;
+    const response2 = requestAuthDetail2(loginToken);
+    const userDetails2 = response2.body;
+    const expectedUserDetails = {
+      user: {
+        email: 'william@unsw.edu.au',
+        name: 'William Lu',
+        numFailedPasswordsSinceLastLogin: 0,
+        numSuccessfulLogins: 2,
+        userId: 0,
+      }
+    };
+    expect(userDetails1).toEqual(expectedUserDetails);
+    expect(userDetails2).toEqual(expectedUserDetails);
+
+    const statusCode1 = response1.status;
+    expect(statusCode1).toStrictEqual(200);
+
+    const statusCode2 = response2.status;
+    expect(statusCode2).toStrictEqual(200);
+  });
+});
+
 describe('adminAuthLogout', () => {
   test('Working Case', () => {
     const registerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
@@ -338,6 +449,56 @@ describe('adminAuthLogout', () => {
     const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').body.token;
     const invalidToken2 = loginToken + 'Invalid';
     const loginResponse = requestAdminLogout(invalidToken2);
+    const loginLogout = loginResponse.body;
+    expect(loginLogout).toEqual({ error: 'Invalid Token' });
+
+    const statusCode1 = registerResponse.status;
+    expect(statusCode1).toStrictEqual(401);
+
+    const statusCode2 = loginResponse.status;
+    expect(statusCode2).toStrictEqual(401);
+  });
+});
+
+describe('adminAuthLogout testing version 2', () => {
+  test('Working Case', () => {
+    const registerToken = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').body.token;
+    const registerResponse = requestAdminLogout2(registerToken);
+    const registerLogout = registerResponse.body;
+
+    const loginResponse = requestAdminLogout2(loginToken);
+    const loginLogout = loginResponse.body;
+
+    expect(registerLogout).toEqual({});
+    expect(loginLogout).toEqual({});
+
+    const statusCode1 = registerResponse.status;
+    const statusCode2 = loginResponse.status;
+    expect(statusCode1).toStrictEqual(200);
+    expect(statusCode2).toStrictEqual(200);
+  });
+
+  test('Token is empty', () => {
+    const emptyToken = '';
+    const response = requestAdminLogout2(emptyToken);
+    const adminLogout1 = response.body;
+    expect(adminLogout1).toStrictEqual({ error: 'Invalid Token' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(401);
+  });
+
+  test('Token is invalid', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const invalidToken = token + 'Invalid';
+    const registerResponse = requestAdminLogout2(invalidToken);
+    const registerLogout = registerResponse.body;
+    expect(registerLogout).toEqual({ error: 'Invalid Token' });
+
+    const loginToken = requestAuthLogin('william@unsw.edu.au', '1234abcd').body.token;
+    const invalidToken2 = loginToken + 'Invalid';
+    const loginResponse = requestAdminLogout2(invalidToken2);
     const loginLogout = loginResponse.body;
     expect(loginLogout).toEqual({ error: 'Invalid Token' });
 
@@ -413,6 +574,83 @@ describe('adminPasswordUpdate', () => {
     const numberResponse = requestPasswordUpdate(token, '1234abcd', 'NoNumbers');
     const numberError = numberResponse.body;
     const letterResponse = requestPasswordUpdate(token, '1234abcd', '12345678');
+    const letterError = letterResponse.body;
+
+    expect(numberError).toStrictEqual({ error: 'New password must contain at least 1 number and 1 letter' });
+    expect(letterError).toStrictEqual({ error: 'New password must contain at least 1 number and 1 letter' });
+
+    const statusCode1 = numberResponse.status;
+    expect(statusCode1).toStrictEqual(400);
+
+    const statusCode2 = letterResponse.status;
+    expect(statusCode2).toStrictEqual(400);
+  });
+});
+
+describe('adminPasswordUpdate version 2', () => {
+  test('Invalid Token ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const invalidToken = token + 'Invalid';
+    const response = requestPasswordUpdate2(invalidToken, '1234abcd', 'NewPassword123');
+    const invalidError = response.body;
+    const response2 = requestPasswordUpdate2('', '1234abcd', 'NewPassword123');
+    const blankError = response2.body;
+
+    expect(invalidError).toStrictEqual({ error: 'Invalid Token' });
+    expect(blankError).toStrictEqual({ error: 'Invalid Token' });
+
+    const statusCode1 = response.status;
+    expect(statusCode1).toStrictEqual(401);
+    const statusCode2 = response2.status;
+    expect(statusCode2).toStrictEqual(401);
+  });
+
+  test('Incorrect Old Password ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestPasswordUpdate2(token, 'IncorrectPassword123', 'NewPassword123');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Password is incorrect' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Old Password = New Password ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestPasswordUpdate2(token, '1234abcd', '1234abcd');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'New password cannot be the same as the old password' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('New Password Previously Used ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    requestPasswordUpdate2(token, '1234abcd', 'NewPassword123');
+    const response = requestPasswordUpdate2(token, 'NewPassword123', '1234abcd');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'New password cannot be the same as a past password' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('New Password is too short ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestPasswordUpdate2(token, '1234abcd', 'Short12');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'New password is too short' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Invalid new password ERROR', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const numberResponse = requestPasswordUpdate2(token, '1234abcd', 'NoNumbers');
+    const numberError = numberResponse.body;
+    const letterResponse = requestPasswordUpdate2(token, '1234abcd', '12345678');
     const letterError = letterResponse.body;
 
     expect(numberError).toStrictEqual({ error: 'New password must contain at least 1 number and 1 letter' });
@@ -541,7 +779,128 @@ describe('PUT /v1/admin/user/details', () => {
   });
 });
 
+describe('PUT /v1/admin/user/details version 2', () => {
+  test('Success', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'jayden@unsw.edu.au', 'Jayden', 'Lam');
+    const body = response.body;
+    expect(body).toStrictEqual({});
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(200);
+
+    const details = requestAuthDetail(token).body;
+    expect(details).toStrictEqual({
+      user: {
+        email: 'jayden@unsw.edu.au',
+        name: 'Jayden Lam',
+        numFailedPasswordsSinceLastLogin: 0,
+        numSuccessfulLogins: 1,
+        userId: 0,
+      }
+    });
+  });
+
+  test('Invalid Email', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'INVALIDEMAIL', 'Jayden', 'Lam');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Email is invalid' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Invalid Token', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const invalidToken = token + 'Invalid';
+    const response = requestDetailsUpdate2(invalidToken, 'jayden@unsw.edu.au', 'Jayden', 'Lam');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Invalid Token' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(401);
+  });
+
+  test('Email already being used', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    requestAuthRegister('alreadyused@unsw.edu.au', '1234abcd', 'John', 'Smith');
+    const response = requestDetailsUpdate2(token, 'alreadyused@unsw.edu.au', 'Jayden', 'Lam');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Email has already been used' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('First name too short', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'jayden@unsw.edu.au', 'J', 'Lam');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'First Name is too short' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('First name too long', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'jayden@unsw.edu.au', 'Namethatisveryveryveryveryverylong', 'Lam');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'First Name is too long' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Last name too short', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'jayden@unsw.edu.au', 'Jayden', 'L');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Last Name is too short' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Last name too long', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'jayden@unsw.edu.au', 'Jayden', 'Namethatisveryveryveryveryverylong');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Last Name is too long' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('Last name invalid character(s)', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'jayden@unsw.edu.au', 'Jayden', 'Lam?)(9');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'Last Name contains invalid character/s' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+
+  test('First name invalid character(s)', () => {
+    const token = requestAuthRegister('william@unsw.edu.au', '1234abcd', 'William', 'Lu').body.token;
+    const response = requestDetailsUpdate2(token, 'jayden@unsw.edu.au', 'Jayden?)(9', 'Lam');
+    const error = response.body;
+    expect(error).toStrictEqual({ error: 'First Name contains invalid character/s' });
+
+    const statusCode = response.status;
+    expect(statusCode).toStrictEqual(400);
+  });
+});
+
 request(
   'DELETE',
   SERVER_URL + '/v1/clear'
 );
+
+describe('Testing a 404 error', () => {
+  test('Working Case', () => {
+    requestInvalidUrlWrapper();
+  });
+});
