@@ -406,6 +406,15 @@ function scoreCalculator(quizId: number, session: quizSession) {
   // Determine the index of the current question
   const questionIndex = session.atQuestion - 1;
   const question = session.metadata.questions[questionIndex];
+  if (!question.correctPlayers) {
+    question.correctPlayers = [];
+  }
+  if (!question.incorrectPlayers) {
+    question.incorrectPlayers = [];
+  }
+  if (!question.nonSubmissionPlayers) {
+    question.nonSubmissionPlayers = [];
+  }
   // Array to store correct answer IDs
   const correctAnswerArray: number[] = [];
   // Populate correctAnswerArray with correct answer IDs
@@ -425,12 +434,13 @@ function scoreCalculator(quizId: number, session: quizSession) {
       submissionTime: player.submissionTime,
       lastSubmittedAnswer: [],
       score: 0,
+      rank: 0,
     };
+    if (correct === 'empty') {
+      question.nonSubmissionPlayers.push(playerEntry);
+    }
     // Update scores based on correctness
     if (correct) {
-      if (!question.correctPlayers) {
-        question.correctPlayers = [];
-      }
       // Calculate and add scores
       const add = addScoreCalc(question.answerOrder, question.points, player.playerId);
       playerEntry.score += add;
@@ -438,25 +448,56 @@ function scoreCalculator(quizId: number, session: quizSession) {
       // Add player entry to correctPlayers array
       question.correctPlayers.push(playerEntry);
     } else if (!correct) {
-      if (!question.incorrectPlayers) {
-        question.incorrectPlayers = [];
-      }
       // Add player entry to incorrectPlayers array
       question.incorrectPlayers.push(playerEntry);
     }
   }
+  console.log(question);
   // Update the question and player profiles in the existing session
   for (const existingSession of data.quizSessions) {
     if (session.sessionId === existingSession.sessionId) {
       existingSession.metadata.questions[questionIndex] = question;
+      console.log('Saved question is');
+      console.log(existingSession.metadata.questions[questionIndex]);
       existingSession.playerProfiles = session.playerProfiles;
     }
   }
   // Save the updated data object
   setData(data);
+  rankAdjuster(session.sessionId, questionIndex);
+  const updatedData = getData();
   // Return the updated data object
-  return data;
+  return updatedData;
 }
+
+function rankAdjuster(sessionId: number, questionIndex: number) {
+  const data = getData();
+  let question;
+  for (const session of data.quizSessions) {
+    if (session.sessionId === sessionId) {
+      question = session.metadata.questions[questionIndex];
+    }
+  }
+  let rank = 1;
+  console.log('Correct Players!');
+  console.log(question.correctPlayers);
+  question.correctPlayers.sort((playerA, playerB) => playerB.score - playerA.score);
+  for (const player of question.correctPlayers) {
+    player.rank = rank;
+    rank++;
+  }
+  console.log(question.incorrectPlayers);
+  for (const player of question.incorrectPlayers) {
+    player.rank = rank;
+  }
+  for (const session of data.quizSessions) {
+    if (session.sessionId === sessionId) {
+      session.metadata.questions[questionIndex] = question;
+    }
+  }
+  setData(data);
+}
+
 /**
  * Calculates the score to be added for a player based on their position in the answer order.
  *
@@ -732,6 +773,9 @@ export function playerAnswerSubmit(playerId: number, questionPosition: number, a
  * @returns {boolean} - True if the submitted answer IDs match the correct answer IDs, false otherwise.
  */
 function answerIdChecker(answerIds: number[], correctAnswers: number[]) {
+  if (answerIds.length === 0) {
+    return 'empty';
+  }
   // Check if the number of submitted and correct answers match
   if (answerIds.length !== correctAnswers.length) {
     return false;

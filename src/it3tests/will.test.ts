@@ -1147,6 +1147,7 @@ describe('PUT playerAnswerSubmit', () => {
     requestSessionUpdate(token, quizId, sessionId, { action: 'SKIP_COUNTDOWN' });
     const answerId = requestQuizInfo(token, quizId).body.questions[0].answers[0].answerId;
     const response = requestAnswerSubmit(playerId, 1, { answerIds: [answerId] });
+    requestSessionUpdate(token, quizId, sessionId, { action: 'GO_TO_ANSWER' });
 
     const body = response.body;
     expect(body).toStrictEqual({});
